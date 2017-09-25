@@ -1,0 +1,15 @@
+{
+    "classes": {
+        "SSL": null
+    },
+
+    "cli": {
+        "disc": "Generate a disc overview of the js bundle size",
+        "docs": "Generate the core-server documentations",
+        "gen-ssl-ca": "Generate a root certificate authority",
+        "gen-ssl":    "Generate ssl certificates for your server",
+        "init":       "Create a new project",
+        "vulnerabilities": "Generate a report of your dependencies vulnerabilities",
+        "git":      "Show git stats"
+    }
+}

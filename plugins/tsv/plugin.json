@@ -1,0 +1,5 @@
+{
+    "classes": {
+        "SiteManager": "databases/SiteManager"
+    }
+}

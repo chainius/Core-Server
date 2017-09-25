@@ -1,0 +1,9 @@
+{
+    "depencies": [ ],
+
+    "classes": {
+        "SiteManager": "web-server/SiteManager",
+        "Session":     null,
+        "SessionsManager": null
+    }
+}

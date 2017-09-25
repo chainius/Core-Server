@@ -1,0 +1,10 @@
+{
+    "depencies": [ ],
+
+    "classes": {
+        "SiteManager":  "sessions/SiteManager",
+        "Session":      "sessions/Session",
+        "ApiEnvironment": null,
+        "ApiCreator":     null
+    }
+}

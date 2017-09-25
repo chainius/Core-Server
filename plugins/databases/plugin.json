@@ -1,0 +1,14 @@
+{
+    "depencies": [ ],
+
+    "classes": {
+        "ApiEnvironment": "api/ApiEnvironment",
+        "SiteManager":  "web-server/SiteManager",
+        "Mysql":        null,
+        "Mongodb":      null
+    },
+
+    "cli": {
+        "cloudflare": "options: purge, Execute a full purge on your web site"
+    }
+}

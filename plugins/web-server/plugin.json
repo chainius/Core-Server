@@ -1,0 +1,14 @@
+{
+    "depencies": [ ],
+
+    "classes": {
+        "SiteManager":  null,
+        "MasterServer": null,
+        "HttpServer":   null,
+        "Crypter":      null,
+        "Watcher":      null,
+        "Resources/Manager": null,
+        "Resources/CacheObject": null,
+        "Resources/CacheStream": null
+    }
+}

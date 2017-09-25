@@ -1,0 +1,6 @@
+{
+    "classes": {
+        "Mailer": null,
+        "ApiEnvironment": "api/ApiEnvironment"
+    }
+}

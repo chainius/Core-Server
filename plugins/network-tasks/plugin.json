@@ -1,0 +1,8 @@
+{
+    "depencies": [ ],
+
+    "classes": {
+        "SiteManager":  "web-server/SiteManager",
+        "ApiEnvironment": "api/ApiEnvironment"
+    }
+}
