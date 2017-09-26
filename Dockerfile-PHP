@@ -1,0 +1,27 @@
+FROM node:8.5.0
+
+RUN echo 'deb http://packages.dotdeb.org jessie all' >> /etc/apt/sources.list
+RUN wget https://www.dotdeb.org/dotdeb.gpg
+RUN apt-key add dotdeb.gpg
+RUN apt-get update
+RUN apt-get install php7.0 -y
+RUN apt-get install php7.0-mysql php7.0-curl php7.0-json php7.0-cgi php7.0-gd php7.0-gmp php7.0-bcmath -y --force-yes
+RUN apt-get install php7.0-mbstring php7.0-xml -y
+RUN apt-get install php7.0-cli php7.0-common php7.0-fpm php7.0-bz2 -y
+RUN apt-get install php7.0-dev php-pear -y
+
+RUN mkdir -p /var/core-server
+RUN mkdir -p /var/www
+
+#--------------------------------------------------------------------------------------
+
+COPY ./ /var/core-server
+RUN cd /var/core-server/src && npm install && /var/core-server/core-server --install
+
+WORKDIR /var/www
+
+#--------------------------------------------------------------------------------------
+
+CMD /var/core-server/core-server /var/www --production
+EXPOSE 80
+EXPOSE 443
