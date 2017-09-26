@@ -3,7 +3,7 @@ class SessionsManager extends SuperClass
     setupRedis()
     {
         var _this = this;
-        this.siteManager.onBroadcast('SESSION_UPDATE', function(msg)
+        this.siteManager.onRedisBroadcast('SESSION_UPDATE', function(msg)
         {
             if (msg.token && msg.data)
                 _this.sessionUpdateFromRedis(msg.token, msg.data, msg.time);

@@ -127,7 +127,7 @@ class Session extends SuperClass
     {
         if (this.siteManager.redis && this.token !== 'global')
         {
-            this.siteManager.broadcast('SESSION_UPDATE', {
+            this.siteManager.broadcastToRedis('SESSION_UPDATE', {
                 token: this.token,
                 time: this.updateTime,
                 data: this.data

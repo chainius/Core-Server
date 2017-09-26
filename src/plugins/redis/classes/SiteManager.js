@@ -39,6 +39,47 @@ class SiteManager extends SuperClass
         }
     }
 
+
+    /**
+    * Broadcast a message over a channel using the redis service
+    * @param channel {String}
+    * @param msg {String|Object}
+    */
+    broadcastToRedis(channel, msg)
+    {
+        this.connections = this.connections || {};
+
+        try
+        {
+            if(!this.connections.redis)
+            {
+                console.warn('Cannot broadcast redis event, redis server not instantiated');
+                return;
+            }
+
+            this.connections.redis.emit(channel, msg);
+        }
+        catch(e)
+        {
+            console.error(e);
+        }
+    }
+
+    /**
+    * Listen to a redis broadcast channel
+    * @param channel {String}
+    * @param callback {Function}
+    */
+    onRedisBroadcast(channel, cb)
+    {
+        this.connections = this.connections || {};
+
+        if (!this.connections.redis)
+            return console.error('Please instantiate a redis server before listening some broadcast events');
+
+        this.connections.redis.onChannel(channel, cb);
+    }
+
 }
 
 module.exports = SiteManager;

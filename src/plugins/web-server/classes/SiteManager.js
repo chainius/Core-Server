@@ -88,42 +88,6 @@ class SiteManager
     }
 
     /**
-    * Broadcast a message over a channel using the redis service
-    * @param channel {String}
-    * @param msg {String|Object}
-    */
-    /*broadcast(channel, msg)
-    {
-        try
-        {
-            if(!this.redis)
-            {
-                console.warn('Cannot broadcast redis event, redis server not instantiated');
-                return;
-            }
-
-            this.redis.emit(channel, msg);
-        }
-        catch(e)
-        {
-            console.error(e);
-        }
-    }*/
-
-    /**
-    * Listen to a redis broadcast channel
-    * @param channel {String}
-    * @param callback {Function}
-    */
-    /*onBroadcast(channel, cb)
-    {
-        if (!this.redis)
-            return console.error('Please instantiate a redis server before listening some broadcast events');
-
-        this.redis.onChannel(channel, cb);
-    }*/
-
-    /**
     * Broadcast a message to all users
     * @param api {String}
     * @param data {Object}
@@ -168,16 +132,6 @@ class SiteManager
     }*/
 
     //------------------------------------------
-
-    /**
-    * Add additionals meta data to a page
-    * @param req {Object}
-    * @param res {Object}
-    */
-    /*setPageMeta(req, res)
-    {
-        return true;
-    }*/
 
     /**
     * Remove an object from the CDN and locally memory
