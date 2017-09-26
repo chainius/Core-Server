@@ -5,13 +5,13 @@ RUN mkdir -p /var/www
 
 #--------------------------------------------------------------------------------------
 
-COPY ./ /var/core-server
-RUN cd /var/core-server/src && npm install && /var/core-server/core-server --install
-
 WORKDIR /var/www
+CMD core-server /var/www --production
+EXPOSE 80
+EXPOSE 443
 
 #--------------------------------------------------------------------------------------
 
-CMD /var/core-server/core-server /var/www --production
-EXPOSE 80
-EXPOSE 443
+COPY ./ /var/core-server
+RUN ln -s /var/core-server/core-server /usr/bin/core-server
+RUN cd /var/core-server/src && npm install && core-server --install
