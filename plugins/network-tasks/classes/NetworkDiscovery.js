@@ -1,4 +1,4 @@
-const airswarm = require('./airswarm-tls.js')
+const airswarm = plugins.require('network-tasks/AirswarmTls')
 const missive  = require('missive');
 const fs       = require('fs');
 const Path     = require('path');

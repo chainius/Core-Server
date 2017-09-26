@@ -1,11 +1,7 @@
 'use strict';
 
-/** SiteManager */
 class SiteManager extends SuperClass
 {
-    /**
-    * Load the config files of the site and handle it
-    */
     autoSetupFromConfig()
     {
         super.autoSetupFromConfig();

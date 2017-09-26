@@ -26,7 +26,7 @@ class ApiEnvironment extends SuperClass {
         if (!database)
             throw('No Mysql connection found');
 
-        return await mysql.query(sql, vars, this.console);
+        return await database.query(sql, vars, this.console);
     }
 
     /**

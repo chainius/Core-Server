@@ -219,11 +219,6 @@ function ensureExists(path, mask, cb)
 {
     const fs  = require('fs');
 
-    if (typeof mask === 'function')
-    { // allow the `mask` parameter to be optional
-        cb = mask;
-        mask = 0777;
-    }
     fs.mkdir(path, mask, function(err)
     {
         if (err)
@@ -240,23 +235,26 @@ PagesManager.compile = function(mode, done) {
     //const snapRequire  = require('./additionals/snapshotRequire.js');
 
     const Path              = require('path');
+    const fs                = require('fs');
     const browserify        = require('browserify');
-    const BrowserifyCache   = require('../additionals/watchify-cache.js');
-    const vueify            = require('../vueify');
     const babelify          = require('babelify');
+    const watchify          = require('watchify');
+    const envify            = require('envify/custom');
+    const BrowserifyCache   = require('../additionals/watchify-cache.js');
     const bulkify           = require('../additionals/bulkify.js');
     const blukifyWatch      = require('../additionals/bulkify-watch.js');
-    const envify            = require('envify/custom');
-    const watchify          = require('watchify');
-    const browhmr           = require('./hmr');
+    const vueify            = require('../vueify');
     const extractCss        = require('../vueify/plugins/extract-css.js');
-    const fs                = require('fs');
+    const browhmr           = require('./hmr');
 
     //--------------------------------------------------------
 
     const isServer = (mode === 'server');
     const isProduction = (process.env.NODE_ENV === 'production');
     const cacheFile = Path.join(process.cwd(), 'dist', 'cache-' + mode + '.json');
+
+    const vuePath = fs.existsSync(Path.join(__dirname, '..', 'node_modules', 'vue')) ? Path.join(__dirname, '..', 'node_modules', 'vue') : Path.join(process.pwd(), 'node_modules', 'vue');
+    //const jqueryPath = fs.existsSync(Path.join(__dirname, '..', 'node_modules', 'jquery')) ? Path.join(__dirname, '..', 'node_modules', 'jquery') : Path.join(process.pwd(), 'node_modules', 'jquery');
 
     const cache = BrowserifyCache.getCache(cacheFile);
     const config = {
@@ -268,7 +266,7 @@ PagesManager.compile = function(mode, done) {
         stylesCache: cache.styles,
         cacheFile: cacheFile,
         fullPaths: !isProduction,
-        paths: [Path.join(process.cwd(), 'node_modules'), process.cwd(), Path.join(process.pwd(), 'node_modules')],
+        paths: [Path.join(process.cwd(), 'node_modules'), process.cwd(), Path.join(process.pwd(), 'node_modules'), Path.join(__dirname, '..', 'node_modules')],
 
         process: {
             env: {
@@ -297,8 +295,7 @@ PagesManager.compile = function(mode, done) {
 
             Vue: function(file, dir)
             {
-                const fdir = Path.join(process.pwd(), 'node_modules', 'vue');
-                return 'require("'+fdir+'")';
+                return 'require("'+vuePath+'")';
             }
         },
 
@@ -350,7 +347,7 @@ PagesManager.compile = function(mode, done) {
             b.plugin(browhmr);
     }
 
-    ensureExists(distFolder, 0744, function(err)
+    ensureExists(distFolder, 0o744, function(err)
     {
         if (err)
         {

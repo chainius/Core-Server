@@ -1,0 +1,17 @@
+{
+  "name": "network-tasks",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "missive": "^3.0.0",
+    "multicast-dns": "^6.1.1",
+    "network-address": "^1.1.2",
+    "tls": "0.0.1"
+  }
+}

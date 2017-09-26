@@ -1,6 +1,6 @@
-const nsp = require('nsp');
+const nsp   = require('nsp');
 const Table = require('cli-table');
-const Path = require('path');
+const Path  = require('path');
 
 process.on('uncaughtException', function (err) {
     console.warn('Exception caught: ', arguments);
@@ -186,7 +186,7 @@ async function startScan() {
     }
 }
 
-module.exports = function () {
+module.exports = async function () {
     console.info('Vuln', 'Scanning for vulnerabilities, please wait..');
     await startScan();
     return false;

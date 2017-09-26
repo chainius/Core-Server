@@ -1,6 +1,5 @@
 'use strict';
 
-/** SiteManager */
 class SiteManager extends SuperClass
 {
     constructor(HttpServer)

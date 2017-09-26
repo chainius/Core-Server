@@ -127,7 +127,7 @@ class SiteManager
     * Broadcast a message to all users
     * @param api {String}
     * @param data {Object}
-    * @param Selector {Optional, Object(MongoDb selector on session or cookie data)}
+    * @param Selector Optional mongodb style {Object}
     */
     /*live(api, data, selector) {
         throw('ToDo implement function')
@@ -140,7 +140,7 @@ class SiteManager
     * Broadcast a message to all users that are connected to this node
     * @param api {String}
     * @param data {Object}
-    * @param Selector {Optional, Object(MongoDb selector on session or cookie data)}
+    * @param Selector Optional mongodb style {Object}
     */
     /*liveInternal(api, data, salt, selector) {
         if(typeof(salt) === 'object')

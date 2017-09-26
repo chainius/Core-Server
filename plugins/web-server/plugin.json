@@ -10,5 +10,7 @@
         "Resources/Manager": null,
         "Resources/CacheObject": null,
         "Resources/CacheStream": null
-    }
+    },
+
+    "entry": "MasterServer"
 }

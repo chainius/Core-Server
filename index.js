@@ -5,18 +5,10 @@ const console      = Console.create('Index');
 
 plugins.loadConfig();
 
-/*const pluginNames = require('fs').readdirSync(Path.join(process.pwd(), 'plugins'));
-
-pluginNames.forEach(name => {
-    plugins.register(name);
-});*/
-
 plugins.executeCLI().then(function(execute) {
 
-    if(execute) {
-        const MasterServer = plugins.require("web-server/MasterServer");
-        const site = new MasterServer({});
-    }
+    if(execute)
+        plugins.createEntries();
 
 }).catch(function(err) {
 
