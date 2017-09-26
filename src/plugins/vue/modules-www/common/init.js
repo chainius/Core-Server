@@ -123,7 +123,7 @@ export default function initApp( _options )
 
     router.beforeEach(checkRoutePermission);
 
-    const app   = InitReq.getApp();
+    const app   = InitReq.getApp(router, _options.apiManager.isClient);
     Vue.use(options.apiManager);
 
     return new Vue(
