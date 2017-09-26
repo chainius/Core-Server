@@ -87,50 +87,6 @@ class SiteManager
         return this.getConfigByPath(name, basePath + '.json');
     }
 
-    /**
-    * Broadcast a message to all users
-    * @param api {String}
-    * @param data {Object}
-    * @param Selector Optional mongodb style {Object}
-    */
-    /*live(api, data, selector) {
-        throw('ToDo implement function')
-        //...
-
-        //ToDo send over redis, on redis broadcast received => send to liveInternal
-    }*/
-
-    /**
-    * Broadcast a message to all users that are connected to this node
-    * @param api {String}
-    * @param data {Object}
-    * @param Selector Optional mongodb style {Object}
-    */
-    /*liveInternal(api, data, salt, selector) {
-        if(typeof(salt) === 'object')
-        {
-            selector = salt;
-            salt = undefined;
-        }
-
-        if(selector)
-            throw('ToDo implement selector function')
-
-        const sessions = this.sessionsManager.sessions;
-
-        for(var key in sessions) {
-
-            //ToDo check with selector
-
-            sessions[key].broadcastSocketMessage({
-                api: api,
-                data: data,
-                salt: salt || this.getSalt(api, {})
-            });
-
-        }
-    }*/
-
     //------------------------------------------
 
     /**
