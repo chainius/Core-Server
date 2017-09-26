@@ -1,3 +1,5 @@
+const Path = require('path');
+
 class ApiEnvironment extends SuperClass
 {
 
@@ -20,20 +22,42 @@ class ApiEnvironment extends SuperClass
         var recv_name = '';
         var subject   = '';
         var message   = '';
-        const mymail  = this.siteManager.config.mail.user;
-        const myname  = this.siteManager.mailName || this.siteManager.title;
+        const mymail  = this.siteManager.getConfig('servers').mail.user;
+        const myname  = this.siteManager.getConfig('servers').mail.name || mymail;
 
-        const info = await Mailer.parseLayout(Path.join(process.cwd(), 'mails'), layout, data);
+        try {
+            const info = await Mailer.parseLayout(Path.join(process.cwd(), 'mails'), layout, data);
 
-        info.name = myname;
-        info.destination = email;
-        info.source = mymail;
+            info.name = myname;
+            info.destination = email;
+            info.source = mymail;
 
-        //recv_name = '';
-        subject = info.subject;
-        message = info.html;
+            //recv_name = '';
+            subject = info.subject;
+            message = info.html;
 
-        return await Mailer.send(info);
+            return {
+                result: await Mailer.send(info),
+
+                send_mail:  mymail,
+                send_name:  myname,
+                recv_mail:  email,
+                recv_name:  recv_name,
+                subject:    subject,
+                message:    message,
+            }
+        } catch(e) {
+
+            e.send_mail =  mymail;
+            e.send_name =  myname;
+            e.recv_mail =  email;
+            e.recv_name =  recv_name;
+            e.subject =    subject;
+            e.message =    message;
+
+            e.message = e.message || e.code || 'An error occured while sending the email';
+            throw(e);
+        }
     }
 
 }
