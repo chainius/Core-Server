@@ -12,6 +12,7 @@ class ApiManager extends BaseManager
         super();
         this.isClient   = true;
         this.formPoster = formPoster;
+        this.socketConnected = false;
 
         if (!this.token)
             this.generateToken();
@@ -25,7 +26,6 @@ class ApiManager extends BaseManager
         const _this = this;
 
         Vue.mixin({
-
             created()
             {
                 try
@@ -71,12 +71,14 @@ class ApiManager extends BaseManager
         var _this = this;
         this.socket = new SockJS(this.base() + 'socketapi?token=' + this.token);
         this.socket.onopen = function () {
+            this.socketConnected = true;
             _this.emitSocketOpen();
         };
         this.socket.onmessage = function (e) {
             _this.emitSocketMessage(e);
         };
         this.socket.onclose = function () {
+            this.socketConnected = false;
             _this.emitSocketClose();
         };
     }
