@@ -13,6 +13,7 @@ class ApiManager extends BaseManager
         this.isClient   = true;
         this.formPoster = formPoster;
         this.socketConnected = false;
+        this.saltApiForcers  = {};
 
         if (!this.token)
             this.generateToken();
@@ -226,15 +227,25 @@ class ApiManager extends BaseManager
     //---------------------------------------------------------
 
     emitSocketOpen() {
-        this.socketIsOpen = true;
+        const callbacks      = this.onOpenCallbacks;
+        this.onOpenCallbacks = [];
 
-        for (var key in this.onOpenCallbacks) {
+        for (var key in callbacks) {
             try {
-                this.onOpenCallbacks[key].call(this, this);
+                callbacks[key].call(this, this);
             } catch (e) {
                 console.error(e);
             }
         }
+
+        var count = 0;
+        for(var key in this.saltApiForcers) {
+            count ++;
+            this.saltApiForcers[key]();
+        }
+
+        if (this.isDev)
+            console.log('Forcing fetching of ' + count + ' api\'s');
     }
 
     emitSocketClose() {
@@ -286,6 +297,9 @@ class ApiManager extends BaseManager
             salt = this.getSalt(api, mergePost({}));
         }
 
+        if(this.saltApiForcers[salt])
+            delete this.saltApiForcers[salt];
+
         for (var key in this.onApiCallbacks) {
             try {
 
@@ -318,7 +332,7 @@ class ApiManager extends BaseManager
             }
         }
 
-        if (this.socketIsOpen === false) {
+        if (this.socketConnected === false) {
             return this.onSocketOpen(function () {
                 this.socket.send(msg);
             });
@@ -329,7 +343,7 @@ class ApiManager extends BaseManager
     }
 
     onSocketOpen(cb) {
-        if (this.socketIsOpen) {
+        if (this.socketConnected) {
             try {
                 cb();
             } catch (e) {
@@ -344,6 +358,23 @@ class ApiManager extends BaseManager
 
     //---------------------------------------------------------
 
+    sendApiAndForceResponse(api, data, salt) {
+        const _this = this;
+
+        this.saltApiForcers[salt] = function() {
+            _this.sendSocketMessage({
+                api:  api,
+                data: data,
+                salt: salt
+            });
+        }
+
+        if(!this.socketConnected)
+            return;
+
+        this.saltApiForcers[salt]();
+    }
+
     require(api, data, cb)
     {
         const res = super.require(api, data, cb);
@@ -351,11 +382,7 @@ class ApiManager extends BaseManager
         if(!res)
             return;
 
-        this.sendSocketMessage({
-            api: api,
-            data: res.data,
-            salt: res.salt
-        });
+        this.sendApiAndForceResponse(api, res.data, res.salt);
 
         return res.id;
     }
@@ -367,11 +394,7 @@ class ApiManager extends BaseManager
         if(!res)
             return;
 
-        this.sendSocketMessage({
-            api: api,
-            data: res.data,
-            salt: res.salt
-        });
+        this.sendApiAndForceResponse(api, res.data, res.salt);
     }
 
     post(api, data)

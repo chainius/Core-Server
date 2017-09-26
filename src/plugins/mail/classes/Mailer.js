@@ -112,5 +112,7 @@ function sendMail(options)
     });
 }
 
-global.parseMailLayout = parseMailLayout;
-global.__sendMail = sendMail;
+module.exports = {
+    parseLayout: parseMailLayout,
+    send:        sendMail
+}
