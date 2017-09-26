@@ -9,6 +9,7 @@ class PluginSystem {
     constructor() {
         this.classes       = {};
         this.loadedPlugins = {};
+        this.entries       = {};
     }
 
     registerPath(path) {
@@ -124,18 +125,25 @@ class PluginSystem {
     }
 
     createEntries() {
-        var result = [];
+        var result   = [];
+        this.entries = {};
 
         for(var key in this.loadedPlugins) {
             const plugin = this.loadedPlugins[key];
 
             if(plugin.entry) {
                 const Entry = this.require(plugin.name + '/' + plugin.entry);
-                result.push( new Entry({}) );
+
+                this.entries[ plugin.name + '/' + plugin.entry ] = new Entry({});
+                result.push( this.entries[ plugin.name + '/' + plugin.entry ] );
             }
         }
 
         return result;
+    }
+
+    getEntry(name) {
+        return this.entries[name];
     }
 
     //------------------------

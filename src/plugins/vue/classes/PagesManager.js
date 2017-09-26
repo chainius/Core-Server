@@ -1,8 +1,11 @@
+const SocketServer = plugins.require('vue/hmr/socket-server');
+
 class PagesManager
 {
     constructor(siteManager)
     {
         this.isProduction   = (process.env.NODE_ENV === 'production');
+        this.hmrSocket      = new SocketServer(this);
 
         if(siteManager) {
             this.siteManager    = siteManager;
