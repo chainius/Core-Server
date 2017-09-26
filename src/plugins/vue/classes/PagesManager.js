@@ -117,18 +117,29 @@ class PagesManager
 
         function init()
         {
+            const {
+              title, htmlAttrs, bodyAttrs, link, style, script, noscript, meta,
+            } = context.metatags.inject();
+
             try
             {
                 isInited = true;
                 code     = code || ctx.meta.httpCode || 200;
                 res.status(code);
                 res.setHeader('Content-Type', 'text/html; charset=utf-8');
-                res.write(`<html lang="en">`);
+                res.write(`<html lang="en" data-vue-meta-server-rendered ${htmlAttrs.text()}>`);
                 res.write(`<head>`);
                 res.write(`<meta charset="utf-8">`);
                 res.write(`<meta name="viewport" content="width=device-width, initial-scale=1">`);
                 res.write(`<link rel="icon" type="image/png" href="/img/favicon.png" />`);
-                res.write(`<title>${_this.siteManager.title}</title>`);
+                res.write(title.text ? title.text() : `<title>${_this.siteManager.title}</title>`);
+                res.write(`
+                  ${meta.text()}
+                  ${link.text()}
+                  ${style.text()}
+                  ${script.text()}
+                  ${noscript.text()}
+                `);
 
                 if(code !== 200 && code !== 404)
                     res.write(`<script>window.HTTP_STATUS = ${code}; </script>`);
@@ -145,7 +156,7 @@ class PagesManager
                 const hash = _this.isProduction ? _this.getCacheObject('/css/bundle.css').getHash() : 'dev';
                 res.write("<link href='/css/bundle.css?"+hash+"' rel='stylesheet' type='text/css'>");
                 res.write(`</head>`);
-                res.write(`<body>`);
+                res.write(`<body ${bodyAttrs.text()}>`);
             }
             catch (e)
             {

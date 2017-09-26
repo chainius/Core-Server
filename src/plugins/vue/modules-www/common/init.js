@@ -1,4 +1,5 @@
 import Router from 'vue-router';
+import Meta from 'vue-meta';
 import serializeProperties from './pageProperties';
 
 var options  = {};
@@ -6,6 +7,7 @@ var errorComponent = null;
 const routes = [];
 
 Vue.use(Router);
+Vue.use(Meta);
 
 //------------------------------------------------------------------
 

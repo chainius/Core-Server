@@ -35,6 +35,9 @@ export function transformPost(post)
 }
 
 export default (ctx) => {
+    const metatags = app.$meta();
+    context.metatags = metatags;
+    
     api.ctx = ctx;
     app.$router.push(ctx.url);
 
