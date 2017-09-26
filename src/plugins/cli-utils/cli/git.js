@@ -5,7 +5,7 @@ const Table    = require('cli-table');
 
 function spawnLog(cmd)
 {
-    child.exec(cmd, { cwd: process.working_dir },  function(error, stdout, stderr)
+    child.exec(cmd, { cwd: process.cwd() },  function(error, stdout, stderr)
     {
         if (error) {
             console.error(error);
@@ -18,7 +18,7 @@ function spawnLog(cmd)
 
 function exec(cmd, arg)
 {
-    return child.execSync(cmd, { cwd: process.working_dir }).toString();
+    return child.execSync(cmd, { cwd: process.cwd() }).toString();
 }
 
 function onlyUnique(value, index, self) {
@@ -90,10 +90,9 @@ function getAuthorCommits()
     return result;
 }
 
-module.exports = function(options)
+module.exports = function(gitShow)
 {
     const g1        = new GitStats();
-    const gitShow   = options.git;
 
     if (!gitShow || gitShow === 'calendar')
     {
@@ -107,7 +106,7 @@ module.exports = function(options)
     if (!gitShow || gitShow === 'authors')
     {
         g1.authorsPie({
-            repo: process.working_dir,
+            repo: process.cwd(),
             start: '2016-01-01',
             end: '2020-01-01',
             radius: 10

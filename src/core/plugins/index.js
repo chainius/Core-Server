@@ -123,6 +123,21 @@ class PluginSystem {
         return CLI.execute(this);
     }
 
+    createEntries() {
+        var result = [];
+
+        for(var key in this.loadedPlugins) {
+            const plugin = this.loadedPlugins[key];
+
+            if(plugin.entry) {
+                const Entry = this.require(plugin.name + '/' + plugin.entry);
+                result.push( new Entry({}) );
+            }
+        }
+
+        return result;
+    }
+
     //------------------------
 
     loadConfig() {

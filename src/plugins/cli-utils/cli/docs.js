@@ -1,32 +1,44 @@
-const copydir = require('copy-dir');
 const Path    = require('path');
+const fs      = require('fs');
 
-module.exports = function(options)
-{
-    if (options.docs === 'generate')
-    {
-        var scripts = ['modules/siteManager.js', 'modules/sessionsManager.js', 'modules/api/environment.js', 'modules/crypter.js'];
+function getScripts() {
+    var scripts = [];
 
-        const spawn = require('child_process').spawn;
+    for(var path in plugins.loadedPlugins) {
+        const plugin = plugins.loadedPlugins[path];
 
-        const ls    = spawn('jsdoc', scripts.concat(['-t', './node_modules/ink-docstrap/template', '-d', 'docs']));
+        if(!plugin.classes)
+            continue;
 
-        ls.stdout.on('data', (data) =>
-        {
-            console.log(data.toString());
-        });
-
-        ls.stderr.on('data', (data) =>
-        {
-            console.error(data.toString());
-        });
-
-        return false;
+        for(var name in plugin.classes)
+            scripts.push( Path.join(path, 'classes', name + '.js') );
     }
 
-    if (options.docs === null)
-        options.docs = 'core-docs';
+    return scripts;
+}
 
-    copydir.sync(Path.join(__dirname, '..', '..', 'docs'), Path.resolve(process.cwd(), options.docs));
+module.exports = function(value)
+{
+    const scripts = getScripts();
+
+    const spawn  = require('child_process').spawn;
+    const output = Path.join(process.cwd(), value || 'docs');
+
+    const tmpPath1 = Path.join(process.pwd(), 'node_modules', 'ink-docstrap', 'template');
+    const templatePath = fs.existsSync(tmpPath1) ? tmpPath1 : Path.join(__dirname, '..', 'node_modules', 'ink-docstrap', 'template');
+    const ls     = spawn('jsdoc', scripts.concat(['-t', templatePath, '-d', output]));
+
+    console.log('Generating docs to', output);
+
+    ls.stdout.on('data', (data) =>
+    {
+        console.log(data.toString());
+    });
+
+    ls.stderr.on('data', (data) =>
+    {
+        console.error(data.toString());
+    });
+
     return false;
 };

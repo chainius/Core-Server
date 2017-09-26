@@ -6,12 +6,17 @@ const net           = require('net');
 
 cluster.schedulingPolicy = cluster.SCHED_NONE;
 
-/*
-//const appversion    = require('../cli/version');
-//const argentDisc    = require('../agents/discovery.js');
+function getAppVersion(basePath) {
+    const Path = require('path');
+    try {
+        return require(Path.join(basePath, 'package.json')).version || 'dev';
+    } catch(e) {
+        if(e.code === 'MODULE_NOT_FOUND')
+            return 'dev';
 
-//const Path    = require('path');
-//const config  = require( Path.join(process.cwd(), 'config', 'servers.json') ); //ToDo get correct config & use global getconfig function*/
+        throw(e);
+    }
+}
 
 class MasterServer
 {
@@ -34,7 +39,7 @@ class MasterServer
     {
         this.port = port || 80;
 
-        console.info('Starting server on port', this.port, 'with version:', 'ToDo get from package.json');
+        console.info('Starting server on port', this.port, 'with version:', getAppVersion(process.cwd()));
 
         const _this = this;
 

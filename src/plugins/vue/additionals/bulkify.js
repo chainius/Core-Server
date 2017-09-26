@@ -1,8 +1,8 @@
 var staticModule = require('static-module');
-var path = require('path');
-var through = require('through2');
-var bulk = require('bulk-require');
-var concat = require('concat-stream');
+var path        = require('path');
+var through     = require('through2');
+var bulk        = require('bulk-require');
+var concat      = require('concat-stream');
 
 global.BrowserifyRequiredBulks = [];
 
@@ -16,7 +16,7 @@ module.exports = function (file, opts) {
     };
 
     const Requires = [];
-    
+
     function bulkRequire (dir, globs, opts) {
         var stream = through();
         var res = bulk(dir, globs, {

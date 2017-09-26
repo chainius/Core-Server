@@ -4,7 +4,6 @@ const Path          = require('path');
 const ApiCreator    = plugins.require('api/ApiCreator');
 const Watcher       = plugins.require('web-server/Watcher');
 
-/** SiteManager */
 class SiteManager extends SuperClass
 {
     constructor(HttpServer)
@@ -245,10 +244,12 @@ class SiteManager extends SuperClass
 
     /**
     * Call an api from an http request
+    * @async
     * @param api_name {String}
     * @param post {Object}
     * @param req {Object}
     * @param token_changed_cb {Function}
+    * @return {Promise<Object>} The reponse object of the api.
     */
     async api(name, post, req, tokenChangeNotify)
     {

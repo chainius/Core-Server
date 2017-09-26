@@ -1,4 +1,4 @@
-const cluster       = require('cluster');
+//const cluster       = require('cluster');
 const chalk         = require('chalk');
 const subConsole    = console.create('Bundle');
 
@@ -15,8 +15,8 @@ module.exports = function(value, cb)
         return false;
     }
 
-    if (cluster.isMaster)
-        subConsole.info('Bundle environment:', chalk.bold(process.env.NODE_ENV + '-' + value));
+    //if (cluster.isMaster)
+    subConsole.info('Starting bundle in environment:', chalk.bold(process.env.NODE_ENV + '-' + value));
 
     var serverStart = Date.now();
 

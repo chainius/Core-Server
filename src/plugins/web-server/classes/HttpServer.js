@@ -2,12 +2,9 @@
 
 process.options.secure = (process.options.secure === undefined) ? false : true;
 
-//require('../core');
-
 const express       = require('express');
 const http          = process.options.secure ? require('spdy') : require('http');
 
-//const ThreadRestart = require('./threadRestart.js');
 /*const formidable    = require('formidable');
 
 function formParse(req, res, next)

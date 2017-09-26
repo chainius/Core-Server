@@ -1,33 +1,21 @@
-/*const Path = require('path');
-const fs   = require('fs');
+const Path = require('path');
 
-module.exports = function(options, argv)
-{
-    if (!process.appversion)
-    {
-        process.appversion = 'dev';
-        const fs            = require('fs');
-        const versionPath   = Path.join(process.cwd(), 'VERSION');
+function getAppVersion(basePath) {
+    try {
+        return require(Path.join(basePath, 'package.json')).version || 'dev';
+    } catch(e) {
+        if(e.code === 'MODULE_NOT_FOUND')
+            return 'dev';
 
-        if (fs.existsSync(versionPath))
-            process.appversion = fs.readFileSync(versionPath).toString();
+        throw(e);
     }
-
-    if (options === undefined)
-        return process.appversion;
-
-    if (options.version !== undefined)
-    {
-        console.log('Current app version:', process.appversion);
-        console.log('Running node version:', process.version);
-        return false;
-    }
-
-    return process.appversion;
-};*/
-
-console.log('ToDo');
+}
 
 module.exports = function() {
+
+    console.log('Current app version:          ', getAppVersion(process.cwd()));
+    console.log('Current core-server version:  ', getAppVersion(process.pwd()));
+    console.log('Running node version:         ', process.version);
+
     return false;
 }

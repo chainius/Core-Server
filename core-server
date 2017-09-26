@@ -12,4 +12,4 @@ while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symli
 done
 
 SOURCE=$(dirname $SOURCE)
-node $SOURCE/index.js $@
+node $SOURCE/src/index.js $@
