@@ -226,10 +226,16 @@ class SiteManager extends SuperClass
                     Watcher.onFileChange(code.path, function()
                     {
                         console.warn('Api', name, 'changed');
-                        const nCode = _this.apiCreator.create(name, path);
+                        
+                        try {                            
+                            const nCode = _this.apiCreator.create(path, name);
 
-                        if (nCode !== false)
-                            _this.apiCreator.apis[name] = nCode.handler;
+                            if (nCode !== false)
+                                _this.apiCreator.apis[name] = nCode.handler;
+                            
+                        } catch(e) {
+                            console.error(e);
+                        }
                     });
 
                     this.apiCreator.apis[name] = code.handler;

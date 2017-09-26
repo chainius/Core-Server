@@ -243,9 +243,6 @@ class ApiManager extends BaseManager
             count ++;
             this.saltApiForcers[key]();
         }
-
-        if (this.isDev)
-            console.log('Forcing fetching of ' + count + ' api\'s');
     }
 
     emitSocketClose() {
