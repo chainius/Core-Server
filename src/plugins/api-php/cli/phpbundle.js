@@ -7,6 +7,21 @@ const subConsole = console.create('PHP');
 
 const phpPath   = Path.join(process.cwd(), 'plugins', 'phpcore.php');
 
+function ensureExists(path, mask, cb)
+{
+    const fs  = require('fs');
+
+    fs.mkdir(path, mask, function(err)
+    {
+        if (err)
+        {
+            if (err.code == 'EEXIST') cb(null); // ignore the error if the folder already exists
+            else cb(err); // something else went wrong
+        }
+        else cb(null); // successfully created folder
+    });
+}
+
 function bundlePhp(folder)
 {
     var files;
@@ -54,30 +69,33 @@ function bundlePhp(folder)
 
 module.exports = function(value)
 {
-    if (value === 'size')
+    ensureExists(Path.join(process.cwd(), 'plugins'), 0o744, function(err)
     {
-        try {
-            const fs    = require('fs');
-            const stats = fs.statSync(phpPath);
-            const fileSizeInKB = Math.round(stats.size / 1000.0);
+        if (value === 'size')
+        {
+            try {
+                const fs    = require('fs');
+                const stats = fs.statSync(phpPath);
+                const fileSizeInKB = Math.round(stats.size / 1000.0);
 
-            subConsole.log('PHP Bundle size: ' + fileSizeInKB + ' KB');
-        } catch(e) {
-            if(e.code === 'ENOENT')
-                subConsole.error('PhpBundle not bundled yet, the bundle size could not be evaluated');
+                subConsole.log('PHP Bundle size: ' + fileSizeInKB + ' KB');
+            } catch(e) {
+                if(e.code === 'ENOENT')
+                    subConsole.error('PhpBundle not bundled yet, the bundle size could not be evaluated');
+            }
         }
-    }
-    else
-    {
-        const php = bundlePhp(Path.join(__dirname, '..', 'php'));
+        else
+        {
+            const php = bundlePhp(Path.join(__dirname, '..', 'php'));
 
-        if (php === false)
-            return false;
+            if (php === false)
+                return false;
 
-        fs.writeFileSync(phpPath, php);
+            fs.writeFileSync(phpPath, php);
 
-        subConsole.success('PHP core bundled');
-    }
+            subConsole.success('PHP core bundled');
+        }
+    });
 
     return false;
 };
