@@ -22,7 +22,7 @@ class SocketServer
         {
             if(msg.SocketServer && msg.method && msg.data)
             {
-                if(typeof(_this[msg.method]) === 'function' && global.sl_server)
+                if(typeof(_this[msg.method]) === 'function')
                 {
                     _this[msg.method].apply(_this, Object.keys(msg.data).map(function (key) { return msg.data[key]; }));
                 }
@@ -32,12 +32,14 @@ class SocketServer
 
     on(event, cb)
     {
-        if(!global.sl_server)
+        const server = plugins.getEntry('web-server/MasterServer');
+
+        if(!server)
             return;
 
         const _this = this;
         process.nextTick(function() {
-            sl_server.echo.on(event, function()
+            server.echo.on(event, function()
             {
                 cb.apply(_this, arguments);
             });

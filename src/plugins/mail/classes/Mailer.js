@@ -68,7 +68,8 @@ function sendMail(options)
 
     return new Promise(function(resolve, reject)
     {
-        const config = global.sl_server.siteManager.config.mail;
+        const server = plugins.getEntry('web-server/MasterServer');
+        const config = server.siteManager.config.mail;
         const transporterConfig = {};
 
         if(config.service === 'gmail')

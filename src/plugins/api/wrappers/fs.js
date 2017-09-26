@@ -130,10 +130,12 @@ wrapFn3('write');
 function purge(file)
 {
     const relative = Path.relative(process.cwd(), file);
-    if (relative.substr(0, 10) !== 'resources/' || !global.sl_server)
+    const server   = plugins.getEntry('web-server/MasterServer');
+
+    if (relative.substr(0, 10) !== 'resources/' || !server.siteManager)
         return;
 
-    global.sl_server.siteManager.purgeCache(relative);
+    server.siteManager.purgeCache(relative);
 }
 
 module.exports.writeFile = function(file, data, options, callback)

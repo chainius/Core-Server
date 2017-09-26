@@ -1,4 +1,5 @@
 const fsWrapper = require('./fs.js');
+const Path      = require('path');
 
 module.exports = function(name)
 {

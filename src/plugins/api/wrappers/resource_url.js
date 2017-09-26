@@ -2,7 +2,7 @@ function getResource(name)
 {
     try
     {
-        return sl_server.siteManager.resourceManager.getObject(name);
+        return plugins.getEntry('web-server/MasterServer').siteManager.resourceManager.getObject(name);
     }
     catch (e)
     {
