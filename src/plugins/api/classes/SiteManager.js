@@ -229,7 +229,7 @@ class SiteManager extends SuperClass
                         const nCode = _this.apiCreator.create(name, path);
 
                         if (nCode !== false)
-                            _this.apis[name] = nCode.handler;
+                            _this.apiCreator.apis[name] = nCode.handler;
                     });
 
                     this.apiCreator.apis[name] = code.handler;

@@ -17,7 +17,7 @@ function tryParseJson(msg)
 }
 
 
-class ApiCreator {
+class ApiCreator extends SuperClass {
 
     create(name, path) {
         const handler = this.createPhpHandler(path + '.php', name);
