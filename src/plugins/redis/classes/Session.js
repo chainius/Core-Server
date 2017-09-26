@@ -26,12 +26,22 @@ class Session extends SuperClass
         const _this = this;
         return new Promise(function(resolve, reject)
         {
+            var didTimeout = false;
+            const timeout = setTimeout(function() {
+                didTimeout = true;
+                reject('The session could not be loaded');
+            }, 1500);
+
             _this.onRedisLoaded.push(function()
             {
                 superOnReady(cb).then(function(data) {
-                    resolve(data);
+                    if(!didTimeout)
+                        resolve(data);
                 }).catch(function(err) {
-                    reject(err);
+                    if(!didTimeout)
+                        reject(err);
+                }).then(function() {
+                    clearTimeout(timeout);
                 });
             });
         });
@@ -46,11 +56,12 @@ class Session extends SuperClass
 
     loadRedisTTL()
     {
-        if (!this.siteManager.redis || this.token === 'global')
+        const redis = this.siteManager.connections.redis;
+        if (!redis || this.token === 'global')
             return;
 
         var _this = this;
-        this.siteManager.redis.getExpirationTime('session_' + this.token, -2).then(function(data)
+        redis.getExpirationTime('session_' + this.token, -2).then(function(data)
         {
             if (data > Date.now())
                 _this.expirationTime = data;
@@ -66,6 +77,8 @@ class Session extends SuperClass
     */
     loadFromRedis()
     {
+        const redis = this.siteManager.connections.redis;
+
         const _this = this;
         function dispatchLoaded()
         {
@@ -75,7 +88,7 @@ class Session extends SuperClass
             {
                 try
                 {
-                    _this.onRedisLoaded[key].call(_this, _this.siteManager.redis);
+                    _this.onRedisLoaded[key].call(_this, redis);
                 }
                 catch (e)
                 {
@@ -84,9 +97,9 @@ class Session extends SuperClass
             }
         }
 
-        if (this.siteManager.redis && this.token !== 'global')
+        if (redis && this.token !== 'global')
         {
-            this.siteManager.redis.load('session_' + this.token).then(function(data)
+            redis.load('session_' + this.token).then(function(data)
             {
                 if (typeof (data) !== 'object')
                 {
@@ -113,9 +126,10 @@ class Session extends SuperClass
     saveToRedis()
     {
         this.updateTime = Date.now();
+        const redis = this.siteManager.connections.redis;
 
-        if (this.siteManager.redis && this.token !== 'global')
-            this.siteManager.redis.save('session_' + this.token, this.data, this.expirationTime);
+        if (redis && this.token !== 'global')
+            redis.save('session_' + this.token, this.data, this.expirationTime);
 
         this.emitRedis();
     }
@@ -125,7 +139,9 @@ class Session extends SuperClass
     */
     emitRedis()
     {
-        if (this.siteManager.redis && this.token !== 'global')
+        const redis = this.siteManager.connections.redis;
+
+        if (redis && this.token !== 'global')
         {
             this.siteManager.broadcastToRedis('SESSION_UPDATE', {
                 token: this.token,
