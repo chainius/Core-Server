@@ -71,14 +71,15 @@ class ApiManager extends BaseManager
         var _this = this;
         this.socket = new SockJS(this.base() + 'socketapi?token=' + this.token);
         this.socket.onopen = function () {
-            this.socketConnected = true;
+            _this.socketConnected = true;
             _this.emitSocketOpen();
         };
         this.socket.onmessage = function (e) {
+            _this.socketConnected = true;
             _this.emitSocketMessage(e);
         };
         this.socket.onclose = function () {
-            this.socketConnected = false;
+            _this.socketConnected = false;
             _this.emitSocketClose();
         };
     }

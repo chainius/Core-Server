@@ -21,6 +21,11 @@ class ApiManager
         this.permissionsManager = new PermissionsManager(this);
 
         Vue.mixin({
+            computed: {
+              socketConnected() {
+                return this.$api.socketConnected;
+              },
+            },
             destroyed: function () {
                 _this.unbindVue(this);
 
