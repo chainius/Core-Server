@@ -54,6 +54,7 @@
     "synchd": "^1.0.2",
     "uglify-es": "^3.1.2",
     "vue": "^2.4.4",
+    "vue-meta": "^1.2.0",
     "vue-router": "^2.7.0",
     "vue-server-renderer": "^2.4.4",
     "vue-template-compiler": "^2.4.4",
