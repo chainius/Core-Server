@@ -117,12 +117,12 @@ class PagesManager
 
         function init()
         {
-            const {
-              title, htmlAttrs, bodyAttrs, link, style, script, noscript, meta,
-            } = context.metatags.inject();
-
             try
             {
+                const {
+                  title, htmlAttrs, bodyAttrs, link, style, script, noscript, meta,
+                } = ctx.metatags.inject();
+
                 isInited = true;
                 code     = code || ctx.meta.httpCode || 200;
                 res.status(code);

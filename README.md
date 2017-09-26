@@ -6,11 +6,12 @@
 
 ## Quick Installation
 
-To automatically compile and install Core Server, run the following script.
+To install Core Server, run the following commands:
 
 ```
-echo "We will upload our one-line install command as soon as possible."
-# bash -c "$(curl -s https://raw.githubusercontent.com/somescript.sh)"
+git clone https://github.com/Skyhark-Projects/Core-Server.git core-server
+cd core-server
+bash ./install.sh
 ```
 
 ----

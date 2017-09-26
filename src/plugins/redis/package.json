@@ -1,5 +1,5 @@
 {
-  "name": "redis",
+  "name": "redis-plugin",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -7,5 +7,8 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "redis": "^2.8.0"
+  }
 }

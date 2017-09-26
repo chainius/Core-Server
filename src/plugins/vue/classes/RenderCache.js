@@ -37,7 +37,7 @@ class RenderCache {
 
     bundleChanged() {
         try {
-            this.logWarn('Bundle changed, deleting cache');
+            console.warn('Bundle changed, deleting cache');
             this.deleteCache();
         } catch (e) {
             console.error(e);
@@ -108,7 +108,7 @@ class RenderCache {
         {
             if(RenderCache.bundle === {})
             {
-                _this.logWarn('Force reloading bundle');
+                console.warn('Force reloading bundle');
                 loadPreloads();
                 return null;
             }
