@@ -4,47 +4,6 @@ const Path    = require('path');
 const Console = require('../logs/console.js');
 var console   = Console.create('CLI');
 
-
-/*
-
-//---------------------------------------------------------------------------------
-
-if (cluster.isWorker && process.env.bundle)
-{
-    argv.options.bundle = process.env.bundle;
-    argv.options.hot = true;
-}
-
-//---------------------------------------------------------------------------------
-
-process.argvOptions = argv.options;
-
-module.exports.exec = function()
-{
-    for (var key in argv.options)
-    {
-        if (['production', 'hot', 'port', 'secure'].indexOf(key) === -1)
-        {
-            const path = Path.join(__dirname, key + '.js');
-            if (fs.existsSync(path))
-            {
-                const r = require(path);
-                if (r(argv.options, argv) === false)
-
-                    return false;
-            }
-            else
-            {
-                console.error('Invalid argument', key);
-                process.exit(1);
-            }
-        }
-    }
-
-    return true;
-};*/
-
-
 class CLI {
 
     constructor() {
