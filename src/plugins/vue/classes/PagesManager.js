@@ -259,7 +259,7 @@ PagesManager.compile = function(mode, done) {
     const blukifyWatch      = require('../additionals/bulkify-watch.js');
     const vueify            = require('../vueify');
     const extractCss        = require('../vueify/plugins/extract-css.js');
-    const browhmr           = require('./hmr');
+    const browhmr           = plugins.require('vue/hmr/index');
 
     //--------------------------------------------------------
 
