@@ -267,7 +267,7 @@ PagesManager.compile = function(mode, done) {
     const isProduction = (process.env.NODE_ENV === 'production');
     const cacheFile = Path.join(process.cwd(), 'dist', 'cache-' + mode + '.json');
 
-    const vuePath = fs.existsSync(Path.join(__dirname, '..', 'node_modules', 'vue')) ? Path.join(__dirname, '..', 'node_modules', 'vue') : Path.join(process.pwd(), 'node_modules', 'vue');
+    const vuePath = fs.existsSync(Path.join(__dirname, '..', 'node_modules', 'vue')) ? Path.join(__dirname, '..', 'node_modules', 'vue') : Path.join(process.pwd(), '..', 'node_modules', 'vue');
     //const jqueryPath = fs.existsSync(Path.join(__dirname, '..', 'node_modules', 'jquery')) ? Path.join(__dirname, '..', 'node_modules', 'jquery') : Path.join(process.pwd(), 'node_modules', 'jquery');
 
     const cache = BrowserifyCache.getCache(cacheFile);
@@ -280,7 +280,7 @@ PagesManager.compile = function(mode, done) {
         stylesCache: cache.styles,
         cacheFile: cacheFile,
         fullPaths: !isProduction,
-        paths: [Path.join(process.cwd(), 'node_modules'), process.cwd(), Path.join(process.pwd(), 'node_modules'), Path.join(__dirname, '..', 'node_modules')],
+        paths: [Path.join(process.cwd(), 'node_modules'), process.cwd(), Path.join(process.pwd(), '..', 'node_modules'), Path.join(__dirname, '..', 'node_modules')],
 
         process: {
             env: {

@@ -6,7 +6,7 @@
 
 ## Quick Installation
 
-To install Core Server, run the following commands:
+To install Core Server and start a new project, run the following commands:
 
 ```
 npm install -g core-server

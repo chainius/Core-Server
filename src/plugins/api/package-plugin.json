@@ -1,0 +1,20 @@
+{
+  "name": "core-server-api",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+        "email-validator": "^1.1.1",
+        "file-type": "^6.2.0",
+        "image-size": "^0.6.1",
+        "jimp": "^0.2.28",
+        "querystring": "^0.2.0",
+        "request": "^2.82.0",
+        "request-promise": "^4.2.2"
+  }
+}
