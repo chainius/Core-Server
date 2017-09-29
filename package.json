@@ -1,6 +1,6 @@
 {
     "name": "core-server",
-    "version": "1.0.0",
+    "version": "0.1.0",
     "description": "<p align=\"center\"> <img width=\"100\" src=\"./wiki/img/logo/logo-128.png\" > <br> <b>Core Server</b> </p>",
     "main": "src/index.js",
     "bin": "src/index.js",
@@ -23,6 +23,9 @@
         "redis": "file:src/plugins/redis",
         "vue": "file:src/plugins/vue",
         "web-server": "file:src/plugins/web-server"
+    },
+    "engines": {
+        "node": ">=7.0.0"
     },
     "devDependencies": {},
     "repository": {
