@@ -25,7 +25,7 @@ class CLI {
         process.options = argv.options;
         const oldCwd    = process.cwd();
         process.cwd     = function() { return Path.resolve(oldCwd, argv.command) };
-        process.pwd     = function() { return Path.dirname(process.argv[1]); };
+        process.pwd     = function() { return Path.resolve(__dirname, '..', '..', '..'); };
     }
 
     parseEnvironmentCLI() {

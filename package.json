@@ -1,0 +1,116 @@
+{
+    "name": "core-server",
+    "version": "0.1.3",
+    "description": "CoreServer",
+    "main": "src/index.js",
+    "bin": "src/index.js",
+    "scripts": {
+        "server": "node ./src/index.js",
+        "start": "node ./src/index.js"
+    },
+    "author": "Vandamme Sacha",
+    "license": "MIT",
+    "dependencies": {
+        "babel-preset-es2015": "^6.24.1",
+        "chalk": "^2.1.0",
+        "dateformat": "^3.0.2",
+        "process-argv": "^1.0.0",
+
+        "email-validator": "^1.1.1",
+        "file-type": "^6.2.0",
+        "image-size": "^0.6.1",
+        "jimp": "^0.2.28",
+        "querystring": "^0.2.0",
+        "request": "^2.82.0",
+        "request-promise": "^4.2.2",
+
+        "cli-table": "^0.3.1",
+        "commander": "^2.11.0",
+        "disc": "^1.3.3",
+        "git-stats": "^2.10.6",
+        "ink-docstrap": "^1.3.0",
+        "is-valid-path": "^0.1.1",
+        "node-forge": "^0.7.1",
+        "nsp": "^2.8.0",
+        "readline": "^1.3.0",
+        "retire": "^1.4.0",
+        "ursa": "^0.9.4",
+
+        "cloudflare": "^2.1.1",
+        "mongodb": "^2.2.31",
+        "mysql2": "^1.4.2",
+
+        "html-to-text": "^3.3.0",
+        "jsesc": "^2.5.1",
+        "nodemailer": "^4.1.1",
+
+        "missive": "^3.0.0",
+        "multicast-dns": "^6.1.1",
+        "network-address": "^1.1.2",
+        "tls": "0.0.1",
+
+        "redis": "^2.8.0",
+
+        "babelify": "^7.3.0",
+        "browserify": "^14.4.0",
+        "bulk-require": "^1.0.1",
+        "clean-css": "^4.1.9",
+        "concat-stream": "^1.6.0",
+        "convert-source-map": "^1.5.0",
+        "cssnano": "^3.10.0",
+        "envify": "^4.1.0",
+        "lodash": "^4.17.4",
+        "lru-cache": "^4.1.1",
+        "minimatch": "^3.0.4",
+        "node-sass": "^4.5.3",
+        "postcss": "^6.0.12",
+        "postcss-selector-parser": "^2.2.3",
+        "rsvp": "^4.0.1",
+        "sane": "^2.2.0",
+        "sockjs-client": "^1.1.4",
+        "source-map": "^0.5.7",
+        "static-module": "^1.5.0",
+        "synchd": "^1.0.2",
+        "through2": "^2.0.3",
+        "uglify-es": "^3.1.2",
+        "vue": "^2.4.4",
+        "vue-meta": "^1.2.0",
+        "vue-server-renderer": "^2.4.4",
+        "vue-template-compiler": "^2.4.4",
+        "watchify": "^3.9.0",
+
+        "body-parser": "^1.18.2",
+        "connect-timeout": "^1.9.0",
+        "cookie-parser": "^1.4.3",
+        "cors": "^2.8.4",
+        "express": "^4.15.5",
+        "google_authenticator": "^1.0.6",
+        "helmet": "^3.8.1",
+        "hi-base32": "^0.3.0",
+        "method-override": "^2.3.9",
+        "mime-types": "^2.1.17",
+        "recaptcha2": "^1.3.2",
+        "sane": "^2.2.0",
+        "sockjs": "^0.3.18",
+        "spdy": "^3.4.7",
+        "xxhashjs": "^0.2.1"
+    },
+    "engines": {
+        "node": ">=7.0.0"
+    },
+    "devDependencies": {},
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/SachaSkyhark/Core-Server.git"
+    },
+    "keywords": [
+        "Core-Server",
+        "Vue",
+        "Server",
+        "api"
+      ],
+    "bugs": {
+        "url": "https://github.com/SachaSkyhark/Core-Server/issues"
+    },
+    "homepage": "https://github.com/SachaSkyhark/Core-Server#readme"
+}

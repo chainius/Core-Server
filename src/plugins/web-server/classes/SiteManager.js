@@ -57,7 +57,8 @@ class SiteManager
         }
         catch (e)
         {
-            console.error(e);
+            if(e.code !== 'ENOENT')
+                console.error(e);
         }
 
         return {};

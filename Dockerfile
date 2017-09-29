@@ -13,5 +13,6 @@ EXPOSE 443
 #--------------------------------------------------------------------------------------
 
 COPY ./ /var/core-server
+RUN rm -r /var/core-server/src/node_modules /var/core-server/src/plugins/*/node_modules
 RUN ln -s /var/core-server/core-server /usr/bin/core-server
 RUN cd /var/core-server/src && npm install && core-server --install

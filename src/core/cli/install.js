@@ -20,9 +20,11 @@ function spawn(cwd) {
     });
 }
 
-module.exports = function(disableRootInstall) {
-    spawn(process.pwd());
-    spawn(process.cwd());
+module.exports = function(value) {
+    if(value !== 'plugins') {
+        spawn(process.pwd());
+        spawn(process.cwd());
+    }
 
     for(var path in plugins.loadedPlugins) {
         spawn(path);

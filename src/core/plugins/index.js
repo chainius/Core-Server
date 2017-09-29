@@ -48,7 +48,7 @@ class PluginSystem {
         }
 
         if(!path)
-            path = Path.join(process.pwd(), 'plugins', name);
+            path = Path.join(process.pwd(), 'src', 'plugins', name);
 
         this.registerPath(path);
     }
@@ -162,7 +162,7 @@ class PluginSystem {
 
         //ToDo load git repositories
 
-        this.loadFolderPlugins(Path.join(process.pwd(), 'plugins'), config);
+        this.loadFolderPlugins(Path.join(process.pwd(), 'src', 'plugins'), config);
         this.loadFolderPlugins(Path.join(process.cwd(), 'plugins'), config);
 
         try {
