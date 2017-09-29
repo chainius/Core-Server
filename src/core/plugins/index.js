@@ -110,9 +110,11 @@ class PluginSystem {
                     BaseClass = this.createHeritedClass(BaseClass, this.loadedPlugins[key].name + '/' + className, className);
                 }
                 catch(e) {
-                    const err = new Error('[' + this.loadedPlugins[key].name + '] ' + e.message);
-                    err.code = e.code;
-                    throw(err);
+                    //e.message = '[' + this.loadedPlugins[key].name + '/' + className + '] ' + e.message;
+                    //console.error(e);
+                    //const err = new Error('[' + this.loadedPlugins[key].name + '/' + className + '] ' + e.message);
+                    //err.code = e.code;
+                    throw(e);
                 }
             }
         }
