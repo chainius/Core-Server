@@ -11,6 +11,18 @@
         "Resources/CacheObject": null,
         "Resources/CacheStream": null
     },
+    
+    "cli": {
+        "port": {
+            "fake": true,
+            "description": "Specify a startup port for the web server"
+        },
+
+        "threads": {
+            "fake": true,
+            "description": "Specify the number of threads that will be started for the server"
+        }
+    },
 
     "entry": "MasterServer"
 }

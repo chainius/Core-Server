@@ -26,7 +26,6 @@ class CLI {
         const oldCwd    = process.cwd();
         process.cwd     = function() { return Path.resolve(oldCwd, argv.command) };
         process.pwd     = function() { return Path.dirname(process.argv[1]); };
-        process.port    = argv.options.port ? argv.options.port : ((process.env.NODE_ENV === 'production') ? 8085 : 8080);
     }
 
     parseEnvironmentCLI() {

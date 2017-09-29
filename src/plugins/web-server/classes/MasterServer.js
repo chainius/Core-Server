@@ -20,16 +20,17 @@ function getAppVersion(basePath) {
 
 class MasterServer
 {
-    constructor(config) //ToDo config = from file mixed with cli args
+    constructor()
     {
-        this.config           = config || {};
+        //this.config           = config || {};
         this.workers          = [];
         this.roundIncrement   = 0;
         this.balancingMethode = this.handleRoundRobinSocket;
-        this.threads          = this.config.threads || ((process.env.NODE_ENV === 'production') ? require('os').cpus().length : 1);
+        this.threads          = process.options.threads || ((process.env.NODE_ENV === 'production') ? require('os').cpus().length : 1);
         this.isMaster         = true;
 
-        this.start(this.config.port || process.port || 80);
+        if(this.threads > 1 || process.options.forceCluster !== undefined)
+            this.start(process.options.port || 8080);
 
         console.info('Setup using', this.threads, 'threads');
         this.updateWorkers();

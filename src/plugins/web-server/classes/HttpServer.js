@@ -60,6 +60,13 @@ class HttpServer
         {
             this.server = http.createServer(this.app);
         }
+        
+        const threads = parseInt(process.options.threads) || ((process.env.NODE_ENV === 'production') ? require('os').cpus().length : 1);
+        if(threads === 1 && process.options.forceCluster === undefined) {
+            const port = process.options.port || 8080;
+            console.info('Starting server on port', port);
+            this.server.listen(port);
+        }
 
         process.nextTick(function() { _this.setup(); })
 

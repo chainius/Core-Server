@@ -40,7 +40,6 @@ module.exports = function()
         core: {
             production: "Run the core-server in production mode",
             install:    "Install all the dependencies of the core-server & the nested plugins",
-            port:       "Specify a default port for the web plugins",
             help:       "Show the help utility",
             version:    "Show the current nodejs and app version"
         }
