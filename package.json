@@ -1,7 +1,7 @@
 {
     "name": "core-server",
-    "version": "0.1.0",
-    "description": "<p align=\"center\"> <img width=\"100\" src=\"./wiki/img/logo/logo-128.png\" > <br> <b>Core Server</b> </p>",
+    "version": "0.1.1",
+    "description": "CoreServer",
     "main": "src/index.js",
     "bin": "src/index.js",
     "scripts": {

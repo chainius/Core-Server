@@ -9,33 +9,32 @@
 To install Core Server, run the following commands:
 
 ```
-git clone https://github.com/Skyhark-Projects/Core-Server.git core-server
-cd core-server
-bash ./install.sh
+npm install -g core-server
+core-server --init
 ```
 
 ----
 
 # Core Server
 
-**Description**:  
-Core Server helps teams set a standard project structure and workings for all sort of Node projects.  
-  
+**Description**:
+Core Server helps teams set a standard project structure and workings for all sort of Node projects.
+
 We developed Core Server to provide a standard and global project structure for our web platforms developed in-house. We were loosing to much time figuring out a project structure for each seperate project. We open sourced as it may help other developers facing the same problems.
 
-**Technology stack**:  
+**Technology stack**:
 Core Server is based on Node's v10 architecture and has a tight integration with VueJS.
 
-**Status**:  
-Currently used by multiple launched projects!  
-This open-source version is currently not yet production ready.  
-We recently added a CLI and modular plugin system before open sourcing, which still needs testing.  
+**Status**:
+Currently used by multiple launched projects!
+This open-source version is currently not yet production ready.
+We recently added a CLI and modular plugin system before open sourcing, which still needs testing.
 We started versioning since open sourcing the project. [CHANGELOG](CHANGELOG.md).
 
-**Projects using Core Server**  
-- [SkyHark](https://www.skyhark.com/)  
-- [FameBroker](https://www.famebroker.com/)  
-- 3 Projects under an NDA  
+**Projects using Core Server**
+- [SkyHark](https://www.skyhark.com/)
+- [FameBroker](https://www.famebroker.com/)
+- 3 Projects under an NDA
 
 ----
 
@@ -44,12 +43,12 @@ We started versioning since open sourcing the project. [CHANGELOG](CHANGELOG.md)
 **Project folder structure**:
 
 Using this project means that a certain folder structure is desired.
-This can be achieved by running:  
-``` core-server init ```  
+This can be achieved by running:
+``` core-server init ```
 
-The folder structure looks like this:  
+The folder structure looks like this:
 ```
-Project root 
+Project root
 │
 └─── api
 │    └─── ...
@@ -73,11 +72,11 @@ Project root
 │    └─── public-api.json
 │    └─── plugins.json
 │
-└─── package.json  
+└─── package.json
 ```
 To learn more about project setup please take a look at our [Wiki](wiki).
 
-Open up a terminal and make your way to your project root folder an run following command:  
+Open up a terminal and make your way to your project root folder an run following command:
 ``` core-server [--port XXXX] ```
 
 The default port is 8080.
@@ -94,7 +93,7 @@ We hope to see your great changes as contributions to this project.
 
 **Contributions**:
 
-We hope to provide a working project that fits many needs.  
+We hope to provide a working project that fits many needs.
 In return we hope to improve Core Server with the help of the community.
 
 Contributing can be done in many  ways.Instructions on _how_ to contribute scan be found in our [CONTRIBUTING](CONTRIBUTING.md) guide.
