@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 const Path         = require('path');
 const plugins      = require('./core/plugins/index.js');
 const Console      = require('./core/logs/console.js');
