@@ -102,6 +102,7 @@ class ApiCreator {
         context.setTimeout      = setTimeout;
         context.setInterval     = setInterval;
         context.resource_url    = resource_url;
+        context.Buffer          = Buffer;
         //context.ASyncQueue      = ASyncQueue;
 
         context.eval = function(code) {
