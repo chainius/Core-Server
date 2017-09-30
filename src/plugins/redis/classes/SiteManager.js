@@ -35,7 +35,7 @@ class SiteManager extends SuperClass
         }
         catch (e)
         {
-            console.error(e);
+            console.error('{setupRedis}', e);
         }
     }
 
@@ -61,7 +61,7 @@ class SiteManager extends SuperClass
         }
         catch(e)
         {
-            console.error(e);
+            console.error('{broadcastToRedis}', e);
         }
     }
 

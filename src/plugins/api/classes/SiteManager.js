@@ -226,15 +226,15 @@ class SiteManager extends SuperClass
                     Watcher.onFileChange(code.path, function()
                     {
                         console.warn('Api', name, 'changed');
-                        
-                        try {                            
+
+                        try {
                             const nCode = _this.apiCreator.create(path, name);
 
                             if (nCode !== false)
                                 _this.apiCreator.apis[name] = nCode.handler;
-                            
+
                         } catch(e) {
-                            console.error(e);
+                            console.error('{autoCreateApi-watch}', e);
                         }
                     });
 
@@ -243,7 +243,7 @@ class SiteManager extends SuperClass
             }
             catch (e)
             {
-                console.error(e);
+                console.error('{autoCreateApi}', e);
             }
         }
     }
@@ -299,7 +299,7 @@ class SiteManager extends SuperClass
             function handleResult(result)
             {
                 if(req.timedout) {
-                    console.error(path, 'Response received after timeout');
+                    console.error('{handleApi-Result}', path, 'Response received after timeout');
                     return;
                 }
 
@@ -310,7 +310,7 @@ class SiteManager extends SuperClass
                 }
                 catch (e)
                 {
-                    console.error(e);
+                    console.error('{handleApi-Result}', e);
                     _this.sendErrorPage(500, req, res);
                 }
             }
@@ -352,7 +352,7 @@ class SiteManager extends SuperClass
                 }
                 catch (e)
                 {
-                    console.error(e);
+                    console.error('{handleApi}', e);
                 }
 
                 if (typeof (err) === 'object' || typeof (err) === 'array')
@@ -363,7 +363,7 @@ class SiteManager extends SuperClass
                     }
                     else if (err.message !== undefined)
                     {
-                        console.error(err);
+                        console.error('{handleApi}', err);
                         return handleResult({ error: err.message });
                     }
                 }
@@ -377,7 +377,7 @@ class SiteManager extends SuperClass
         }
         catch (e)
         {
-            console.error(e);
+            console.error('{handleApi}', e);
             this.sendErrorPage(500, req, res);
         }
 

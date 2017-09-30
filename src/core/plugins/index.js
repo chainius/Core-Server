@@ -81,7 +81,8 @@ class PluginSystem {
             if(this.loadedPlugins[key].classes[name] !== null) {
                 //ToDo find the highest superclass in order to show to right needed class in the warning
                 console.warn('Warning a plugin requires slow down the process, please change:', plugin + '/' + name, 'to:', this.loadedPlugins[key].classes[name]);
-                return this.getClass(this.loadedPlugins[key].classes[name]);
+                const FullName = this.loadedPlugins[key].classes[name].split('/');
+                return this.createClass(FullName.shift(), FullName.join('/'));
             }
 
             const path      = Path.join(key, 'classes', name + '.js');
