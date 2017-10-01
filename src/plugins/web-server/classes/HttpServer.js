@@ -209,6 +209,7 @@ class HttpServer
 
         try
         {
+            res.setHeader('Content-Type', 'text/html; charset=utf-8');
             res.status(code);
             res.send('An error occured on the server (code: ' + code + ')');
         }
