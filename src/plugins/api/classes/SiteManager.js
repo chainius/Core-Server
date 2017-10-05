@@ -1,6 +1,7 @@
 'use strict';
 
 const Path          = require('path');
+const minimatch     = require("minimatch")
 const ApiCreator    = plugins.require('api/ApiCreator');
 const Watcher       = plugins.require('web-server/Watcher');
 
@@ -42,8 +43,21 @@ class SiteManager extends SuperClass
     */
     getPermissionsConfig(api)
     {
+        const config = this.getConfig('public-api');
+        const globsConfig = {};
+
+        for(var key in config) {
+            if(config[key].filter) {
+                const res = config[key].filter(function(obj) { return obj.indexOf('*') !== -1 });
+
+                if(res.length > 0)
+                    globsConfig[key] = res;
+            }
+        }
+
         return {
-            config: this.getConfig('public-api'),
+            config: config,
+            globsConfig: globsConfig,
             api: api
         };
     }
@@ -94,6 +108,7 @@ class SiteManager extends SuperClass
         if (config.api)
             api = config.api;
 
+        const globsConfig = config.globsConfig || {};
         config = config.config;
         if (!config)
             return false;
@@ -103,7 +118,21 @@ class SiteManager extends SuperClass
             if (config[field] === undefined)
                 return false;
 
-            return (config[field].indexOf(api) !== -1);
+            if(config[field].indexOf(api) !== -1)
+                return true;
+
+            if(!globsConfig[field])
+                return false;
+
+            const subGlob = globsConfig[field];
+            for(var key in subGlob) {
+                if(minimatch(api, subGlob[key])) {
+                    config[field].push(api); //Does not require a match test next time, ToDo check if api exists before add to array
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         if (checkConfig('everyone'))
