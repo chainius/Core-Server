@@ -101,21 +101,24 @@ class PluginSystem {
             if(!this.loadedPlugins[key].classes)
                 continue;
 
-            if(this.loadedPlugins[key].classes[className] === name) {
-                try {
-                    //Create herited class
-                    const path        = Path.join(key, 'classes', className + '.js');
-                    BaseClass         = CustomRequire.plugin(path, BaseClass);
+            for(var subClass in this.loadedPlugins[key].classes)
+            {
+                if(this.loadedPlugins[key].classes[subClass] === name) {
+                    try {
+                        //Create herited class
+                        const path        = Path.join(key, 'classes', subClass + '.js');
+                        BaseClass         = CustomRequire.plugin(path, BaseClass);
 
-                    //Continue creating class with sub herited classes
-                    BaseClass = this.createHeritedClass(BaseClass, this.loadedPlugins[key].name + '/' + className, className);
-                }
-                catch(e) {
-                    //e.message = '[' + this.loadedPlugins[key].name + '/' + className + '] ' + e.message;
-                    //console.error(e);
-                    //const err = new Error('[' + this.loadedPlugins[key].name + '/' + className + '] ' + e.message);
-                    //err.code = e.code;
-                    throw(e);
+                        //Continue creating class with sub herited classes
+                        BaseClass = this.createHeritedClass(BaseClass, this.loadedPlugins[key].name + '/' + className, className);
+                    }
+                    catch(e) {
+                        //e.message = '[' + this.loadedPlugins[key].name + '/' + className + '] ' + e.message;
+                        //console.error(e);
+                        //const err = new Error('[' + this.loadedPlugins[key].name + '/' + className + '] ' + e.message);
+                        //err.code = e.code;
+                        throw(e);
+                    }
                 }
             }
         }

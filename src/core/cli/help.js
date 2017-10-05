@@ -41,7 +41,8 @@ module.exports = function()
             production: "Run the core-server in production mode",
             install:    "Install all the dependencies of the core-server & the nested plugins",
             help:       "Show the help utility",
-            version:    "Show the current nodejs and app version"
+            version:    "Show the current nodejs and app version",
+            test:       "Run testes using mocha"
         }
     };
 
