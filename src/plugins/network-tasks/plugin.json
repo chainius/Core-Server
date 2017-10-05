@@ -2,7 +2,12 @@
     "depencies": [ ],
 
     "classes": {
-        "SiteManager":  "web-server/SiteManager",
-        "ApiEnvironment": "api/ApiEnvironment"
+        "MasterServer":  "web-server/MasterServer",
+        "SiteManager":   "web-server/SiteManager",
+        "ApiEnvironment": "api/ApiEnvironment",
+        "AirswarmTls":   null,
+        "NetworkDiscovery": null,
+        "TasksManager":   null,
+        "NetWorker":      null
     }
 }

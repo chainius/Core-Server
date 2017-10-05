@@ -1,265 +1,255 @@
-const airswarm = plugins.require('network-tasks/AirswarmTls')
-const missive  = require('missive');
-const fs       = require('fs');
-const Path     = require('path');
-const EventEmitter = require('events');
+const cluster       = require('cluster');
+const EventEmitter  = require('events');
+const fs            = require('fs');
+const Path          = require('path');
+const airswarm      = plugins.require('network-tasks/AirswarmTls');
+const TasksManager  = plugins.require('network-tasks/TasksManager');
+const NetWorker     = plugins.require('network-tasks/NetWorker');
 
 class NetworkDiscovery extends EventEmitter {
 
-    constructor(identifier) {
+    constructor(identifier) {
         super();
 
-        const _this = this;
+        this.threads              = 0;
+        this.workers              = [];
+        this.tasksManager         = new TasksManager(this);
         this.incrementalWorkIndex = 0;
-        this.workers = [];
-        this.workerCallbacks = {};
-        this.internalCallbacks = {};
 
-        if(identifier) {
-            const tlsOptions = {
-                key: fs.readFileSync(Path.join(process.cwd(), 'ssl', 'cert-key.pem')),
-                cert: fs.readFileSync(Path.join(process.cwd(), 'ssl', 'cert.pem')),
-                requestCert: true,
-                ca: fs.readFileSync(Path.join(process.cwd(), 'ssl', 'ca.pem'))
-            };
+        console.info('Seting up network discovery with identifier', identifier);
 
-            this.server = airswarm(tlsOptions, identifier, function(sock) {
-                try {
-                    _this.onSocket(sock);
-                    _this.emit('socket', sock);
-                }
-                catch(e) {
-                    console.error(e);
-                }
-            });
-        }
+        const tlsOptions = {
+            key: fs.readFileSync(Path.join(process.cwd(), 'ssl', 'cert-key.pem')),
+            cert: fs.readFileSync(Path.join(process.cwd(), 'ssl', 'cert.pem')),
+            requestCert: true,
+            ca: fs.readFileSync(Path.join(process.cwd(), 'ssl', 'ca.pem'))
+        };
 
-        this.on('threads', this.onThreads);
-        this.on('task', this.onTask);
-        this.on('task-response', this.onTaskResponse);
-    }
-
-    getPeers() {
-        if(!this.server)
-            return [];
-
-        return this.server.peers;
-    }
-
-    onSocket(socket) {
-        const parse  = missive.parse();
-        const encode = missive.encode();
-        const _this  = this;
-
-        encode.pipe(socket);
-        socket.pipe( parse ).on( 'message', obj => {
-            if(obj.type)
-            {
-                _this.emit(obj.type, socket, obj);
+        this.server = airswarm(tlsOptions, identifier, function(sock) {
+            try {
+                this.onSocket(sock);
+                this.emit('socket', sock);
             }
-            else if(obj.threads) {
-                _this.onThreads(socket, obj.threads);
+            catch(e) {
+                console.error(e);
             }
-        });
-
-        socket.encoder = encode;
-        socket.workerThreads = socket.workerThreads || 1;
-
-        this.sendToSocket(socket, {
-            threads: _this.workers.length
-        });
+        }.bind(this));
     }
 
-    onThreads(socket, threads) {
-        const val = parseInt(threads);
+    registerWorker(worker) {
+        this.threads++;
 
-        if(!isNaN(val))
-            socket.workerThreads = threads;
-    }
+        const netWorker = new NetWorker(this);
+        netWorker.setWorker(worker);
 
-    onTask(socket, cmd) {
-        const _this = this;
-        this.sendInternalTask(cmd.name, cmd.task, cmd.thread || 1, cmd.id).then(function(data)
-        {
-            _this.sendToSocket(socket, {
-                type: 'task-response',
-                isError: false,
-                id:   cmd.id,
-                data: data
-            });
-        })
-        .catch(function(err) {
-            _this.sendToSocket(socket, {
-                type: 'task-response',
-                isError: true,
-                id:   cmd.id,
-                data: err
-            });
-        });
-    }
-
-    onTaskResponse(socket, cmd) {
-        try {
-            if(this.workerCallbacks[cmd.id])
-                this.workerCallbacks[cmd.id](cmd.data, cmd.isErr);
-        } catch(e) {
-            console.error(e);
-        }
-    }
-
-    sendToSocket(socket, message) {
-        try {
-            socket.encoder.write(message);
-        }
-        catch(e) {
-            console.error(e);
-        }
-    }
-
-    sendTask(name, task) {
-        var index = this.incrementalWorkIndex;
-        this.incrementalWorkIndex++;
-
-        const id  = index + '_' + Math.random() + 'work' + Math.random();
-
-        if(index < this.workers.length) {
-            return this.sendInternalTask(name, task, index, id);
-        }
-
-        index -= this.workers.length;
-
-        const peers  = this.getPeers();
-        var executed = false;
-
-        for(var i=0; i<peers.length; i++) {
-            if(peers[i].workerThreads > index) {
-                this.sendToSocket(peers[i], {
-                    type:   'task',
-                    id:     id,
-                    name:   name,
-                    thread: index,
-                    task:   task
-                });
-
-                executed = true;
-                break;
-            }
-
-            index -= peers[i].workerThreads;
-        }
-
-        if(!executed)
-        {
-            this.incrementalWorkIndex = 0;
-
-            if(this.workers.length === 0 && peers.length === 0)
-                return new Promise(function(resolve, reject) { reject('No workers found'); });
-
-            return this.sendTask(name, task);
-        }
-
-        const _this = this;
-        return new Promise(function(resolve, reject) {
-            _this.workerCallbacks[id] = function(data, isError) {
-
-                if(isError)
-                    reject(data);
-                else
-                    resolve(data);
-
-                delete _this.workerCallbacks[id];
-            };
-        });
-    }
-
-    sendInternalTask(name, task, threadIndex, id) {
-        if(!threadIndex || threadIndex < 0 || threadIndex >= this.workers.length)
-            threadIndex = 0;
-
-        //Return promise
-        const _this = this;
-        return new Promise(function(resolve, reject) {
-            if(!task)
-                return reject('The requried task could not be parsed');
-            if(_this.workers.length === 0)
-                return reject('No internal workers found');
-            if(!_this.workers[threadIndex])
-                return reject('The required worker could not be found');
-
-            _this.workers[threadIndex].sendMessage({
-                type: 'discovery-task',
-                name: name,
-                id:   id,
-                task: task
-            });
-
-            _this.internalCallbacks[id] = function(data, isError) {
-                delete _this.internalCallbacks[id];
-
-                if(isError)
-                    reject(data);
-                else
-                    resolve(data);
-            }
-        });
-    }
-
-    handleTaskResponse(data) {
-        if(this.internalCallbacks[data.id]) {
-            this.internalCallbacks[data.id](data.data, data.isError);
-        }
-    }
-
-    handleTaskRequire(msg, worker) {
-        return this.sendTask(msg.name, msg.task).then(function(data) {
-            worker.sendMessage({
-                type: 'task-response',
-                name: msg.name,
-                id:   msg.id,
-                isError: false,
-                data: data
-            });
-        })
-        .catch(function(err) {
-            worker.sendMessage({
-                type: 'task-response',
-                name: msg.name,
-                id:   msg.id,
-                isError: true,
-                data: err
-            });
-        });
-    }
-
-    //--------------
-    //Internal cluster workers..?
-
-    onWorkerMessage(msg, worker) {
-        if(!msg)
-            return;
-
-        if(msg.type === 'task-response')
-            this.handleTaskResponse(msg);
-        else if(msg.type === 'task')
-            this.handleTaskRequire(msg, worker);
-    }
-
-    reigsterWorker(worker) {
-        this.workers.push(worker);
-
-        const _this = this;
-        worker.on('message', function(msg) {
-            _this.onWorkerMessage(msg, worker);
-        });
+        this.workers.push(netWorker);
 
         const peers = this.getPeers();
 
-        for(var key in peers) {
-            this.sendToSocket(peers[key], {
-                threads: this.workers.threads
+        for(var key in peers)
+            peers[key].send('threads', this.threads);
+    }
+
+    onSocket(socket) {
+        const netWorker = new NetWorker(this);
+        netWorker.setSocket(socket);
+
+        this.workers.push(netWorker);
+
+        socket.once('close', function() {
+            const index = this.workers.indexOf(netWorker);
+
+            if (index > -1)
+                this.workers.splice(index, 1);
+        }.bind(this));
+
+        netWorker.send('threads', this.threads);
+    }
+
+    getPeers() {
+        return this.workers.filter(function(obj) {
+            return obj.socket ? true : false;
+        });
+    }
+
+    getInternalWorkers() {
+        return this.workers.filter(function(obj) {
+            return obj.worker ? true : false;
+        });
+    }
+
+    //------------------------------
+
+    getThreads() {
+        if(this.workers.length === 0)
+            return 0;
+
+        if(this.workers.length === 1)
+            return this.workers[0].threads;
+
+        return this.workers.map(function(obj) {
+            return obj.threads;
+        }).reduce(function(a, b) {
+            return a + b;
+        });
+    }
+
+    getNextSocket() {
+        const threads = this.getThreads();
+
+        if(threads === 0)
+            return null;
+
+        const index   = this.incrementalWorkIndex >= threads ? 0 : this.incrementalWorkIndex;
+        this.incrementalWorkIndex = index + 1;
+
+        var i = 0;
+        for(var key in this.workers) {
+            if(this.workers[key].threads + i > index)
+                return this.workers[key];
+
+            i += this.workers[key].threads;
+        }
+
+        return null;
+    }
+
+    //------------------------------
+
+    distributeJob(name, params) {
+        return this.jobsManager.distribute(name, params);
+    }
+
+    distributeTask(name, params) {
+        return this.tasksManager.distribute(name, params);
+    }
+
+    //------------------------------
+
+}
+
+
+
+
+//---------------------------------------------------
+
+class SlaveDiscovery extends EventEmitter {
+
+    constructor() {
+        super();
+        this.taskHandlers   = {};
+        this.wrapperWaiters = {};
+
+        process.on('message', function(msg) {
+            if(typeof(msg) === 'string') {
+                try {
+                    msg = JSON.parse(msg);
+                } catch(e) {
+                    return;
+                }
+            }
+
+            if(msg.event)
+                this.emit(msg.event, msg.argv);
+        }.bind(this));
+
+        this.on('task', this.handleTask);
+        this.on('task-response', this.handleWrapperResponse);
+    }
+
+    send(event, argv) {
+        this.emit(event, argv);
+        process.send({
+            event: event,
+            argv: argv
+        });
+    }
+
+    handleTask(argv) {
+        const _this = this;
+
+        function sendTaskResult(type, data) {
+            const p = { id: argv.id };
+            p[type] = data;
+
+            _this.send('task-response', p);
+        }
+
+        if(!this.taskHandlers[argv.name])
+            return sendTaskResult('error', 'No task handler found for the required task: ' + argv.name);
+
+        const result = this.taskHandlers[argv.name](argv.params || {});
+
+        if(!result.then)
+            return sendTaskResult('result', result);
+
+        result.then(function(obj) {
+            sendTaskResult('result', obj);
+        }).catch(function(err) {
+            if(err.error)
+                return sendTaskResult('error', err.error);
+            else if(err.message)
+                return sendTaskResult('error', err.message);
+
+            sendTaskResult('error', err);
+        })
+    }
+
+    onTask(name, cb) {
+        this.taskHandlers[name] = cb;
+    }
+
+    //-----------------
+
+    createMasterWrapper(event, subName, params) {
+        const _this = this;
+        return new Promise(function(resolve, reject) {
+            const id  = event + '_' + subName + '_' + Math.random() + 'work' + Math.random();
+
+            _this.wrapperWaiters[id] = function(argv) {
+                if(argv.error)
+                    reject(argv.error);
+                else
+                    resolve(argv.result);
+            }
+
+            _this.send(event, {
+                id:     id,
+                name:   subName,
+                params: params
             });
+        });
+    }
+
+    distributeTask(name, params) {
+        return this.createMasterWrapper('task', name, params);
+    }
+
+    distributeJob(name, params) {
+        return this.createMasterWrapper('job', name, params);
+    }
+
+    handleWrapperResponse(argv) {
+        if(argv.id)
+        {
+            if(this.wrapperWaiters[argv.id])
+                this.wrapperWaiters[argv.id](argv);
         }
     }
+}
+
+
+
+//---------------------------------------------------
+
+NetworkDiscovery.Create = function(identifier) {
+    if(cluster.isMaster)
+    {
+        const req = plugins.require('network-tasks/NetworkDiscovery');
+        return new req(identifier);
+    }
+
+    return new SlaveDiscovery();
 }
 
 module.exports = NetworkDiscovery;

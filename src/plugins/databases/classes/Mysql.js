@@ -426,7 +426,6 @@ class Mysql
                             reject(stack);
                         }
                         else
-
                             resolve({result: results, fields: fields});
                     });
                 }
@@ -449,7 +448,24 @@ class Mysql
         {
             _this.queryWithFields(sql, vars, console).then(function(data)
             {
-                resolve(data.result);
+                if(!data.result.map)
+                    return resolve(data.result);
+
+                const fieldTypes = {};
+
+                for(var key in data.fields) {
+                    const f = data.fields[key];
+                    fieldTypes[ f.name ] = f.columnType;
+                }
+
+                resolve(data.result.map(function(obj) {
+                    for(var key in obj) {
+                        if(fieldTypes[key] === 246)
+                            obj[key] = parseFloat(obj[key]);
+                    }
+
+                    return obj;
+                }));
             })
             .catch(function(err)
             {

@@ -282,6 +282,7 @@ class Worker extends EventEmitter
             if (!that.isLastPid(this))
                 return;
 
+            that.emit('restart', that);
             that.unbindWorker(that.worker);
             that.initWorker();
         });

@@ -1,7 +1,7 @@
 const multicastdns   = require('multicast-dns')
 const net            = require('tls')
 const addr           = require('network-address');
-const Crypter        = plugins.require('web-server/Require');
+const Crypter        = plugins.require('web-server/Crypter');
 const iv             = 'core-server@12$3';
 
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
