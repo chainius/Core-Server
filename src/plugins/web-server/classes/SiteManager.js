@@ -123,6 +123,7 @@ class SiteManager
     {
         try
         {
+            res.setHeader('Content-Type', 'text/html; charset=utf-8');
             res.status(code);
             res.send('An error occured on the requested page (code: ' + code + ')');
         }

@@ -103,6 +103,7 @@ class PagesManager
         try
         {
             res.status(code);
+            res.setHeader('Content-Type', 'text/html; charset=utf-8');
             res.write('An unexpected error occured');
             res.end();
         }
