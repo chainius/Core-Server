@@ -143,11 +143,35 @@ module.exports = function airswarm(tlsOptions, name, opts, fn) {
             });
         }
 
-        server.createConnection = connect;
+        server.createConnection = function(host, port) {
+            var remoteId = host + ':' + port
+            if (remoteId === id) return
+            if (connections[remoteId]) return
+
+            const options = JSON.parse(JSON.stringify(tlsOptions));
+            options.host = host;
+            options.port = port;
+
+            var sock = connections[remoteId] = net.connect(port, options);
+
+            sock.on('error', function (err) {
+                console.error(err);
+                sock.destroy()
+            })
+
+            sock.on('close', function () {
+                delete connections[remoteId]
+            })
+
+            auth(sock, function() {
+                track(sock);
+            });
+        };
     })
 
-    if (fn) server.on('peer', fn)
-    server.listen(process.options.discoveryPort || process.env.discoveryPort || 0);
+    if (fn) server.on('peer', fn);
+
+    server.listen(parseFloat(process.options.discoveryPort || process.env.discoveryPort || 0));
 
     return server
 }

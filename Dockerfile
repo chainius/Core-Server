@@ -7,7 +7,7 @@ RUN mkdir -p /var/www
 
 WORKDIR /var/www
 CMD core-server /var/www --production
-EXPOSE 80
+EXPOSE 8080
 EXPOSE 443
 
 #--------------------------------------------------------------------------------------
