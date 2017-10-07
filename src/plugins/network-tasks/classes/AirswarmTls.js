@@ -1,25 +1,79 @@
-const multicastdns   = require('multicast-dns')
-const net            = require('tls')
-const addr           = require('network-address');
-const Crypter        = plugins.require('web-server/Crypter');
-const iv             = 'core-server@12$3';
+const Discovery = plugins.require('network-tasks/Discovery');
+const net       = require('tls');
+const Crypter   = plugins.require('web-server/Crypter');
+const iv        = 'core-server@12$3';
 
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+class AirswarmTls {
 
-module.exports = function airswarm(tlsOptions, name, opts, fn) {
-    if (typeof opts === 'function') return airswarm(tlsOptions, name, null, opts)
-    if (!opts) opts = {}
+    constructor(tlsOptions, identifier, fn) {
+        this.discovery  = new Discovery();
+        this.limit      = Infinity;
+        this.identifier = identifier;
+        this.connections = {};
+        this.tlsOptions = tlsOptions;
 
-    var limit = opts.limit || Infinity
-    var mdns = multicastdns()
-    var connections = {}
+        this.start(tlsOptions);
 
-    function auth(socket, cb) {
-        socket.write(Crypter.encrypt('auth', name, iv));
-        getAuth(socket, cb, 'rauth');
+        const port = this.server.address().port;
+        console.log('Starting airwarm on port', port)
+        this.discovery.local(identifier, port);
+
+        if(process.options.discoveryPort || process.env.discoveryPort) {
+            this.discovery.listenKubernetes({
+                port: port
+            });
+        }
+
+        if (fn)
+            this.server.on('peer', fn);
     }
 
-    function getAuth(socket, cb, msgR) {
+    start(tlsOptions) {
+        this.server = net.createServer(tlsOptions, function (sock) {
+            sock.on('error', function (err) {
+                sock.destroy(err)
+            })
+
+            this.getAuth(sock, function() {
+                this.track(sock);
+            }.bind(this), 'auth');
+        }.bind(this))
+
+        this.server.peers = []
+
+        this.server.on('error', function(err) {
+            console.error(err);
+        }).on('clientError', function(err, conn) {
+            console.error('clientError', err);
+        });
+
+        this.server.on('listening', function () {
+            this.discovery.on('addr', function(host, port) {
+                this.connect(host, port);
+            }.bind(this));
+        }.bind(this));
+
+        this.server.listen(parseFloat(process.options.discoveryPort || process.env.discoveryPort || 0));
+    }
+
+    track(sock) {
+        if (this.server.peers.length >= this.limit)
+            return sock.destroy();
+
+        this.server.peers.push(sock)
+        sock.on('close', function () {
+            this.server.peers.splice(this.server.peers.indexOf(sock), 1)
+        }.bind(this));
+
+        this.server.emit('peer', sock);
+    }
+
+    auth(socket, cb) {
+        socket.write(Crypter.encrypt('auth', this.identifier, iv));
+        this.getAuth(socket, cb, 'rauth');
+    }
+
+    getAuth(socket, cb, msgR) {
         const timeOut = setTimeout(function() {
             socket.destroy('auth not received');
         }, 5000);
@@ -28,11 +82,11 @@ module.exports = function airswarm(tlsOptions, name, opts, fn) {
             clearTimeout(timeOut);
 
             try {
-                const res = Crypter.decrypt(data.toString(), name, iv);
+                const res = Crypter.decrypt(data.toString(), this.identifier, iv);
 
                 if(res === msgR) {
                     if(msgR === 'auth')
-                        socket.write(Crypter.encrypt('rauth', name, iv));
+                        socket.write(Crypter.encrypt('rauth', this.identifier, iv));
 
                     cb(socket);
                 } else {
@@ -41,137 +95,34 @@ module.exports = function airswarm(tlsOptions, name, opts, fn) {
             } catch(e) {
                 socket.destroy(e);
             }
-        })
+        }.bind(this))
     }
 
-    var server = net.createServer(tlsOptions, function (sock) {
+    connect(host, port, force) {
+        const remoteId = host + ':' + port;
+        if (remoteId === this.discovery.id) return;
+        if (this.connections[remoteId]) return;
+        if (remoteId < this.discovery.id) return this.discovery.dnsRespond();
+
+        const options = JSON.parse(JSON.stringify(this.tlsOptions));
+        options.host = host;
+        options.port = port;
+
+        const sock = this.connections[remoteId] = net.connect(port, options);
+
         sock.on('error', function (err) {
-            sock.destroy(err)
+            console.error(err);
+            sock.destroy()
         })
 
-        getAuth(sock, function() {
-            track(sock)
-        }, 'auth');
-    })
-
-    server.peers = []
-
-    function track(sock) {
-        if (server.peers.length >= limit) return sock.destroy()
-        server.peers.push(sock)
         sock.on('close', function () {
-            server.peers.splice(server.peers.indexOf(sock), 1)
-        })
-        server.emit('peer', sock)
+            delete this.connections[remoteId]
+        }.bind(this));
+
+        this.auth(sock, function() {
+            this.track(sock);
+        }.bind(this));
     }
-
-    server.on('error', function(err) {
-        console.error(err);
-    }).on('clientError', function(err, conn) {
-      console.error('clientError', err);
-    });
-
-    server.on('listening', function () {
-        var host = addr()
-        var port = server.address().port
-        var id = host + ':' + port
-
-        mdns.on('query', function (q) {
-            for (var i = 0; i < q.questions.length; i++) {
-                var qs = q.questions[i]
-                if (qs.name === name && qs.type === 'SRV') return respond()
-            }
-        })
-
-        mdns.on('response', function (r) {
-            for (var i = 0; i < r.answers.length; i++) {
-                var a = r.answers[i]
-                if (a.name === name && a.type === 'SRV') connect(a.data.target, a.data.port)
-            }
-        })
-
-        update()
-        var interval = setInterval(update, 3000)
-
-        server.on('close', function () {
-            clearInterval(interval)
-        })
-
-        function respond() {
-            mdns.response([{
-                name: name,
-                type: 'SRV',
-                data: {
-                    port: port,
-                    weigth: 0,
-                    priority: 10,
-                    target: host
-                }
-      }])
-        }
-
-        function update() {
-            if (server.peers.length < limit) mdns.query([{
-                name: name,
-                type: 'SRV'
-            }])
-        }
-
-        function connect(host, port) {
-            var remoteId = host + ':' + port
-            if (remoteId === id) return
-            if (connections[remoteId]) return
-            if (remoteId < id) return respond()
-
-            const options = JSON.parse(JSON.stringify(tlsOptions));
-            options.host = host;
-            options.port = port;
-
-            var sock = connections[remoteId] = net.connect(port, options);
-
-            sock.on('error', function (err) {
-                console.error(err);
-                sock.destroy()
-            })
-
-            sock.on('close', function () {
-                delete connections[remoteId]
-            })
-
-            auth(sock, function() {
-                track(sock);
-            });
-        }
-
-        server.createConnection = function(host, port) {
-            var remoteId = host + ':' + port
-            if (remoteId === id) return
-            if (connections[remoteId]) return
-
-            const options = JSON.parse(JSON.stringify(tlsOptions));
-            options.host = host;
-            options.port = port;
-
-            var sock = connections[remoteId] = net.connect(port, options);
-
-            sock.on('error', function (err) {
-                console.error(err);
-                sock.destroy()
-            })
-
-            sock.on('close', function () {
-                delete connections[remoteId]
-            })
-
-            auth(sock, function() {
-                track(sock);
-            });
-        };
-    })
-
-    if (fn) server.on('peer', fn);
-
-    server.listen(parseFloat(process.options.discoveryPort || process.env.discoveryPort || 0));
-
-    return server
 }
+
+module.exports = AirswarmTls;

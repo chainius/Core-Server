@@ -1,6 +1,6 @@
 {
   "name": "core-server",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "CoreServer",
   "main": "src/index.js",
   "bin": "src/index.js",
@@ -43,6 +43,7 @@
     "is-valid-path": "^0.1.1",
     "jimp": "^0.2.28",
     "jsesc": "^2.5.1",
+    "kubernetes-client": "^3.16.0",
     "lodash": "^4.17.4",
     "lru-cache": "^4.1.1",
     "method-override": "^2.3.9",

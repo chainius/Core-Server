@@ -5,9 +5,15 @@
         "MasterServer":  "web-server/MasterServer",
         "SiteManager":   "web-server/SiteManager",
         "ApiEnvironment": "api/ApiEnvironment",
-        "AirswarmTls":   null,
+        "Discovery":      null,
+        "AirswarmTls":    null,
         "NetworkDiscovery": null,
         "TasksManager":   null,
         "NetWorker":      null
+    },
+
+    "cli": {
+        "discovery": "Enable the discovery service with a specified identifier",
+        "discoveryPort": "Port that will be used for the network tasks"
     }
 }

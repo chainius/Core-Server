@@ -30,11 +30,17 @@ class MasterServer extends SuperClass
         if(this.networkDiscovery)
             return true;
 
-        const config = this.getConfig('servers');
+        var discoveryIdentifier = process.discovery;
 
-        if(config['network-discover']) {
+        if(!discoveryIdentifier) {
+            const config = this.getConfig('servers');
+            discoveryIdentifier = config['network-discovery'];
+        }
+
+
+        if(discoveryIdentifier) {
             const NetworkDiscovery = plugins.require('network-tasks/NetworkDiscovery');
-            this.networkDiscovery  = NetworkDiscovery.Create(config['network-discover']);
+            this.networkDiscovery  = NetworkDiscovery.Create(discoveryIdentifier);
             return true;
         }
 

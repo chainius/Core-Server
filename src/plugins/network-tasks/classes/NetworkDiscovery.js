@@ -25,7 +25,7 @@ class NetworkDiscovery extends EventEmitter {
             ca: fs.readFileSync(Path.join(process.cwd(), 'ssl', 'ca.pem'))
         };
 
-        this.server = airswarm(tlsOptions, identifier, function(sock) {
+        this.server = new airswarm(tlsOptions, identifier, function(sock) {
             try {
                 this.onSocket(sock);
                 this.emit('socket', sock);
@@ -53,6 +53,8 @@ class NetworkDiscovery extends EventEmitter {
     }
 
     onSocket(socket) {
+        console.log('New worker connected:', socket.remoteAddress);
+
         const netWorker = new NetWorker(this);
         netWorker.setSocket(socket);
 
