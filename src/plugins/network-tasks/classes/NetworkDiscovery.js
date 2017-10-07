@@ -143,8 +143,8 @@ class NetworkDiscovery extends EventEmitter {
         return this.getPeers().map(function(obj) {
             return obj.socket.nonce < id;
         }).filter(function(obj) {
-            return !obj;
-        }).length > 0;
+            return obj;
+        }).length === 0;
     }
 
     checkMasterFromWorker(params, worker) {
