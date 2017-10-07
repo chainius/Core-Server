@@ -142,10 +142,12 @@ module.exports = function airswarm(tlsOptions, name, opts, fn) {
                 track(sock);
             });
         }
+
+        server.createConnection = connect;
     })
 
     if (fn) server.on('peer', fn)
-    server.listen(0)
+    server.listen(process.options.discoveryPort || process.env.discoveryPort || 0);
 
     return server
 }

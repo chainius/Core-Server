@@ -34,6 +34,8 @@ class NetworkDiscovery extends EventEmitter {
                 console.error(e);
             }
         }.bind(this));
+
+        this.on('connectToWorker', this.connectToWorker);
     }
 
     registerWorker(worker) {
@@ -126,6 +128,10 @@ class NetworkDiscovery extends EventEmitter {
 
     //------------------------------
 
+    connectToWorker(options) {
+        console.log('Connect to worker', options.host + ':' + options.port);
+        this.server.createConnection(options.host, options.port);
+    }
 }
 
 
@@ -235,6 +241,13 @@ class SlaveDiscovery extends EventEmitter {
             if(this.wrapperWaiters[argv.id])
                 this.wrapperWaiters[argv.id](argv);
         }
+    }
+
+    connectToWorker(host, port) {
+        this.send('connectToWorker', {
+            host:   host,
+            port:   port
+        });
     }
 }
 
