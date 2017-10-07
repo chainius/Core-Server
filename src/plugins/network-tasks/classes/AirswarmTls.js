@@ -18,6 +18,8 @@ class AirswarmTls {
         console.log('Starting airwarm on port', port)
         this.discovery.local(identifier, port);
 
+        this.nonce = Crypter.sha1Hex((this.discovery.id + Math.random()).toString());
+
         if(process.options.discoveryPort || process.env.discoveryPort) {
             this.discovery.listenKubernetes({
                 port: port
@@ -56,6 +58,10 @@ class AirswarmTls {
         this.server.listen(parseFloat(process.options.discoveryPort || process.env.discoveryPort || 0));
     }
 
+    getId() {
+        return this.discovery.id;
+    }
+
     track(sock) {
         if (this.server.peers.length >= this.limit)
             return sock.destroy();
@@ -69,7 +75,7 @@ class AirswarmTls {
     }
 
     auth(socket, cb) {
-        socket.write(Crypter.encrypt('auth', this.identifier, iv));
+        socket.write(Crypter.encrypt('auth-' + this.nonce, this.identifier, iv));
         this.getAuth(socket, cb, 'rauth');
     }
 
@@ -84,9 +90,12 @@ class AirswarmTls {
             try {
                 const res = Crypter.decrypt(data.toString(), this.identifier, iv);
 
-                if(res === msgR) {
-                    if(msgR === 'auth')
-                        socket.write(Crypter.encrypt('rauth', this.identifier, iv));
+                if(res.substr(0, msgR.length + 1) === msgR + '-') {
+                    socket.nonce = res.substr(msgR.length + 1);
+
+                    if(msgR === 'auth') {
+                        socket.write(Crypter.encrypt('rauth-' + this.nonce, this.identifier, iv));
+                    }
 
                     cb(socket);
                 } else {

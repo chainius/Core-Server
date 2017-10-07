@@ -13,7 +13,13 @@
     },
 
     "cli": {
-        "discovery": "Enable the discovery service with a specified identifier",
-        "discoveryPort": "Port that will be used for the network tasks"
+        "discovery": {
+            "fake": true,
+            "description": "Enable the discovery service with a specified identifier"
+        },
+        "discoveryPort": {
+            "fake": true,
+            "description": "Port that will be used for the network tasks"
+        }
     }
 }

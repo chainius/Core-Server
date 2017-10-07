@@ -36,6 +36,7 @@ class NetworkDiscovery extends EventEmitter {
         }.bind(this));
 
         this.on('connectToWorker', this.connectToWorker);
+        this.on('isMaster', this.checkMasterFromWorker);
     }
 
     registerWorker(worker) {
@@ -53,12 +54,13 @@ class NetworkDiscovery extends EventEmitter {
     }
 
     onSocket(socket) {
-        console.log('New worker connected:', socket.remoteAddress);
 
         const netWorker = new NetWorker(this);
         netWorker.setSocket(socket);
 
         this.workers.push(netWorker);
+
+        console.log('New worker connected:', socket.remoteAddress);
 
         socket.once('close', function() {
             const index = this.workers.indexOf(netWorker);
@@ -134,6 +136,23 @@ class NetworkDiscovery extends EventEmitter {
         console.log('Connect to worker', options.host + ':' + options.port);
         this.server.createConnection(options.host, options.port);
     }
+
+    isMaster() {
+        const id = this.server.nonce;
+
+        return this.getPeers().map(function(obj) {
+            return obj.socket.nonce < id;
+        }).filter(function(obj) {
+            return !obj;
+        }).length > 0;
+    }
+
+    checkMasterFromWorker(params, worker) {
+        worker.send('task-response', {
+            id: params.id,
+            result: this.isMaster()
+        });
+    }
 }
 
 
@@ -163,6 +182,7 @@ class SlaveDiscovery extends EventEmitter {
 
         this.on('task', this.handleTask);
         this.on('task-response', this.handleWrapperResponse);
+        this.on('isMaster-response', this.handleWrapperResponse);
     }
 
     send(event, argv) {
@@ -250,6 +270,10 @@ class SlaveDiscovery extends EventEmitter {
             host:   host,
             port:   port
         });
+    }
+
+    isMaster() {
+        return this.createMasterWrapper('isMaster', 'workerCheck', {});
     }
 }
 
