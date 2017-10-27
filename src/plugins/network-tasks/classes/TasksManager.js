@@ -8,7 +8,14 @@ class TasksManager {
         //-----------------------------------------------------
 
         discovery.on('task', function(task, worker) {
-            this.onTask(task).then(function(result) {
+            var handler;
+
+            if(worker.worker)
+                handler = this.distribute(task.name, task.params);
+            else
+                handler = this.onTask(task);
+
+            handler.then(function(result) {
                 worker.send('task-response', {
                     id: task.id,
                     result: result

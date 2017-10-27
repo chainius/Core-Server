@@ -186,7 +186,7 @@ class SlaveDiscovery extends EventEmitter {
     }
 
     send(event, argv) {
-        this.emit(event, argv);
+        //this.emit(event, argv);
         process.send({
             event: event,
             argv: argv

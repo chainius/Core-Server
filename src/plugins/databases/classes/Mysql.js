@@ -298,7 +298,6 @@ class Mysql
         this.query('select VARIABLE_VALUE FROM performance_schema.global_status WHERE VARIABLE_NAME="wsrep_incoming_addresses"').then(function(result)
         {
             _this.awaitingPerconna = false;
-            console.Log(result);
 
             try
             {
@@ -418,10 +417,13 @@ class Mysql
                             //if(index !== -1)
                             //    stack.stack = stack.stack.substr(0, index);
 
-                            if(subConsole)
-                                subConsole.error(stack);
-                            else
-                                console.error(stack);
+                            if(!process.options['disable-mysql-errors'])
+                            {
+                                if(subConsole)
+                                    subConsole.error(stack);
+                                else
+                                    console.error(stack);
+                            }
 
                             reject(stack);
                         }
