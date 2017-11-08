@@ -112,8 +112,9 @@ class NetworkDiscovery extends EventEmitter {
 
         var i = 0;
         for(var key in this.workers) {
-            if(this.workers[key].threads + i > index)
+            if(this.workers[key].threads + i > index) {
                 return this.workers[key];
+            }
 
             i += this.workers[key].threads;
         }
@@ -149,10 +150,17 @@ class NetworkDiscovery extends EventEmitter {
     }
     
     onBroadcast(data, my) {
-        this.workers.forEach(function(worker) {
-            //if(worker.equals(my) === false) {
+        const workers = this.workers.filter(function(obj) {
+            if(my.worker)
+                return true;
+            
+            return obj.worker ? true : false;
+        });
+
+        workers.forEach(function(worker) {
+            if(worker.equals(my) === false) {
                 worker.send('broadcast', data);
-            //}
+            }
         });
     }
 
@@ -219,7 +227,7 @@ class SlaveDiscovery extends EventEmitter {
 
         const result = this.taskHandlers[argv.name](argv.params || {});
 
-        if(!result.then)
+        if(result === undefined || !result.then)
             return sendTaskResult('result', result);
 
         result.then(function(obj) {

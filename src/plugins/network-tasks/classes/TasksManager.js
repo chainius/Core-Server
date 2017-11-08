@@ -21,10 +21,17 @@ class TasksManager {
                     result: result
                 });
             }).catch(function(error) {
-                if(error.message)
+                /*if(error.message)
                     error = error.message;
                 else if(error.error)
-                    error = error.error;
+                    error = error.error;*/
+                
+                if(error.message) {
+                    error = {
+                        error: error.message,
+                        stack: error.stack
+                    }
+                }
 
                 worker.send('task-response', {
                     id: task.id,
@@ -88,8 +95,8 @@ class TasksManager {
     }
 
     onTask(task) {
-        const workers = this.discovery.getInternalWorkers();
-        const index  = this.workerIncrement >= workers.length ? 0 : this.workerIncrement;
+        const workers        = this.discovery.getInternalWorkers();
+        const index          = this.workerIncrement >= workers.length ? 0 : this.workerIncrement;
         this.workerIncrement = index + 1;
 
         const worker = workers[index];

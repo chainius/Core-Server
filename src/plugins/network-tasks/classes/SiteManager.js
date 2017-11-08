@@ -34,12 +34,12 @@ class SiteManager extends SuperClass {
     onNetworkBroadcast(event, fn) {
         this.networkDiscovery.onBroadcast.push({
             event: event,
-            fn:    fn
+            fn:    fn.bind(this)
         })
     }
     
     onceNetworkBroadcast(event, fn) {
-        this.networkDiscovery.broadcastEvent.once(event, fn);
+        this.networkDiscovery.broadcastEvent.once(event, fn.bind(this));
     }
 
     //--------------------------
@@ -50,7 +50,7 @@ class SiteManager extends SuperClass {
             return;
 
         this.networkDiscovery.isMaster().then(function(res) {
-            _this.onMasterStateChanged();
+            _this.onMasterStateChanged(res);
             
             setTimeout(() => {
                 _this.updateMasterStatus();

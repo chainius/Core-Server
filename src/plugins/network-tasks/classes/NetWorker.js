@@ -30,8 +30,8 @@ class NetWorker {
         const encode = missive.encode();
 
         encode.pipe(socket);
-        socket.pipe( parse ).on('message', function() {
-            this.disconnected();
+        socket.pipe( parse ).on('message', function(obj) {
+            this.handleMessage( obj );
         }.bind(this));
 
         socket.encoder = encode;
