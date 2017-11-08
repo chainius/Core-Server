@@ -102,11 +102,9 @@ class HttpServer
 
         const uploadLimit = '15mb';
 
-        //this.appUse(timeout('5s', { respond: false }));
-        //this.appUse(formParse);
         this.appUse(bodyParser.json({ limit: uploadLimit }));
         this.appUse(bodyParser.urlencoded({ extended: true, limit: uploadLimit })); //ToDo auto get limit from cloudflare
-        this.appUse(timeout('5s', { respond: false }));
+        this.appUse(timeout('10s', { respond: false }));
 
         this.appUse(cookieParser());
         this.appUse(helmet())

@@ -4,7 +4,10 @@ class SiteManager extends SuperClass {
         super(server);
 
         const NetworkDiscovery = plugins.require('network-tasks/NetworkDiscovery');
-        this.networkDiscovery = NetworkDiscovery.Create();
+        this.networkDiscovery  = NetworkDiscovery.Create();
+        this.isMaster          = false;
+        
+        this.updateMasterStatus();
     }
 
     //--------------------------
@@ -23,9 +26,50 @@ class SiteManager extends SuperClass {
     sendTask(name, params) {
         return this.networkDiscovery.distributeTask(name, params);
     }
+    
+    networkBroadcast(event, data) {
+        return this.networkDiscovery.networkBroadcast(event, data);
+    }
+
+    onNetworkBroadcast(event, fn) {
+        this.networkDiscovery.onBroadcast.push({
+            event: event,
+            fn:    fn
+        })
+    }
+    
+    onceNetworkBroadcast(event, fn) {
+        this.networkDiscovery.broadcastEvent.once(event, fn);
+    }
 
     //--------------------------
 
+    updateMasterStatus() {
+        const _this = this;
+        if(!this.networkDiscovery)
+            return;
+
+        this.networkDiscovery.isMaster().then(function(res) {
+            _this.onMasterStateChanged();
+            
+            setTimeout(() => {
+                _this.updateMasterStatus();
+            }, 5000);
+        }).catch(function(err) {
+            console.error(err);
+        })
+    }
+
+    onMasterStateChanged(isMaster) {
+        if(this.isMaster !== isMaster) {
+            if(isMaster)
+                console.log('Node becomes the new master');
+            else
+                console.log('Master downgraded to slave status');
+        }
+
+        this.isMaster = isMaster;
+    }
 }
 
 module.exports = SiteManager;
