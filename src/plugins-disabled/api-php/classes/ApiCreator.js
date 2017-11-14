@@ -19,12 +19,13 @@ function tryParseJson(msg)
 
 class ApiCreator extends SuperClass {
 
-    create(name, path) {
+    create(path, name) {
         const handler = this.createPhpHandler(path + '.php', name);
+
         if (handler != false)
             return { handler: handler, path: path + '.php' };
 
-        return super.create(name, path);
+        return super.create(path, name);
     }
 
     createPhpHandler(path, name) {
@@ -35,10 +36,10 @@ class ApiCreator extends SuperClass {
         {
             const _this = this;
 
-            var cmd = "php '" + Path.join(process.cwd(), 'plugins', 'phpcore.js') + "'";
+            var cmd = "php '" + Path.join(process.cwd(), 'plugins', 'phpcore.php') + "'";
 
             if(process.platform.toString().toLowerCase().indexOf('win32') > -1) {
-                cmd = "php " + Path.join(process.cwd(), 'plugins', 'phpcore.js');
+                cmd = "php " + Path.join(process.cwd(), 'plugins', 'phpcore.php');
             }
 
             const Run = new Promise(function(resolve, reject) {
@@ -51,7 +52,7 @@ class ApiCreator extends SuperClass {
                         session:    JSON.stringify(_this.session),
                         cookie:     JSON.stringify(_this.cookie),
                         client_ip:  _this.client_ip,
-                        actions_path: Path.normalize(base_path),
+                        actions_path: Path.join(process.cwd(), 'api'),
                         api_exec:   Path.normalize(path)
                     }
                 },
