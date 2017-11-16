@@ -3,7 +3,7 @@ const dateFormat = require('dateformat');
 
 process.on('unhandledRejection', function(reason, p)
 {
-    log('error', 'PROMISE', 'Possibly Unhandled Rejection at: Promise ', p, ' reason: ', reason);
+    log('error', 'PROMISE', 'Possibly Unhandled Rejection with reason: ', reason);
 });
 
 process.on('uncaughtException', (err) =>

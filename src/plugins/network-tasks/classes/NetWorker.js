@@ -1,11 +1,22 @@
 const missive       = require('missive');
+var idIncrement     = 0;
 
 class NetWorker {
 
     constructor(discovery) {
-        this.threads   = 1;
-        this.discovery = discovery;
+        this.threads             = 1;
+        this.discovery           = discovery;
         this.disconnectListeners = [];
+        this.id                  = idIncrement;
+        
+        idIncrement++;
+    }
+    
+    equals(obj) {
+        if(!obj)
+            return false;
+        
+        return (obj.id === this.id);
     }
 
     setSocket(socket) {
@@ -19,15 +30,9 @@ class NetWorker {
         const encode = missive.encode();
 
         encode.pipe(socket);
-        socket.pipe( parse ).on('message', obj => {
-            if(!obj)
-                return;
-            if(obj.event)
-                this.discovery.emit(obj.event, obj.argv || {}, this);
-
-            if(obj.event === 'threads')
-                this.onThreads(obj.argv);
-        });
+        socket.pipe( parse ).on('message', function(obj) {
+            this.handleMessage( obj );
+        }.bind(this));
 
         socket.encoder = encode;
         socket.workerThreads = socket.workerThreads || 0;
@@ -41,11 +46,17 @@ class NetWorker {
         }.bind(this));
 
         worker.on('message', function(obj) {
-            if(!obj)
-                return;
-            if(obj.event)
-                this.discovery.emit(obj.event, obj.argv || {}, this);
+            this.handleMessage(obj);
         }.bind(this));
+    }
+    
+    handleMessage(obj) {
+        if(!obj)
+            return;
+        if(obj.event)
+            this.discovery.emit(obj.event, obj.argv || {}, this);
+        if(obj.event === 'threads')
+            this.onThreads(obj.argv);
     }
 
     send(event, argv) {

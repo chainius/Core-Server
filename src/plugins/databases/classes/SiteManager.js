@@ -42,7 +42,7 @@ class SiteManager extends SuperClass
             {
                 console.log("Purging cloudflare cache..");
 
-                cloudflare.deleteCache(config["zone-id"], {
+                this.connections.cloudflare.deleteCache(config["zone-id"], {
                     purge_everything: true
                 })
                 .then(function()

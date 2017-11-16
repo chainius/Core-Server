@@ -37,6 +37,7 @@ class NetworkDiscovery extends EventEmitter {
 
         this.on('connectToWorker', this.connectToWorker);
         this.on('isMaster', this.checkMasterFromWorker);
+        this.on('broadcast', this.onBroadcast)
     }
 
     registerWorker(worker) {
@@ -46,7 +47,7 @@ class NetworkDiscovery extends EventEmitter {
         netWorker.setWorker(worker);
 
         this.workers.push(netWorker);
-
+        
         const peers = this.getPeers();
 
         for(var key in peers)
@@ -111,8 +112,9 @@ class NetworkDiscovery extends EventEmitter {
 
         var i = 0;
         for(var key in this.workers) {
-            if(this.workers[key].threads + i > index)
+            if(this.workers[key].threads + i > index) {
                 return this.workers[key];
+            }
 
             i += this.workers[key].threads;
         }
@@ -146,6 +148,21 @@ class NetworkDiscovery extends EventEmitter {
             return obj;
         }).length === 0;
     }
+    
+    onBroadcast(data, my) {
+        const workers = this.workers.filter(function(obj) {
+            if(my.worker)
+                return true;
+            
+            return obj.worker ? true : false;
+        });
+
+        workers.forEach(function(worker) {
+            if(worker.equals(my) === false) {
+                worker.send('broadcast', data);
+            }
+        });
+    }
 
     checkMasterFromWorker(params, worker) {
         worker.send('task-response', {
@@ -166,6 +183,8 @@ class SlaveDiscovery extends EventEmitter {
         super();
         this.taskHandlers   = {};
         this.wrapperWaiters = {};
+        this.broadcastEvent = new EventEmitter();
+        this.onBroadcast    = [];
 
         process.on('message', function(msg) {
             if(typeof(msg) === 'string') {
@@ -180,13 +199,13 @@ class SlaveDiscovery extends EventEmitter {
                 this.emit(msg.event, msg.argv);
         }.bind(this));
 
+        this.on('broadcast', this.handleBroadcast);
         this.on('task', this.handleTask);
         this.on('task-response', this.handleWrapperResponse);
         this.on('isMaster-response', this.handleWrapperResponse);
     }
 
     send(event, argv) {
-        this.emit(event, argv);
         process.send({
             event: event,
             argv: argv
@@ -208,7 +227,7 @@ class SlaveDiscovery extends EventEmitter {
 
         const result = this.taskHandlers[argv.name](argv.params || {});
 
-        if(!result.then)
+        if(result === undefined || !result.then)
             return sendTaskResult('result', result);
 
         result.then(function(obj) {
@@ -220,7 +239,7 @@ class SlaveDiscovery extends EventEmitter {
                 return sendTaskResult('error', err.message);
 
             sendTaskResult('error', err);
-        })
+        });
     }
 
     onTask(name, cb) {
@@ -256,6 +275,31 @@ class SlaveDiscovery extends EventEmitter {
     distributeJob(name, params) {
         return this.createMasterWrapper('job', name, params);
     }
+
+    networkBroadcast(event, params) {
+        this.send('broadcast', {
+            event:  event,
+            params: params
+        })
+    }
+
+    handleBroadcast(argv) {
+        try {
+            this.broadcastEvent.emit(argv.event, argv.params);
+        } catch(e) {
+            console.error(e);
+        }
+        
+        this.onBroadcast.filter(function(obj) { return obj.event === argv.event; }).forEach(function(obj) {
+            try {
+                obj.fn(argv.params);
+            } catch(e) {
+                console.error(e);
+            }
+        });
+    }
+    
+    //-----------------
 
     handleWrapperResponse(argv) {
         if(argv.id)
