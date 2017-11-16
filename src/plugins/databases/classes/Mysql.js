@@ -462,7 +462,7 @@ class Mysql
 
                 resolve(data.result.map(function(obj) {
                     for(var key in obj) {
-                        if(fieldTypes[key] === 246)
+                        if(fieldTypes[key] === 246 && obj[key] !== null)
                             obj[key] = parseFloat(obj[key]);
                     }
 
