@@ -13,9 +13,8 @@ class Session extends SuperClass
     async api(name, post, client_ip, file, get) {
         const _this       = this;
 
-        this.siteManager.autoCreateApi(name);
+        const apiHandler = this.siteManager.autoCreateApi(name);
 
-        const apiHandler = this.siteManager.apiCreator.apis[name];
         if (!apiHandler)
             throw({ error: 'The requested api could not be found.', api: name });
 
@@ -67,7 +66,7 @@ class Session extends SuperClass
         });
 
         try {
-            const result = await apiHandler.call(environment, post, client_ip, file, get);
+            const result = await apiHandler.handler.call(environment, apiHandler.console, apiHandler.path, apiHandler.dirname);
 
             if ((typeof (result) === 'object' || typeof (result) === 'array') && result !== null)
             {

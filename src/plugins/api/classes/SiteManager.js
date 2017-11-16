@@ -241,40 +241,43 @@ class SiteManager extends SuperClass
 
     autoCreateApi(name)
     {
-        if (this.apiCreator.apis[name] === undefined)
+        if(this.apiCreator.apis[name])
+            return this.apiCreator.apis[name];
+
+        try
         {
-            try
-            {
-                const base = this.apiBasePath(name);
-                const path = this.apiPath(base, name);
-                const code = this.apiCreator.create(path, name);
+            const base = this.apiBasePath(name);
+            const path = this.apiPath(base, name);
+            const code = this.apiCreator.create(path, name);
 
-                if (code != false)
+            if (code != false)
+            {
+                const _this = this;
+                Watcher.onFileChange(code.path, function()
                 {
-                    const _this = this;
-                    Watcher.onFileChange(code.path, function()
-                    {
-                        console.warn('Api', name, 'changed');
+                    console.warn('Api', name, 'changed');
 
-                        try {
-                            const nCode = _this.apiCreator.create(path, name);
+                    try {
+                        const nCode = _this.apiCreator.create(path, name);
 
-                            if (nCode !== false)
-                                _this.apiCreator.apis[name] = nCode.handler;
+                        if (nCode !== false)
+                            _this.apiCreator.apis[name] = nCode;
 
-                        } catch(e) {
-                            console.error('{autoCreateApi-watch}', e);
-                        }
-                    });
+                    } catch(e) {
+                        console.error('{autoCreateApi-watch}', e);
+                    }
+                });
 
-                    this.apiCreator.apis[name] = code.handler;
-                }
-            }
-            catch (e)
-            {
-                console.error('{autoCreateApi}', e);
+                this.apiCreator.apis[name] = code;
+                return this.apiCreator.apis[name];
             }
         }
+        catch (e)
+        {
+            console.error('{autoCreateApi}', e);
+        }
+        
+        return null;
     }
 
     /**

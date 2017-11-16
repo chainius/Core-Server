@@ -5,7 +5,7 @@ const Crypter       = plugins.require('web-server/Crypter');
 const _require      = require('../wrappers/require.js');
 const resource_url  = require('../wrappers/resource_url.js');
 
-const funcStart = "func = async function() { " +
+const funcStart = "func = async function(console, __filename, __dirname) { " +
                     "var post = this.post; var session = this.session; var cookie = this.cookie; var _this = this; this.console = console;\n";
 
 class ApiCreator {
@@ -13,8 +13,8 @@ class ApiCreator {
     constructor(siteManager) {
         this.siteManager  = siteManager;
         this.nonExisting  = [];
-        this.apiContextes = {};
-        this.apis         = {};
+        this.apis         = {};
+        this.context      = null;
     }
 
     create(path, name) {
@@ -26,11 +26,11 @@ class ApiCreator {
 
         var handler = this.createJsHandler(path + '.js', name);
         if (handler !== false)
-            return { handler: handler, path: path + '.js' };
+            return { handler: handler, path: path + '.js', dirname: Path.dirname(path + '.js'), console: console.create(name) };
 
         handler = this.createSqlHandler(path + '.sql');
         if (handler !== false)
-            return { handler: handler, path: path + '.sql' };
+            return { handler: handler, path: path + '.sql', dirname: Path.dirname(path + '.sql') };
 
         if (process.env.NODE_ENV === 'production')
             this.nonExisting.push(path);
@@ -63,14 +63,18 @@ class ApiCreator {
         try
         {
             const script = new vm.Script(funcStart + source + "\n }", {
-                filename: path,
-                lineOffset: -1,
-                displayErrors: true
+                filename:       path,
+                lineOffset:     -1,
+                displayErrors:  true
             });
 
-            const context = this.createContext(path, name, this.siteManager.getApiContext(name) || {});
-            script.runInContext(context);
-            return context.func;
+            if(!this.context)
+                this.context = this.createContext(this.siteManager.getApiContext() || {});
+
+            script.runInContext( this.context );
+            const fn = this.context.func;
+            this.context.func = null;
+            return fn;
         }
         catch (e)
         {
@@ -86,29 +90,33 @@ class ApiCreator {
 
     //------------------------------------------
 
-    createContext(path, name, contextIn) {
-
-        //const ASyncQueue = require('../queue.js');
-
+    createApiContext(path, name, contextIn) {
         if (this.apiContextes[path])
             return this.apiContextes[path];
+        
+        this.apiContextes[path] = this.createContext(contextIn);
+        return this.apiContextes[path];
+    }
+
+    createContext(contextIn) {
+        //const ASyncQueue = require('../queue.js');
 
         const context           = contextIn;
         context.func            = false;
         context.require         = _require;
         context.Crypter         = Crypter;
-        context.__dirname       = Path.dirname(path);
-        context.__filename      = path;
         context.setTimeout      = setTimeout;
         context.setInterval     = setInterval;
         context.resource_url    = resource_url;
         context.Buffer          = Buffer;
         context.plugins         = plugins;
         //context.ASyncQueue      = ASyncQueue;
-
+        context.process         = process;
+        context.global          = context;
+        
         context.eval = function(code) {
             const script = new vm.Script(code, {
-                filename: path,
+                filename: 'ApiEval',
                 lineOffset: -1,
                 displayErrors: true
             });
@@ -116,12 +124,7 @@ class ApiCreator {
             return script.runInContext(context);
         };
 
-        context.console = console.create(name);
-        context.process = process;
-        context.global  = context;
-
         vm.createContext(context);
-        this.apiContextes[path] = context;
         return context;
     }
 }
