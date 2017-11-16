@@ -384,7 +384,7 @@ PagesManager.compile = function(mode, done) {
 
             b.bundle().on('error', function(err)
             {
-                console.error('Browserify-bundle:', err.message);
+                console.error('Browserify-bundle:', err);
             })
             .pipe(stream);
         }

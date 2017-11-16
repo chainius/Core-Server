@@ -76,8 +76,33 @@ function verifyCache(cache, file)
     }
 }
 
+function verifyDeps(obj, existingFiles, notExisintg) {
+    const add = [];
+
+    for(var key in obj.deps) {
+        const path = obj.deps[key];
+        
+        if(existingFiles.indexOf(path) !== -1)
+            continue;
+        
+        if(notExisintg.indexOf(path) !== -1)
+            return false;
+        
+        if(fs.existsSync(path))
+        {
+            existingFiles.push(path);
+        }
+        else {
+            notExisintg.push(path);
+            return false;
+        }
+    }
+    
+    return true;
+}
+
 module.exports.getCache = function(file)
-{
+{    
     var cache = {
         cache: {},
         package: {},
@@ -92,14 +117,27 @@ module.exports.getCache = function(file)
             package: cache2.package || {},
             styles: cache2.styles || {}
         };
-
+        
         try
         {
             verifyCache(cache, file);
+            
+            var existingFiles = Object.keys(cache.cache);
+            var notExisintg   = [];
+
+            for(var name in cache.cache) {
+                if(!verifyDeps(cache.cache[name], existingFiles, notExisintg)) {
+                    rm(cache, name);
+                }
+            }
         }
         catch(e)
         {
             console.error(e);
+            
+            cache.cache     = {};
+            cache.package   = {};
+            cache.styles    = {};
         }
     }
 
