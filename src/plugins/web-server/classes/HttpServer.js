@@ -94,7 +94,7 @@ class HttpServer
         const helmet       = require('helmet');
         const _this        = this;
 
-        this.echo = sockjs.createServer({ sockjs_url: 'http://cdn.jsdelivr.net/sockjs/1.0.1/sockjs.min.js',
+        this.echo = sockjs.createServer({ sockjs_url: 'https://cdn.jsdelivr.net/sockjs/1.1.4/sockjs.min.js',
             log: function(){}
         });
 
