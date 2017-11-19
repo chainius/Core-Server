@@ -16,24 +16,26 @@ class NetworkDiscovery extends EventEmitter {
         this.tasksManager         = new TasksManager(this);
         this.incrementalWorkIndex = 0;
 
-        console.info('Seting up network discovery with identifier', identifier);
+        if(identifier) {
+            console.info('Seting up network discovery with identifier', identifier);
 
-        const tlsOptions = {
-            key: fs.readFileSync(Path.join(process.cwd(), 'ssl', 'cert-key.pem')),
-            cert: fs.readFileSync(Path.join(process.cwd(), 'ssl', 'cert.pem')),
-            requestCert: true,
-            ca: fs.readFileSync(Path.join(process.cwd(), 'ssl', 'ca.pem'))
-        };
+            const tlsOptions = {
+                key: fs.readFileSync(Path.join(process.cwd(), 'ssl', 'cert-key.pem')),
+                cert: fs.readFileSync(Path.join(process.cwd(), 'ssl', 'cert.pem')),
+                requestCert: true,
+                ca: fs.readFileSync(Path.join(process.cwd(), 'ssl', 'ca.pem'))
+            };
 
-        this.server = new airswarm(tlsOptions, identifier, function(sock) {
-            try {
-                this.onSocket(sock);
-                this.emit('socket', sock);
-            }
-            catch(e) {
-                console.error(e);
-            }
-        }.bind(this));
+            this.server = new airswarm(tlsOptions, identifier, function(sock) {
+                try {
+                    this.onSocket(sock);
+                    this.emit('socket', sock);
+                }
+                catch(e) {
+                    console.error(e);
+                }
+            }.bind(this));
+        }
 
         this.on('connectToWorker', this.connectToWorker);
         this.on('isMaster', this.checkMasterFromWorker);
@@ -139,8 +141,19 @@ class NetworkDiscovery extends EventEmitter {
         this.server.createConnection(options.host, options.port);
     }
 
-    isMaster() {
-        const id = this.server.nonce;
+    isMaster(worker) {
+        if(worker) {
+            const masterWorker = this.getInternalWorkers().map(function(obj) {
+                return obj.id;
+            }).reduce(function(a, b) {
+                return Math.min(a, b);
+            })
+
+            if(masterWorker !== worker.id)
+                return false;
+        }
+
+        const id = (this.server || { nonce: 'SingleNode' }).nonce;
 
         return this.getPeers().map(function(obj) {
             return obj.socket.nonce < id;
@@ -167,7 +180,7 @@ class NetworkDiscovery extends EventEmitter {
     checkMasterFromWorker(params, worker) {
         worker.send('task-response', {
             id: params.id,
-            result: this.isMaster()
+            result: this.isMaster(worker)
         });
     }
 }

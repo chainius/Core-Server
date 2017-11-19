@@ -11,6 +11,19 @@ class SiteManager extends SuperClass {
     }
 
     //--------------------------
+    
+    autoSetupFromConfig()
+    {
+        super.autoSetupFromConfig();
+        const config = this.getConfig('servers');
+
+        if (config.tasks) {
+            process.nextTick(() => {
+                for(var key in config.tasks)
+                    this.registerTaskApi(key, config.tasks[key]);
+            });
+        }
+    }
 
     onTask(name, cb) {
         return this.networkDiscovery.onTask(name, cb.bind(this));
