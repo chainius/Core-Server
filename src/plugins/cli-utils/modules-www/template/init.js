@@ -1,5 +1,5 @@
 //import store from './store';
-import app from '../../menu/backoffice.vue';
+import app from '../../menu/page.vue';
 
 const bulk = require('bulk-require');
 const vue_templates = bulk(__dirname + "/../../components/", ['**/*.vue']);

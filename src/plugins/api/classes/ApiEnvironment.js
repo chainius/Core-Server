@@ -1,5 +1,9 @@
 const request    = require('request-promise');
 
+function isNumeric(val) {
+    return !isNaN(Number(val));
+}
+
 /**
 * ApiEnvironment
 * @property siteManager {Class}
@@ -60,7 +64,7 @@ class ApiEnvironment
     */
     is_numeric(name)
     {
-        return !isNaN(Number(name));
+        return isNumeric(this.post[name]);
     }
 
     /**
@@ -85,13 +89,13 @@ class ApiEnvironment
             return typeof (val) === 'string' || typeof (val) === 'number';
             break;
         case 'numeric':
-            return this.is_numeric(val);
+            return is_numeric(val);
             break;
         case 'positive':
-            return this.is_numeric(val) && val >= 0;
+            return is_numeric(val) && val >= 0;
             break;
         case 'positive+':
-            return this.is_numeric(val) && val > 0;
+            return is_numeric(val) && val > 0;
             break;
         case 'array':
             return Array.isArray(val);
@@ -142,7 +146,7 @@ class ApiEnvironment
         {
             for (var key in lst)
             {
-                if (this.is_numeric(key) == false && (typeof (key) === 'string' || typeof (key) === 'number'))
+                if (isNumeric(key) == false && (typeof (key) === 'string' || typeof (key) === 'number'))
                 {
                     if (!this.check_vartype(key, lst[key]))
                     {

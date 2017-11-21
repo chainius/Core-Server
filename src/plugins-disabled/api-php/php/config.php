@@ -29,7 +29,7 @@
 
         if(!is_local())
         {
-            $path2 = CONFIG_PATH.$name.'-online.json';
+            $path2 = CONFIG_PATH.$name.'-production.json';
             if(is_file($path2))
             {
                 $path = $path2;

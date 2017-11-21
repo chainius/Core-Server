@@ -78,7 +78,7 @@ class SiteManager
 
         if (process.env.NODE_ENV === 'production')
         {
-            const prodPath = basePath + '-online.json';
+            const prodPath = basePath + '-production.json';
             const fs       = require('fs');
 
             if (fs.existsSync(prodPath))

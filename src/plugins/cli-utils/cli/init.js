@@ -62,14 +62,14 @@ async function init()
 
     await mkdir(Path.join(process.cwd(), 'api'));
     await mkdir(Path.join(process.cwd(), 'config'));
-    fs.writeFileSync(Path.join(process.cwd(), 'config', 'public-api.json'), JSON.stringify({connected:[], notconnected: [], everyone: []}, null, '\t'));
+    fs.writeFileSync(Path.join(process.cwd(), 'config', 'public-api.json'), JSON.stringify({connected:[], notconnected: [], everyone: [ '*/*' ]}, null, '\t'));
     fs.writeFileSync(Path.join(process.cwd(), '.babelrc'), '{ "presets": ["es2015"] }');
     fs.writeFileSync(Path.join(process.cwd(), '.gitignore'), 'node_modules/\ndist/\n.vscode\ncore-docs/');
 
     if(config.ui.substr(0,1).toLowerCase() === 'y')
     {
         fs.writeFileSync(Path.join(process.cwd(), 'config', 'servers.json'), JSON.stringify({}, null, '\t'));
-        fs.writeFileSync(Path.join(process.cwd(), 'config', 'servers-online.json'), JSON.stringify({}, null, '\t'));
+        fs.writeFileSync(Path.join(process.cwd(), 'config', 'servers-production.json'), JSON.stringify({}, null, '\t'));
         await mkdir(Path.join(process.cwd(), 'plugins'));
         await mkdir(Path.join(process.cwd(), 'components'));
         await mkdir(Path.join(process.cwd(), 'components', 'home'));
@@ -81,7 +81,7 @@ async function init()
         await mkdir(Path.join(process.cwd(), 'resources', 'css'));
         await mkdir(Path.join(process.cwd(), 'resources', 'fonts'));
 
-        copyClientFile('backoffice.vue', Path.join(process.cwd(), 'menu', 'backoffice.vue'));
+        copyClientFile('page.vue', Path.join(process.cwd(), 'menu', 'page.vue'));
         copyClientFile('home.vue', Path.join(process.cwd(), 'components', 'home', 'layout.vue'));
         copyClientFile('error.vue', Path.join(process.cwd(), 'components', 'error', 'layout.vue'));
         copyClientFile('init.js', Path.join(process.cwd(), 'resources', 'lib', 'init.js'));
@@ -89,7 +89,7 @@ async function init()
     else
     {
         fs.writeFileSync(Path.join(process.cwd(), 'config', 'servers.json'), JSON.stringify({ ui: false }, null, '\t'));
-        fs.writeFileSync(Path.join(process.cwd(), 'config', 'servers-online.json'), JSON.stringify({ ui: false }, null, '\t'));
+        fs.writeFileSync(Path.join(process.cwd(), 'config', 'servers-production.json'), JSON.stringify({ ui: false }, null, '\t'));
     }
 
     //-----------------------------

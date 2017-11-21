@@ -6,7 +6,7 @@ function getConfig()
 {
     if (process.env.NODE_ENV === 'production')
     {
-        const onlinePath = Path.join(process.cwd(), 'config', 'servers-online.json');
+        const onlinePath = Path.join(process.cwd(), 'config', 'servers-production.json');
         if (fs.existsSync(onlinePath))
             return require(onlinePath);
     }

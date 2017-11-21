@@ -2,6 +2,7 @@
 <img width="100" src="./wiki/img/logo/logo-128.png" >
 <br>
 <b>Core Server</b>
+<b>https://www.core-server.io</b>
 </p>
 
 ## Quick Installation
@@ -68,7 +69,7 @@ Project root
 │
 └─── config
 │    └─── servers.json
-│    └─── servers-online.json
+│    └─── servers-production.json
 │    └─── public-api.json
 │    └─── plugins.json
 │
