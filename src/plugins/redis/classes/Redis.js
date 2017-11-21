@@ -80,7 +80,7 @@ class Redis
         }
     }
 
-    undefinedsubscribe(channel)
+    subscribe(channel)
     {
         try
         {
