@@ -111,6 +111,7 @@ export default function initApp( _options )
 
     const router = new Router({
         mode: 'history',
+        abstract: true,
         scrollBehavior: function(to, from, savedPosition) {
             if (to.hash) {
                 return {selector: to.hash}
