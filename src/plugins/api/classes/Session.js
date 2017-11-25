@@ -1,5 +1,23 @@
 const ApiEnvironment = plugins.require('api/ApiEnvironment');
 
+function cachedProperty(object, name, calculator) {
+    var value = null;
+
+    Object.defineProperty(object, name, {
+        get: function() {
+            if(value !== null)
+                return value;
+
+            value = calculator(object);
+            return value;
+        },
+
+        set: function(nValue) {
+            value = nValue;
+        }
+    });
+}
+
 /** session */
 class Session extends SuperClass
 {
@@ -10,62 +28,62 @@ class Session extends SuperClass
     * @param client_ip {String}
     * @param files {Object} optional
     */
-    async api(name, post, client_ip, file, get) {
-        const _this       = this;
+    api(name, post, client_ip, file, get) {
 
         const apiHandler = this.siteManager.autoCreateApi(name);
 
         if (!apiHandler)
-            throw({ error: 'The requested api could not be found.', api: name });
+            return new Promise(function(resolve, reject) {
+                reject({
+                    error: 'The requested api could not be found.',
+                    api: name
+                })
+            });
 
-        await this.onReady();
-
-        const environment = new ApiEnvironment({
-            siteManager:    this.siteManager,
-            name:           name,
-            session:        this.data,
-            sessionObject:  this,
-            cookie:         this.cookies,
-            post:           post || {},
-            $get:           get || {},
-            file:           file || {},
-            client_ip:      client_ip,
-            queryVars:      this.siteManager.apiQueryVars(this, name, post, client_ip, file, get),
-
-            setSessionData: function(data)
-            {
-                _this.setData(data);
-                environment.session = _this.data;
-            },
-
-            setCookieData: function(data)
-            {
-                try
+        const environment = this.createApiEnvironment(name, post, client_ip, file, get);
+        
+        return this.executeOnReady(function() {
+            return apiHandler.handler.call(environment, apiHandler.console, apiHandler.path, apiHandler.dirname).then(function(result) {
+                if ((typeof (result) === 'object' || typeof (result) === 'array') && result !== null)
                 {
-                    for (var key in data)
+                    if (result['error'])
+                        throw(result);
+
+                    return result;
+                }
+                else {
+                    return { result: result };
+                }
+            }).catch(function(err) {
+                if (typeof (err) === 'object' || typeof (err) === 'array')
+                {
+                    if (err.error === undefined)
                     {
-                        _this.cookies[key] = data[key];
-                        environment.cookie[key] = data[key];
+                        if (err.message != undefined)
+                        {
+                            if(err.showIntercept !== false)
+                                console.error(err);
+
+                            err = { error: err.message };
+                        }
+                        else
+                        {
+                            console.error(err);
+                            err = { error: 'an internal error occured' };
+                        }
                     }
                 }
-                catch (e)
-                {
-                    console.error(e);
+                else if (typeof (err) === 'string') {
+                    err = { error: err };
                 }
 
-                if (Date.now() + 48 * 60 * 600000 > _this.expirationTime)
-                    _this.broadcastSocketMessage({cookies: data});
-                else
-                    _this.broadcastSocketMessage({cookies: data, expiration: _this.expirationTime});
-            },
-
-            setSessionExpiration: function(time)
-            {
-                _this.expirationTime = Date.now() + (time * 1000);
-            }
+                throw(err);
+            });
         });
+        
+        
 
-        try {
+        /*try {
             const result = await apiHandler.handler.call(environment, apiHandler.console, apiHandler.path, apiHandler.dirname);
 
             if ((typeof (result) === 'object' || typeof (result) === 'array') && result !== null)
@@ -102,7 +120,22 @@ class Session extends SuperClass
             }
 
             throw(err);
-        }
+        }*/
+    }
+    
+    createApiEnvironment(name, post, client_ip, file, get) {
+        return new ApiEnvironment({
+            siteManager:    this.siteManager,
+            name:           name,
+            session:        this.data,
+            sessionObject:  this,
+            cookie:         this.cookies,
+            post:           post || {},
+            $get:           get || {},
+            file:           file || {},
+            client_ip:      client_ip,
+            queryVars:      this.siteManager.apiQueryVars(this, name, post, client_ip, file, get)
+        });
     }
 
     handleSocketApi(socket, api, post, salt)

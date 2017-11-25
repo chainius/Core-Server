@@ -1,4 +1,5 @@
-const Session         = plugins.require('sessions/Session');
+const Session   = plugins.require('sessions/Session');
+const uniqid    = require('uniqid');
 
 if (!Date.now)
 {
@@ -24,39 +25,30 @@ class SessionsManager
         this.interval.unref();
     }
 
-    generateToken(uuid)
-    {
-        const Crypter = plugins.require('web-server/Crypter');
-        return Crypter.sha1(Crypter.sha1(Date.now() + uuid) + Math.random() + 'famestruct');
-    }
-
     getFromCookies(cookies)
     {
         if (typeof (cookies) !== 'object')
             return {};
 
-        try
-        {
-            if (typeof (cookies.token) !== 'string')
-                cookies.token = this.generateToken(JSON.stringify(cookies) + Math.random() + '-' + Math.random());
-
-            else if (cookies.token.length != 28)
-                cookies.token = this.generateToken(JSON.stringify(cookies) + Math.random() + '-' + cookies.token);
-        }
-        catch (e)
-        {
-            console.error(e);
+        if (typeof (cookies.token) !== 'string' || cookies.token.length < 5 || cookies.token === '__global__') {
+            cookies.token = uniqid();
+            return this.getFromToken(cookies.token, true);
         }
 
         return this.getFromToken(cookies.token);
     }
 
-    getFromToken(token)
+    getFromToken(token, isNewToken)
     {
         try
         {
-            if (this.sessions[token] == undefined)
+            if (this.sessions[token] === undefined) {
                 this.sessions[token] = new Session(this.siteManager, token);
+                
+                if(!isNewToken) {
+                    this.sessions[token].ready = false;
+                }
+            }
 
             return this.sessions[token];
         }
@@ -102,9 +94,9 @@ class SessionsManager
                 if (index != -1)
                     token = token.substr(0, index);
 
-                if (token.length != 28)
+                if (token.length < 5 || token === '__global__')
                 {
-                    token = this.generateToken(socket.remoteAddress); //ToDo get real ip
+                    token = uniqid();
                     socket.write(JSON.stringify({cookies: {token: token}}));
                     socket.close();
                     return;

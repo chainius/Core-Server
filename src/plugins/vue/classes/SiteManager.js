@@ -55,10 +55,8 @@ class SiteManager extends SuperClass {
                             console.error(r.error);
                         }
 
-                        res.status(500);
-                        res.setHeader('Content-Type', 'text/html; charset=utf-8');
-                        res.write('An unexpected error occured, please check if the ui option is enabled and the bundle has successfully been generated');
-                        res.end();
+                        res.writeHead(500, { 'Content-Type': 'text/html; charset=utf-8' });
+                        res.end('An unexpected error occured, please check if the ui option is enabled and the bundle has successfully been generated');
                         return;
                     }
 

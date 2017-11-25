@@ -32,7 +32,12 @@ class ApiEnvironment
     */
     setSessionData(data)
     {
-        //Overwrited by constructor opionts
+        this.sessionObject.setData(data);
+        this.session = this.sessionObject.data;
+    }
+    
+    setSessionExpiration(time) {
+        this.sessionObject.expirationTime = Date.now() + (time * 1000);
     }
 
     /**
@@ -41,7 +46,25 @@ class ApiEnvironment
     */
     setCookieData(data)
     {
-        //Overwrited by constructor opionts
+        const session = this.sessionObject;
+
+        try
+        {
+            for (var key in data)
+            {
+                session.cookies[key] = data[key];
+                this.cookie[key]     = data[key];
+            }
+        }
+        catch (e)
+        {
+            console.error(e);
+        }
+
+        if (Date.now() + 48 * 60 * 600000 > session.expirationTime)
+            session.broadcastSocketMessage({cookies: data});
+        else
+            session.broadcastSocketMessage({cookies: data, expiration: session.expirationTime});
     }
 
     /**

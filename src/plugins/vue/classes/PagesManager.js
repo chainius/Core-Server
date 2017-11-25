@@ -11,7 +11,7 @@ class PagesManager
             this.siteManager    = siteManager;
 
             if(siteManager.getSession)
-                this.globalSession  = siteManager.getSession('global');
+                this.globalSession  = siteManager.getSession('__global__');
         }
     }
 
@@ -86,10 +86,8 @@ class PagesManager
 
             if(r === null)
             {
-                res.status(code);
-                res.setHeader('Content-Type', 'text/html; charset=utf-8');
-                res.write('An unexpected error occured');
-                res.end();
+                res.writeHead(code, { 'Content-Type': 'text/html; charset=utf-8' });
+                res.end('An unexpected error occured');
                 return;
             }
 
@@ -102,10 +100,8 @@ class PagesManager
 
         try
         {
-            res.status(code);
-            res.setHeader('Content-Type', 'text/html; charset=utf-8');
-            res.write('An unexpected error occured');
-            res.end();
+            res.writeHead(code, { 'Content-Type': 'text/html; charset=utf-8' });
+            res.end('An unexpected error occured');
         }
         catch (e)
         {
@@ -129,8 +125,7 @@ class PagesManager
 
                 isInited = true;
                 code     = code || ctx.meta.httpCode || 200;
-                res.status(code);
-                res.setHeader('Content-Type', 'text/html; charset=utf-8');
+                res.writeHead(code, { 'Content-Type': 'text/html; charset=utf-8' });
                 res.write(`<html lang="en" data-vue-meta-server-rendered ${htmlAttrs.text()}>`);
                 res.write(`<head>`);
                 res.write(`<meta charset="utf-8">`);
@@ -147,15 +142,6 @@ class PagesManager
 
                 if(code !== 200 && code !== 404)
                     res.write(`<script>window.HTTP_STATUS = ${code}; </script>`);
-
-                /*try
-                {
-                    _this.siteManager.setPageMeta(req, res);
-                }
-                catch (e)
-                {
-                    console.error(e);
-                }*/
 
                 const hash = _this.isProduction ? _this.getCacheObject('/css/bundle.css').getHash() : 'dev';
                 res.write("<link href='/css/bundle.css?"+hash+"' rel='stylesheet' type='text/css'>");
@@ -220,7 +206,8 @@ class PagesManager
             console.error(error);
             try
             {
-                res.status(500).end('An internal error occured');
+                res.writeHead(500, { 'Content-Type': 'text/plain' });
+                res.end('An internal error occured');
             }
             catch (e)
             {

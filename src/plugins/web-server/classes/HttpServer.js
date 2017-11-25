@@ -2,7 +2,6 @@
 
 process.options.secure = (process.options.secure === undefined) ? false : true;
 
-const express       = require('express');
 const http          = process.options.secure ? require('spdy') : require('http');
 
 /*const formidable    = require('formidable');
@@ -26,14 +25,42 @@ function formParse(req, res, next)
     });
 }*/
 
+function cachedProperty(object, name, calculator) {
+    var value = null;
+
+    Object.defineProperty(object, name, {
+        get: function() {
+            if(value !== null)
+                return value;
+
+            value = calculator(object);
+            return value;
+        },
+
+        set: function(nValue) {
+            value = nValue;
+        }
+    });
+}
+
+function emptyFn() {}
+
+//--------------------------------------------------------------------
+
+const cookie = require('cookie')
+
+//------------------------------------------------------------------------
+
 class HttpServer
 {
     constructor(config)
     {
         this.config         = config || {};
         this.sockets        = [];
-        this.app            = express();
         this.isWorker       = true;
+        this.timeout        = 10000; //10 secondes
+        
+        this.createCachedProperty = cachedProperty;
 
         const _this = this;
         process.on('message', function(msg, socket) {
@@ -58,7 +85,7 @@ class HttpServer
         }
         else
         {
-            this.server = http.createServer(this.app);
+            this.server = http.createServer(this.handleRequest.bind(this));
         }
         
         const threads = parseInt(process.options.threads) || ((process.env.NODE_ENV === 'production') ? require('os').cpus().length : 1);
@@ -69,15 +96,6 @@ class HttpServer
         }
 
         process.nextTick(function() { _this.setup(); })
-
-        //----------------------------------------------------------------------------------------------------------------
-
-        this.app.disable('x-powered-by');
-        /*this.appUse(function(req, res, next)
-        {
-            req.localtime = Date.now();
-            next();
-        });*/
     }
 
     setup()
@@ -86,38 +104,32 @@ class HttpServer
         this.siteManager   = new (plugins.require('web-server/SiteManager'))(this);
 
         const sockjs       = require('sockjs');
-        const bodyParser   = require('body-parser');
-        const cookieParser = require('cookie-parser');
-        const methodOverride = require('method-override');
-        const timeout      = require('connect-timeout');
-        const cors         = require('cors');
-        const helmet       = require('helmet');
-        const _this        = this;
 
         this.echo = sockjs.createServer({ sockjs_url: 'https://cdn.jsdelivr.net/sockjs/1.1.4/sockjs.min.js',
             log: function(){}
         });
-
+        
         this.echo.installHandlers(this.server, {prefix: '/socketapi'});
+        
+        const bodyParser   = require('body-parser');
+        const uploadLimit  = '15mb';
+        
+        this.postParsers = {
+            json: bodyParser.json({ limit: uploadLimit }),
+            url:  bodyParser.urlencoded({ extended: true, limit: uploadLimit })
+        };
 
-        const uploadLimit = '15mb';
+        /*const cors         = require('cors');
+        const helmet       = require('helmet');
 
-        this.appUse(bodyParser.json({ limit: uploadLimit }));
-        this.appUse(bodyParser.urlencoded({ extended: true, limit: uploadLimit })); //ToDo auto get limit from cloudflare
-        this.appUse(timeout('10s', { respond: false }));
-
-        this.appUse(cookieParser());
         this.appUse(helmet())
         this.appUse(cors());
-        this.appUse(this.handleRequest, this);
-        this.appUse(methodOverride());
-        this.appUse(this.verifyTimeout, this);
-        this.appUse(this.logError, this);
-        this.appUse(this.handleError, this);
+        //this.appUse(this.handleRequest, this);
+        /*this.appUse(methodOverride());*/
 
-        this.echo.on('connection', function(conn)
+        this.echo.on('connection', (conn) =>
         {
-            _this.onSockJsConnect(conn);
+            this.onSockJsConnect(conn);
         });
     }
 
@@ -139,31 +151,47 @@ class HttpServer
         }
     }
 
-    handleRequest(req, res, next)
+    parseBody(req, res, next) {
+        this.postParsers.json(req, res, () => {
+            this.postParsers.url(req, res, next);
+        });
+    }
+    
+    handleRequest(req, res)
     {
-        /*console.info('HttpServer pretime: ' + (Date.now() - req.localtime));
-
-        const start = Date.now();
-        const _this = this;
-
-        res.on('finish', function()
-        {
-            _console.info('Skyserver finish time: ' + (Date.now() - start));
-        });*/
-
         try {
-            const _this = this;
-            req.on('timeout', function()
-            {
-                _this.verifyTimeout(null, req, res, null);
+            cachedProperty(req, 'client_ip', HttpServer.getClientIpFromHeaders);
+
+            cachedProperty(req, 'cookies', function() {
+                const cookies = req.headers.cookie;
+                if(!cookies)
+                    return {};
+
+                return cookie.parse(cookies)
             });
 
-            req.client_ip = HttpServer.getClientIpFromHeaders(req);
-
-            if (this.siteManager === null)
-                return this.sendErrorPage(404, req, res);
-
             this.siteManager.handle(req, res);
+            
+            //Setup timeout
+            if(res._headerSent)
+                return;
+
+            const id = setTimeout(() => {
+                req.timedout = true;
+                console.error('An timeout occured on the page:', req.url);
+                this.sendErrorPage(524, req, res);
+            }, this.timeout);
+            
+            var onFinished = require('on-finished')
+            var onHeaders = require('on-headers')
+            
+            onFinished(res, function () {
+                clearTimeout(id)
+            })
+
+            onHeaders(res, function () {
+                clearTimeout(id)
+            });
         } catch(e) {
             console.error(e);
             return this.sendErrorPage(500, req, res);
@@ -207,55 +235,13 @@ class HttpServer
 
         try
         {
-            res.setHeader('Content-Type', 'text/html; charset=utf-8');
-            res.status(code);
-            res.send('An error occured on the server (code: ' + code + ')');
+            res.writeHead(code, { 'Content-Type': 'text/html; charset=utf-8' });
+            res.end('An error occured on the server (code: ' + code + ')');
         }
         catch (err)
         {
             console.error(err);
         }
-    }
-
-    //---------------------------------------------------------------------------------------------------------
-
-    verifyTimeout(err, req, res, next)
-    {
-        if (req.timedout)
-        {
-            console.error('An timeout occured on the page:', req.url);
-            this.sendErrorPage(524, req, res);
-        }
-        else if (next)
-        {
-             next();
-        }
-    }
-
-    logError(err, req, res, next)
-    {
-        console.error(err);
-        next(err);
-    }
-
-    handleError(err, req, res, next)
-    {
-        console.error(err);
-        this.sendErrorPage(500, req, res);
-    }
-
-    appUse(func, obj)
-    {
-        if (obj !== null)
-        {
-            this.app.use(function()
-            {
-                func.apply(obj, arguments);
-            });
-        }
-        else
-
-            this.app.use(func);
     }
 
     //---------------------------------------------------------------------------------------------------------
@@ -311,26 +297,17 @@ class HttpServer
 
 HttpServer.getClientIpFromHeaders = function(req, socket)
 {
-    var address = '';
-
-    try
-    {
-        if (socket)
-            address = socket.remoteAddress || '';
-        else if (req.connection)
-            address = req.connection.remoteAddress || '';
-
-        if (req.headers['cf-connecting-ip'])
-            address = req.headers['cf-connecting-ip'];
-        else if (req.headers['x-real-ip'])
-            address = req.headers['x-real-ip'];
-    }
-    catch (e)
-    {
-        console.error('getClientIp', e);
-    }
-
-    return address;
+    if (req.headers['cf-connecting-ip'])
+        return req.headers['cf-connecting-ip'];
+    if (req.headers['x-real-ip'])
+        return req.headers['x-real-ip'];
+    
+    if (socket)
+        return socket.remoteAddress || '';
+    if (req.connection)
+        return req.connection.remoteAddress || '';
+    
+    return '';
 };
 
 module.exports = HttpServer;
