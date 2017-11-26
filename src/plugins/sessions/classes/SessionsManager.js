@@ -30,9 +30,10 @@ class SessionsManager
         if (typeof (cookies) !== 'object')
             return {};
 
-        if (typeof (cookies.token) !== 'string' || cookies.token.length < 5 || cookies.token === '__global__') {
+        if (typeof (cookies.token) !== 'string' || cookies.token.length < 10 || cookies.token.length > 20 || cookies.token === '__global__') {
             cookies.token = uniqid();
-            return this.getFromToken(cookies.token, true);
+            this.sessions[cookies.token] = new Session(this.siteManager, cookies.token);
+            return this.sessions[cookies.token];
         }
 
         return this.getFromToken(cookies.token);
@@ -94,7 +95,7 @@ class SessionsManager
                 if (index != -1)
                     token = token.substr(0, index);
 
-                if (token.length < 5 || token === '__global__')
+                if (token.length < 10 || token.length > 20 || token === '__global__')
                 {
                     token = uniqid();
                     socket.write(JSON.stringify({cookies: {token: token}}));
@@ -111,22 +112,20 @@ class SessionsManager
         }
     }
 
-    broadcast(message, user_id)
+    broadcast(message, selector)
     {
-        var filterUsers = (typeof (user_id) === 'array' || typeof (user_id) === 'object');
+        const sift = require('sift');
 
         try
         {
             for (var key in this.sessions)
             {
-                if (filterUsers)
-                {
-                    if (user_id.indexOf(this.sessions[key].data['auth_id']) !== -1)
+                if(selector) {
+                    if(sift(selector, [ this.sessions[key].data ]).lengtth > 0)
                         this.sessions[key].broadcastSocketMessage(message);
-                }
-                else
-
+                } else {
                     this.sessions[key].broadcastSocketMessage(message);
+                }
             }
         }
         catch (e)

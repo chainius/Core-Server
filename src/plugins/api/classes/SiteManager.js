@@ -345,7 +345,7 @@ class SiteManager extends SuperClass
             if (permission !== true)
                 throw(permission);
 
-            return session.api(name, post, req.client_ip, req.files, req.get);
+            return session.api(name, post, req);
         });
     }
 

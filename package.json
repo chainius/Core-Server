@@ -71,6 +71,7 @@
     "retire": "^1.4.0",
     "rsvp": "^4.0.1",
     "sane": "^2.2.0",
+    "sift": "^5.0.0",
     "sockjs": "^0.3.18",
     "sockjs-client": "^1.1.4",
     "source-map": "^0.5.7",

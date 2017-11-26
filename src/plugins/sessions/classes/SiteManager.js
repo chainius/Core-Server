@@ -43,22 +43,11 @@ class SiteManager extends SuperClass {
             salt = undefined;
         }
 
-        if(selector)
-            throw('ToDo implement selector function')
-
-        const sessions = this.sessionsManager.sessions;
-
-        for(var key in sessions) {
-
-            //ToDo check with selector
-
-            sessions[key].broadcastSocketMessage({
-                api: api,
-                data: data,
-                salt: salt || this.getSalt(api, {})
-            });
-
-        }
+        this.sessionsManager.broadcast({
+            api: api,
+            data: data,
+            salt: salt || this.getSalt(api, {})
+        }, selector);
     }
 
 }

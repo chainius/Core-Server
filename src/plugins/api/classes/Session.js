@@ -29,6 +29,15 @@ class Session extends SuperClass
     * @param files {Object} optional
     */
     api(name, post, client_ip, file, get) {
+        var req = client_ip;
+        if(typeof(client_ip) === 'string')
+        {
+            req = {
+                client_ip,
+                file,
+                get
+            };
+        }
 
         const apiHandler = this.siteManager.autoCreateApi(name);
 
@@ -40,7 +49,7 @@ class Session extends SuperClass
                 })
             });
 
-        const environment = this.createApiEnvironment(name, post, client_ip, file, get);
+        const environment = this.createApiEnvironment(name, post, req);
         
         return this.executeOnReady(function() {
             return apiHandler.handler.call(environment, apiHandler.console, apiHandler.path, apiHandler.dirname).then(function(result) {
@@ -80,50 +89,9 @@ class Session extends SuperClass
                 throw(err);
             });
         });
-        
-        
-
-        /*try {
-            const result = await apiHandler.handler.call(environment, apiHandler.console, apiHandler.path, apiHandler.dirname);
-
-            if ((typeof (result) === 'object' || typeof (result) === 'array') && result !== null)
-            {
-                if (result['error'])
-                    throw(result);
-
-                return result;
-            }
-            else
-                return { result: result };
-        }
-        catch(err) {
-            if (typeof (err) === 'object' || typeof (err) === 'array')
-            {
-                if (err.error === undefined)
-                {
-                    if (err.message != undefined)
-                    {
-                        if(err.showIntercept !== false)
-                            console.error(err);
-
-                        err = { error: err.message };
-                    }
-                    else
-                    {
-                        console.error(err);
-                        err = { error: 'an internal error occured' };
-                    }
-                }
-            }
-            else if (typeof (err) === 'string') {
-                err = { error: err };
-            }
-
-            throw(err);
-        }*/
     }
     
-    createApiEnvironment(name, post, client_ip, file, get) {
+    createApiEnvironment(name, post, req) {
         return new ApiEnvironment({
             siteManager:    this.siteManager,
             name:           name,
@@ -131,10 +99,7 @@ class Session extends SuperClass
             sessionObject:  this,
             cookie:         this.cookies,
             post:           post || {},
-            $get:           get || {},
-            file:           file || {},
-            client_ip:      client_ip,
-            queryVars:      this.siteManager.apiQueryVars(this, name, post, client_ip, file, get)
+            req:            req
         });
     }
 

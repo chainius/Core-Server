@@ -66,6 +66,22 @@ class ApiEnvironment
         else
             session.broadcastSocketMessage({cookies: data, expiration: session.expirationTime});
     }
+    
+    get client_ip() {
+        return this.$req.client_ip;
+    }
+    
+    get $get() {
+        return this.$req.get;
+    }
+    
+    get file() {
+        return this.$req.file;
+    }
+    
+    get queryVars() {
+        return this.siteManager.apiQueryVars(this.sessionObject, this.name, this.post, this.client_ip, this.file, this.get)
+    }
 
     /**
     * Call an api from the environment
@@ -75,7 +91,7 @@ class ApiEnvironment
     api(name, post)
     {
         post = post || this.post;
-        return this.sessionObject.api(name, post, this.client_ip, this.file, this.$get);
+        return this.sessionObject.api(name, post, this.$req);
     }
 
     //----------------------------------------------------
