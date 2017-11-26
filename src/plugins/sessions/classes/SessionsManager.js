@@ -114,14 +114,19 @@ class SessionsManager
 
     broadcast(message, selector)
     {
-        const sift = require('sift');
+        var sifter;
+        
+        if(selector) {
+            const sift = require('sift');
+            sifter = sift(selector);
+        }
 
         try
         {
             for (var key in this.sessions)
             {
                 if(selector) {
-                    if(sift(selector, [ this.sessions[key].data ]).lengtth > 0)
+                    if(sifter(this.sessions[key].data))
                         this.sessions[key].broadcastSocketMessage(message);
                 } else {
                     this.sessions[key].broadcastSocketMessage(message);
