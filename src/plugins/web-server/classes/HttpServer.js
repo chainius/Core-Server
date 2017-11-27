@@ -3,6 +3,10 @@
 process.options.secure = (process.options.secure === undefined) ? false : true;
 
 const http          = process.options.secure ? require('spdy') : require('http');
+const queryString   = require('querystring');
+
+const onFinished    = require('on-finished')
+const onHeaders     = require('on-headers')
 
 /*const formidable    = require('formidable');
 
@@ -59,6 +63,7 @@ class HttpServer
         this.sockets        = [];
         this.isWorker       = true;
         this.timeout        = 10000; //10 secondes
+        this.uploadLimit    = 15 * 1024 * 1024;
         
         this.createCachedProperty = cachedProperty;
 
@@ -110,22 +115,6 @@ class HttpServer
         });
         
         this.echo.installHandlers(this.server, {prefix: '/socketapi'});
-        
-        const bodyParser   = require('body-parser');
-        const uploadLimit  = '15mb';
-        
-        this.postParsers = {
-            json: bodyParser.json({ limit: uploadLimit }),
-            url:  bodyParser.urlencoded({ extended: true, limit: uploadLimit })
-        };
-
-        /*const cors         = require('cors');
-        const helmet       = require('helmet');
-
-        this.appUse(helmet())
-        this.appUse(cors());
-        //this.appUse(this.handleRequest, this);
-        /*this.appUse(methodOverride());*/
 
         this.echo.on('connection', (conn) =>
         {
@@ -152,13 +141,61 @@ class HttpServer
     }
 
     parseBody(req, res, next) {
-        this.postParsers.json(req, res, () => {
-            this.postParsers.url(req, res, next);
-        });
+        if(!req.headers['content-type'] || (!req.headers['transfer-encoding'] && isNaN(req.headers['content-length']))) {
+            req.body = {};
+            return next();
+        }
+
+        var body = '';
+        const uploadLimit = this.uploadLimit;
+        
+        function onEnd() {
+            try {
+                if(body.length === 0) {
+                    req.body = {};
+                    return next();
+                }
+
+                switch(req.headers['content-type'].toLowerCase()) {
+                    case 'application/x-www-form-urlencoded':
+                        req.body = queryString.parse(body, undefined, undefined, {
+                            maxKeys: 1000
+                        });
+                        break;
+                    case 'application/json':
+                        req.body = JSON.parse(body);
+                        break;
+                }
+
+                next()
+            } catch(e) {
+                console.error(e);
+                next();
+            }
+        }
+
+        function onData(data) {
+            try {
+                body += data;
+
+                if(body.length >= uploadLimit)
+                {
+                    req.removeEventListener('data', onData);
+                    req.removeEventListener('end', onEnd);
+                    onEnd();
+                }
+            } catch(e) {
+                console.error(e);
+                next();
+            }
+        }
+
+        req.on('data', onData);
+        req.on('end', onEnd);
     }
     
     handleRequest(req, res)
-    {
+    {   
         try {
             cachedProperty(req, 'client_ip', HttpServer.getClientIpFromHeaders);
 
@@ -171,7 +208,7 @@ class HttpServer
             });
 
             this.siteManager.handle(req, res);
-            
+
             //Setup timeout
             if(res._headerSent)
                 return;
@@ -181,17 +218,13 @@ class HttpServer
                 console.error('An timeout occured on the page:', req.url);
                 this.sendErrorPage(524, req, res);
             }, this.timeout);
-            
-            var onFinished = require('on-finished')
-            var onHeaders = require('on-headers')
-            
-            onFinished(res, function () {
-                clearTimeout(id)
-            })
 
-            onHeaders(res, function () {
+            function onDone() {
                 clearTimeout(id)
-            });
+            }
+
+            onFinished(res, onDone);
+            onHeaders(res, onDone);
         } catch(e) {
             console.error(e);
             return this.sendErrorPage(500, req, res);

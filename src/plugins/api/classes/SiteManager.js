@@ -5,6 +5,8 @@ const minimatch     = require("minimatch")
 const ApiCreator    = plugins.require('api/ApiCreator');
 const Watcher       = plugins.require('web-server/Watcher');
 
+const EventEmitter = require('events');//tmp
+
 class SiteManager extends SuperClass
 {
     constructor(HttpServer)
@@ -13,6 +15,10 @@ class SiteManager extends SuperClass
 
         this.apiCreator         = new ApiCreator(this);
         this.permissionsConfig  = null;
+        
+        /*process.nextTick(() => {
+            this.stressTest2();
+        })*/
     }
 
     /**
@@ -471,7 +477,92 @@ class SiteManager extends SuperClass
         
         //50000 => 120 - 135 +*
     }
+    
+    createTestCase(cb) {
+        const start = process.hrtime();
+        const event = new EventEmitter();
+        
+        const req = {
+            url: '/api/test/test',
+            headers: { 
+                'cache-control': 'no-cache',
+                'content-type': 'application/x-www-form-urlencoded',
+                'user-agent': 'PostmanRuntime/6.3.2',
+                accept: '*/*',
+                host: 'localhost:8082',
+                cookie: 'token=',
+                'accept-encoding': 'gzip, deflate',
+                'content-length': '39',
+                connection: 'keep-alive' 
+            },
+            
+            on(e, cb) {
+                if(e === 'data') {
+                    process.nextTick(() => {
+                        cb('username=skyhark-live&password=semimoon');
+                        event.emit('end');
+                    });
+                } else {
+                    event.on(e, cb);
+                }
+            },
+            
+            removeListener(e, cb) {
+                event.removeListener(e, cb);
+            }
+        }
+        
+        const res = {
+            write() {
+                
+            },
+            
+            writeHead() {
+                
+            },
+            
+            setHeader() {
+                
+            },
+            
+            end() {
+                event.emit('close');
+                const diff = process.hrtime(start);
+                cb(diff[0] * 1e9 + diff[1]);
+            }
+        };
 
+        this.server.handleRequest(req, res);
+    }
+
+    stressTest2() {
+        const start     = Date.now();
+        const durations = [];
+        const _this     = this;
+        var rpm = 0;
+        
+        console.log('Start test');
+        console.time("test-api");
+        
+        function next() {
+            _this.createTestCase((duration) => {
+                durations.push(duration);
+                rpm++;
+
+                if(Date.now() - start < 1000)
+                    return next();
+
+                const avg = durations.reduce(function(a, b) { return a + b }) / durations.length;
+                console.success("Total time:", Date.now() - start);
+                console.success('RPM:', rpm)
+                console.success("AVG Time:", avg, "\n");
+                console.timeEnd("test-api");
+            })
+        }
+
+        next();
+    }
+    
     preHandle(req, res, prePath)
     {
         if(prePath !== 'api')
@@ -479,6 +570,10 @@ class SiteManager extends SuperClass
 
         this.server.parseBody(req, res, () => {
             this.handleApi(req, res, 4);
+            /*res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({
+                test: 'abc'
+            }));*/
         });
 
         return true;
