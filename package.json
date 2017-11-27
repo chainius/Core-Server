@@ -1,6 +1,6 @@
 {
   "name": "core-server",
-  "version": "0.4.6",
+  "version": "0.4.7",
   "description": "CoreServer",
   "main": "src/index.js",
   "bin": "src/index.js",
@@ -52,7 +52,7 @@
     "mysql2": "^1.4.2",
     "network-address": "^1.1.2",
     "node-forge": "^0.7.1",
-    "node-sass": "^4.5.3",
+    "node-sass": "^4.7.2",
     "nodemailer": "^4.1.1",
     "nsp": "^2.8.0",
     "on-finished": "^2.3.0",
