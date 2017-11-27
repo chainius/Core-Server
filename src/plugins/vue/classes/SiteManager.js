@@ -1,8 +1,11 @@
+const helmet = require('helmet');
+
 class SiteManager extends SuperClass {
 
     constructor(httpServer) {
         super(httpServer);
 
+        this._helmet = helmet();
         const _this = this;
 
         process.nextTick(() => {
@@ -60,7 +63,9 @@ class SiteManager extends SuperClass {
                         return;
                     }
 
-                    _this.pagesManager.handleVueStream(r.stream, r.ctx, req, res);
+                    _this._helmet(req, res, function() {
+                        _this.pagesManager.handleVueStream(r.stream, r.ctx, req, res);
+                    });
                 })
                 .catch(function(err)
                 {

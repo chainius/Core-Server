@@ -155,15 +155,22 @@ class PluginSystem {
     //------------------------
 
     loadConfig() {
-        var config = {};
+        //php & tsv disabled in default config
+        const config = {
+            'api-php': false,
+            'tsv':     false
+        };
 
         try {
-            config = require(Path.join(process.cwd(), 'config', 'plugins.json'));
+            const subConfig = require(Path.join(process.cwd(), 'config', 'plugins.json'));
+
+            for(var key in subConfig)
+                config[key] = subConfig[key];
         } catch(e) {
             if(e.code !== 'MODULE_NOT_FOUND')
                 throw(e);
         }
-
+        
         //ToDo load git repositories
 
         this.loadFolderPlugins(Path.join(process.pwd(), 'src', 'plugins'), config);
