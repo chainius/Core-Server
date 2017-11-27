@@ -446,38 +446,6 @@ class SiteManager extends SuperClass
         });
     }
     
-    recursiveTest(endCB, max, index, res) {
-        index = index || 0;
-        res   = res || [];
-
-        const _this = this;
-        const start = Date.now();
-
-        this.api('test/Test', {}, { cookies: { token: '' } }).catch(function(err) {
-            console.error(err);
-        }).then(function() {
-            res.push(Date.now() - start);
-            index++;
-            
-            if(index >= max)
-                return endCB(res);
-            else
-                _this.recursiveTest(endCB, max, index, res);
-        });
-    }
-    
-    startTest() {
-        const start = Date.now();
-        console.debug("Starting stress test");
-
-        this.recursiveTest(function(res) {
-            const time = (Date.now() - start);
-            console.success('Total time', time - (time % 15));
-        }, 50000); //50000
-        
-        //50000 => 120 - 135 +*
-    }
-    
     createTestCase(cb) {
         const start = process.hrtime();
         const event = new EventEmitter();
@@ -535,7 +503,7 @@ class SiteManager extends SuperClass
         this.server.handleRequest(req, res);
     }
 
-    stressTest2() {
+    stressTest() {
         const start     = Date.now();
         const durations = [];
         const _this     = this;
@@ -567,8 +535,17 @@ class SiteManager extends SuperClass
     {
         if(prePath !== 'api')
             return super.preHandle(req, res, prePath);
+        
+        /*process.nextTick(() => {
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({
+                test: 'abc'
+            }));
+        })
+        return;*/
 
         this.server.parseBody(req, res, () => {
+            //console.log(req.cookies)
             this.handleApi(req, res, 4);
             /*res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify({

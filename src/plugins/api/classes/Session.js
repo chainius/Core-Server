@@ -33,7 +33,7 @@ class Session extends SuperClass
         if(typeof(client_ip) === 'string')
         {
             req = {
-                client_ip,
+                getClientIp() { return client_ip },
                 file,
                 get
             };

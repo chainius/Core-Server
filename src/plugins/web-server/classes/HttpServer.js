@@ -4,6 +4,7 @@ process.options.secure = (process.options.secure === undefined) ? false : true;
 
 const http          = process.options.secure ? require('spdy') : require('http');
 const queryString   = require('querystring');
+const cookie        = require('cookie');
 
 const onFinished    = require('on-finished')
 const onHeaders     = require('on-headers')
@@ -37,7 +38,7 @@ function cachedProperty(object, name, calculator) {
             if(value !== null)
                 return value;
 
-            value = calculator(object);
+            value = calculator.call(object, object);
             return value;
         },
 
@@ -47,11 +48,17 @@ function cachedProperty(object, name, calculator) {
     });
 }
 
-function emptyFn() {}
+function parseRequestCookies() {
+    const cookies = this.headers.cookie;
+    if(!cookies)
+        return {};
 
-//--------------------------------------------------------------------
+    return cookie.parse(cookies)
+}
 
-const cookie = require('cookie')
+function parseRequestClientIp() {
+    return HttpServer.getClientIpFromHeaders(this);
+}
 
 //------------------------------------------------------------------------
 
@@ -197,15 +204,8 @@ class HttpServer
     handleRequest(req, res)
     {   
         try {
-            cachedProperty(req, 'client_ip', HttpServer.getClientIpFromHeaders);
-
-            cachedProperty(req, 'cookies', function() {
-                const cookies = req.headers.cookie;
-                if(!cookies)
-                    return {};
-
-                return cookie.parse(cookies)
-            });
+            req.getClientIp = parseRequestClientIp;
+            req.__defineGetter__('cookies', parseRequestCookies);
 
             this.siteManager.handle(req, res);
 

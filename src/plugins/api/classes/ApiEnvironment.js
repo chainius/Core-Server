@@ -68,7 +68,7 @@ class ApiEnvironment
     }
     
     get client_ip() {
-        return this.$req.client_ip;
+        return this.$req.getClientIp();
     }
     
     get $get() {
