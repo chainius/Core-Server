@@ -6,30 +6,6 @@ const http          = process.options.secure ? require('spdy') : require('http')
 const queryString   = require('querystring');
 const cookie        = require('cookie');
 
-//const onFinished    = require('on-finished')
-//const onHeaders     = require('on-headers')
-
-/*const formidable    = require('formidable');
-
-function formParse(req, res, next)
-{
-    if(req.method !== 'POST' || req.headers['content-type'] !== 'multipart/form-data')
-        return next();
-
-    var form = new formidable.IncomingForm();
-
-    form.parse(req, function(err, fields, files)
-    {
-        if(err)
-            next(err);
-
-        req.post = fields;
-        req.files = files;
-
-        next();
-    });
-}*/
-
 function cachedProperty(object, name, calculator) {
     var value = null;
 
@@ -177,6 +153,21 @@ class HttpServer
                     case 'application/json':
                         req.body = JSON.parse(body);
                         break;
+                    case 'multipart/form-data':
+                        console.warn('multipart/form-data post not supported');
+                        /*var form = new formidable.IncomingForm();
+
+                        form.parse(req, function(err, fields, files)
+                        {
+                            if(err)
+                                next(err);
+
+                            req.post = fields;
+                            req.files = files;
+
+                            next();
+                        });*/
+                        break;
                 }
 
                 next()
@@ -237,23 +228,6 @@ class HttpServer
             });
 
             this.siteManager.handle(req, res);
-
-            //Setup timeout
-            /*if(res._headerSent)
-                return;
-
-            const id = setTimeout(() => {
-                req.timedout = true;
-                console.error('An timeout occured on the page:', req.url);
-                this.sendErrorPage(524, req, res);
-            }, this.timeout);
-
-            function onDone() {
-                clearTimeout(id)
-            }
-
-            onFinished(res, onDone);
-            onHeaders(res, onDone);*/
         } catch(e) {
             console.error(e);
             return this.sendErrorPage(500, req, res);

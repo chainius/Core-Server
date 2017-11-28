@@ -128,7 +128,7 @@ class SiteManager
         }
         catch (err)
         {
-            console.error(err);
+            console.error('{sendErrorPage}', err);
         }
     }
 
@@ -154,7 +154,7 @@ class SiteManager
         }
         catch (e)
         {
-            console.error(e);
+            console.error('{handle}', e);
             this.sendErrorPage(500, req, res);
         }
 

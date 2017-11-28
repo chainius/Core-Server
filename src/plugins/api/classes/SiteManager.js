@@ -55,8 +55,7 @@ class SiteManager extends SuperClass
         
         this.permissionsConfig = {
             config: null,
-            globsConfig: null,
-            api: api
+            globsConfig: null
         }
 
         const basePath = Path.join(process.cwd(), 'config', 'public-api');
@@ -336,7 +335,7 @@ class SiteManager extends SuperClass
     * @param token_changed_cb {Function}
     * @return {Promise<Object>} The reponse object of the api.
     */
-    async api(name, post, req, tokenChangeNotify)
+    api(name, post, req, tokenChangeNotify)
     {
         const oToken  = req.cookies.token;
         const session = this.sessionsManager.getFromCookies(req.cookies);
@@ -387,39 +386,7 @@ class SiteManager extends SuperClass
             }
         }
 
-        /*return handleResult({
-            test: 'abc'
-        })*/
-
-        //------------------------------------------
-        
-        var path = req.url.substr(1 + offset);
-
-        if(path.indexOf('?') !== -1)
-        {
-            this.server.createCachedProperty(req, 'get', function() {
-                const querystring = require('querystring');
-                return querystring.parse(req.url.substr(req.url.indexOf("?")+1));
-            });
-
-            path = path.substr(0, path.indexOf('?') );
-        }
-        else {
-            req.get = {};
-        }
-        
-        //------------------------------------------
-        
-        return this.api(path, req.body, req, function(token, expiration, otoken)
-        {
-            const d = new Date();
-            d.setTime(expiration);
-            const expires = 'expires=' + d.toUTCString() + ';';
-
-            res.setHeader('Set-Cookie', 'token=' + token + ';' + expires + 'path=/');
-        })
-        .then(handleResult).catch(function(err)
-        {
+        function handleCatch(err) {
             var httpCode = err.httpCode || 400;
 
             if(err.httpCode)
@@ -443,7 +410,45 @@ class SiteManager extends SuperClass
             }
 
             _this.sendErrorPage(400, req, res);
-        });
+        }
+        
+        /*return handleResult({
+            test: 'abc'
+        })*/
+
+        //------------------------------------------
+        
+        var path = req.url.substr(1 + offset);
+
+        if(path.indexOf('?') !== -1)
+        {
+            this.server.createCachedProperty(req, 'get', function() {
+                const querystring = require('querystring');
+                return querystring.parse(req.url.substr(req.url.indexOf("?")+1));
+            });
+
+            path = path.substr(0, path.indexOf('?') );
+        }
+        else {
+            req.get = {};
+        }
+        
+        //------------------------------------------
+        
+        try {
+
+            return this.api(path, req.body, req, function(token, expiration, otoken)
+            {
+                const d = new Date();
+                d.setTime(expiration);
+                const expires = 'expires=' + d.toUTCString() + ';';
+
+                res.setHeader('Set-Cookie', 'token=' + token + ';' + expires + 'path=/');
+            }).then(handleResult).catch(handleCatch);
+
+        } catch(e) {
+            handleCatch(e);
+        }
     }
     
     createTestCase(cb) {
@@ -541,8 +546,9 @@ class SiteManager extends SuperClass
             res.end(JSON.stringify({
                 test: 'abc'
             }));
-        })
-        return;*/
+        });
+        
+        return true;*/
 
         this.server.parseBody(req, res, () => {
             //console.log(req.cookies)
