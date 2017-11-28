@@ -87,7 +87,7 @@ class PagesManager
     {
         try
         {
-            return this.pagesManager.renderToString('/error/' + code).then(function(r) {
+            return this.renderToString('/error/' + code).then(function(r) {
                 res.writeHead(code, { 'Content-Type': 'text/html; charset=utf-8' });
                 res.end(r.html);
             }).catch(function(err) {

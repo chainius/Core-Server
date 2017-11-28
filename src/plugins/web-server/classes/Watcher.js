@@ -20,7 +20,14 @@ class Watcher
             _this.changeDetected.apply(_this, arguments);
         }
 
-        var sWatch  = sane(process.cwd(), { dot: false, watchman: true });
+        var useWatchman = false;
+        try {
+            const spawn = require("child_process").spawnSync('watchman');
+            if(!spawn.error)
+                useWatchman = true;
+        } catch(e) { }
+
+        var sWatch  = sane(process.cwd(), { dot: false, watchman: useWatchman });
         sWatch.on('change', changeDetected);
         sWatch.on('add', changeDetected);
         sWatch.on('delete', changeDetected);
