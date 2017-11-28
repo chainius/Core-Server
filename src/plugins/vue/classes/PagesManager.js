@@ -115,7 +115,7 @@ class PagesManager
         var isInited    = false;
         var lang        = 'en';
 
-        function init()
+        function init(chunk)
         {
             try
             {
@@ -126,19 +126,18 @@ class PagesManager
                 isInited = true;
                 code     = code || ctx.meta.httpCode || 200;
                 res.writeHead(code, { 'Content-Type': 'text/html; charset=utf-8' });
-                res.write(`<html lang="en" data-vue-meta-server-rendered ${htmlAttrs.text()}>`);
-                res.write(`<head>`);
-                res.write(`<meta charset="utf-8">`);
-                res.write(`<meta name="viewport" content="width=device-width, initial-scale=1">`);
-                res.write(`<link rel="icon" type="image/png" href="/img/favicon.png" />`);
-                res.write(title.text ? title.text() : `<title>${_this.siteManager.title}</title>`);
-                res.write(`
-                  ${meta.text()}
-                  ${link.text()}
-                  ${style.text()}
-                  ${script.text()}
-                  ${noscript.text()}
-                `);
+                res.write(`<html lang="en" data-vue-meta-server-rendered ${htmlAttrs.text()}>
+                <head>
+                <meta charset="utf-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1">
+                <link rel="icon" type="image/png" href="/img/favicon.png" />
+                ${ title.text ? title.text() : `<title>${_this.siteManager.title}</title>` }
+                ${meta.text()}
+                ${link.text()}
+                ${style.text()}
+                ${script.text()}
+                ${noscript.text()}
+                ${chunk}`);
 
                 if(code !== 200 && code !== 404)
                     res.write(`<script>window.HTTP_STATUS = ${code}; </script>`);
@@ -159,9 +158,9 @@ class PagesManager
             try
              {
                 if (!isInited)
-                    init();
-
-                res.write(chunk);
+                    init(chunk);
+                else
+                    res.write(chunk);
             }
             catch (e)
             {
@@ -174,16 +173,15 @@ class PagesManager
             try
             {
                 const hash = _this.isProduction ? _this.getCacheObject('/lib/bundle.js').getHash() : 'dev';
-                res.write(`  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=Intl.~locale.${lang}"></script>`);
-
-                if(ctx.state)
-                    res.write(`<script>window.STATE = JSON.parse('${JSON.stringify(ctx.state)}')</script>`);
-
-                res.write(`<script>window.API_DATA = ${JSON.stringify(ctx.api_data)}</script>`);
-                res.write(`<script src="/lib/bundle.js?${hash}"></script>`);
-                res.write(`</body>`);
-                res.write(`</html>`);
-                res.end();
+                
+                //if(ctx.state)
+                //res.write(`<script>window.STATE = JSON.parse('${JSON.stringify(ctx.state)}')</script>`);
+                
+                res.end(`<script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=Intl.~locale.${lang}"></script>
+                        <script>window.API_DATA = ${JSON.stringify(ctx.api_data)}</script>
+                        <script src="/lib/bundle.js?${hash}"></script>
+                        </body>
+                        </html>`);
             }
             catch (e)
             {

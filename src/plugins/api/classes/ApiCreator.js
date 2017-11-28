@@ -107,6 +107,10 @@ class ApiCreator {
         context.Crypter         = Crypter;
         context.setTimeout      = setTimeout;
         context.setInterval     = setInterval;
+        context.setImmediate    = setImmediate;
+        context.clearTimeout    = clearTimeout;
+        context.clearInterval   = clearInterval;
+        context.clearImmediate  = clearImmediate;
         context.resource_url    = resource_url;
         context.Buffer          = Buffer;
         context.plugins         = plugins;
