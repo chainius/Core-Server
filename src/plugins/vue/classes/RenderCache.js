@@ -148,12 +148,12 @@ class RenderCache {
         return new Promise(function(resolve, reject) {
             const app = RenderCache.bundle.$app;
 
-            if(app.$route.path === url)
-                return _this.onRouterDone(app, resolve, reject);
+            //if(app.$route.path === url && app.loaded)
+            //    return _this.onRouterDone(app, resolve, reject);
 
-            app.$router.replace(url, function() {
-                _this.onRouterDone(app, resolve, reject);
-            });
+            //app.loaded = true;
+            app.$router.push(url);
+            _this.onRouterDone(app, resolve, reject);
         });
     }
 

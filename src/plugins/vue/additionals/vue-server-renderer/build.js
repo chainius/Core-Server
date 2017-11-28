@@ -8020,3 +8020,7 @@ exports.warned = warned;
 exports.renderNode = renderNode;
 exports.installSSRHelpers = installSSRHelpers;
 exports.normalizeRender = normalizeRender;
+exports.renderAttrs = renderAttrs;
+exports.renderDOMProps = renderDOMProps;
+exports.renderClass = renderClass;
+exports.renderStyle = renderStyle;

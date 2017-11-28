@@ -104,10 +104,10 @@ class Renderer {
             isUnaryTag: isUnaryTag,
             canBeLeftOpenTag: canBeLeftOpenTag,
             modules: [
-                //renderAttrs,
-                //renderDOMProps,
-                //renderClass,
-                //renderStyle
+                build.renderAttrs,
+                build.renderDOMProps,
+                build.renderClass,
+                build.renderStyle
             ],
             // user can provide server-side implementations for custom directives
             // when creating the renderer.
