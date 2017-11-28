@@ -136,10 +136,14 @@ class RenderCache {
         };
         
         this.renderer.renderToString(app, context, (err, html) => {
+            var code = 200;
+            if(app.$route.meta && app.$route.meta.httpCode && html)
+                code = app.$route.meta.httpCode;
+            
             if(err) 
                 reject(err);
             else 
-                resolve(html);
+                resolve({ html, httpCode: code });
         });
     }
     

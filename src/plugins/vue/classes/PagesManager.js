@@ -83,11 +83,19 @@ class PagesManager
 
     //--------------------------------
 
-    async handleError(code, req, res)
+    handleError(code, req, res)
     {
         try
         {
-            const r = await this.getRenderStream({ url: '/error/' + code });
+            return this.pagesManager.renderToString('/error/' + code).then(function(r) {
+                res.writeHead(code, { 'Content-Type': 'text/html; charset=utf-8' });
+                res.end(r.html);
+            }).catch(function(err) {
+                res.writeHead(code, { 'Content-Type': 'text/html; charset=utf-8' });
+                res.end(`An unexpected error occured ${err.message || err}`);
+            });
+                                  
+            /*const r = await this.getRenderStream({ url: '/error/' + code });
 
             if(r === null)
             {
@@ -96,14 +104,19 @@ class PagesManager
                 return;
             }
 
-            return this.handleVueStream(r.stream, r.ctx, req, res, code);
+            return this.handleVueStream(r.stream, r.ctx, req, res, code);*/
         }
         catch (e)
         {
             console.error(e);
         }
 
-        try
+        return new Promise(function(resolve) {
+            res.writeHead(code, { 'Content-Type': 'text/html; charset=utf-8' });
+            res.end('An unexpected error occured');
+            resolve();
+        })
+        /*try
         {
             res.writeHead(code, { 'Content-Type': 'text/html; charset=utf-8' });
             res.end('An unexpected error occured');
@@ -111,7 +124,7 @@ class PagesManager
         catch (e)
         {
             console.error(e);
-        }
+        }*/
     }
 
     handleVueStream(stream, ctx, req, res, code)

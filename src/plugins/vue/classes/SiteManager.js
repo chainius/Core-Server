@@ -64,8 +64,8 @@ class SiteManager extends SuperClass {
                     }*/
 
                     _this._helmet(req, res, function() {
-                        res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-                        res.end(r);
+                        res.writeHead(r.httpCode || 200, { 'Content-Type': 'text/html; charset=utf-8' });
+                        res.end(r.html);
                         //_this.pagesManager.handleVueStream(r.stream, r.ctx, req, res);
                     });
                 })
