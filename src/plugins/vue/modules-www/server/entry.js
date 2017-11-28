@@ -29,6 +29,8 @@ export function createApp() {
     });
 }
 
+export let $app = app;
+
 //-----------------------------------------
 
 export function preloads()

@@ -75,6 +75,11 @@ class PagesManager
     {
         return this.siteManager.resourceManager.getObject(name);
     }
+    
+    renderToString(url) {
+        const renderCache = this.globalSession.getComponentsCache();
+        return renderCache.renderToString(url);
+    }
 
     //--------------------------------
 

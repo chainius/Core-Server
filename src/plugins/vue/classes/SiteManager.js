@@ -49,9 +49,9 @@ class SiteManager extends SuperClass {
 
                 //-----------------------------------------------------------------
 
-                this.pagesManager.getRenderStream(req).then(function(r)
+                this.pagesManager.renderToString(req.url).then(function(r)
                 {
-                    if(r.stream === null)
+                    /*if(r.stream === null)
                     {
                         if(r.error !== null)
                         {
@@ -61,10 +61,12 @@ class SiteManager extends SuperClass {
                         res.writeHead(500, { 'Content-Type': 'text/html; charset=utf-8' });
                         res.end('An unexpected error occured, please check if the ui option is enabled and the bundle has successfully been generated');
                         return;
-                    }
+                    }*/
 
                     _this._helmet(req, res, function() {
-                        _this.pagesManager.handleVueStream(r.stream, r.ctx, req, res);
+                        res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+                        res.end(r);
+                        //_this.pagesManager.handleVueStream(r.stream, r.ctx, req, res);
                     });
                 })
                 .catch(function(err)
