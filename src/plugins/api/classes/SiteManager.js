@@ -17,7 +17,7 @@ class SiteManager extends SuperClass
         this.permissionsConfig  = null;
         
         /*process.nextTick(() => {
-            this.stressTest2();
+            this.stressTest();
         })*/
     }
 
@@ -486,11 +486,11 @@ class SiteManager extends SuperClass
             },
             
             writeHead() {
-                
+                this._headerSent = true;
             },
             
             setHeader() {
-                
+                this._headerSent = true;
             },
             
             end() {

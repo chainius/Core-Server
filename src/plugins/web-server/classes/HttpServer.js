@@ -6,8 +6,8 @@ const http          = process.options.secure ? require('spdy') : require('http')
 const queryString   = require('querystring');
 const cookie        = require('cookie');
 
-const onFinished    = require('on-finished')
-const onHeaders     = require('on-headers')
+//const onFinished    = require('on-finished')
+//const onHeaders     = require('on-headers')
 
 /*const formidable    = require('formidable');
 
@@ -72,6 +72,7 @@ class HttpServer
         this.timeout        = 10000; //10 secondes
         this.uploadLimit    = 15 * 1024 * 1024;
         
+        this.openRequests   = [];
         this.createCachedProperty = cachedProperty;
 
         const _this = this;
@@ -99,7 +100,7 @@ class HttpServer
         {
             this.server = http.createServer(this.handleRequest.bind(this));
         }
-        
+
         const threads = parseInt(process.options.threads) || ((process.env.NODE_ENV === 'production') ? require('os').cpus().length : 1);
         if(threads === 1 && process.options.forceCluster === undefined) {
             const port = process.options.port || 8080;
@@ -108,6 +109,10 @@ class HttpServer
         }
 
         process.nextTick(function() { _this.setup(); })
+        
+        setInterval(() => {
+            this.verifyTimeouts()
+        }, 1000);
     }
 
     setup()
@@ -201,16 +206,40 @@ class HttpServer
         req.on('end', onEnd);
     }
     
+    verifyTimeouts() {
+        const now = Date.now();
+        const connections = this.openRequests;
+        this.openRequests = [];
+        
+        for(var key in connections) {
+            if(connections[key].res._headerSent)
+                continue;
+            
+            if(connections[key].openTime < now - this.timeout) {
+                this.sendErrorPage(524, connections[key].req, connections[key].res);
+            }
+            else {
+                this.openRequests.push(connections[key]);
+            }
+        }
+    }
+    
     handleRequest(req, res)
     {   
         try {
             req.getClientIp = parseRequestClientIp;
             req.__defineGetter__('cookies', parseRequestCookies);
 
+            this.openRequests.push({
+                req: req,
+                res: res,
+                openTime: Date.now()
+            });
+
             this.siteManager.handle(req, res);
 
             //Setup timeout
-            if(res._headerSent)
+            /*if(res._headerSent)
                 return;
 
             const id = setTimeout(() => {
@@ -224,7 +253,7 @@ class HttpServer
             }
 
             onFinished(res, onDone);
-            onHeaders(res, onDone);
+            onHeaders(res, onDone);*/
         } catch(e) {
             console.error(e);
             return this.sendErrorPage(500, req, res);
