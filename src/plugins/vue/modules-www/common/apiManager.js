@@ -294,7 +294,7 @@ class ApiManager
         if (cb)
             id = this.on(api, data, cb, salt);
 
-        if (this.isFetching(salt) && api !== "chat/messages") //ToDo call function to check if it is a fake api
+        if (this.isFetching(salt)) //ToDo call function to check if it is a fake (live) api
             return;
 
         this.setFetching(salt);

@@ -18,7 +18,7 @@ class CacheObject
         this.path = Path.normalize(path);
         this.purge();
 
-        var that = this;
+        const that = this;
         Watcher.onFileChange(this.path, function()
         {
             that.purge();
@@ -68,8 +68,6 @@ class CacheObject
 
     linkPipes(src, dest)
     {
-        const _this = this;
-
         /*src.once('readable', function(e)
         {
             try
@@ -91,7 +89,7 @@ class CacheObject
             catch(e) { /*_console.error(e);*/ }
         }
 
-        src.on('error', onError);
+        src.once('error', onError);
         dest.once('finish', function(e)
         {
             src.removeListener('error', onError);

@@ -13,6 +13,7 @@ class MasterServer extends SuperClass {
     constructor(config) {
         super(config);
 
+        console.log('PHP Support enabled')
         this.startPhpBundler();
     }
 

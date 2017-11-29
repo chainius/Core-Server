@@ -74,6 +74,14 @@ const Console = module.exports = {
     success(tag, ...messages) {
         return log.call(this, 'success', tag, ...messages);
     },
+    
+    time(name) {
+        console.time(name);
+    },
+    
+    timeEnd(name) {
+        console.timeEnd(name);
+    },
 
     implement(obj, tag) {
         const subConsole = {
@@ -114,6 +122,14 @@ const Console = module.exports = {
                 const cons = {};
                 module.exports.implement(cons, tag);
                 return cons.console;
+            },
+
+            time(name) {
+                console.time(name);
+            },
+
+            timeEnd(name) {
+                console.timeEnd(name);
             }
         };
 

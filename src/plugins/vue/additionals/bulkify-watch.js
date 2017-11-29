@@ -5,8 +5,15 @@ const minimatch    = require("minimatch")
 
 module.exports = function (b, opts) {
     if (!opts) opts = {};
+    
+    var useWatchman = false;
+    try {
+        const spawn = require("child_process").spawnSync('watchman');
+        if(!spawn.error)
+            useWatchman = true;
+    } catch(e) { }
 
-    const sWatch  = sane(process.cwd(), { dot: false, watchman: true });
+    const sWatch  = sane(process.cwd(), { dot: false, watchman: useWatchman });
     var cache = b._options.cache;
     var pkgcache = b._options.packageCache;
 

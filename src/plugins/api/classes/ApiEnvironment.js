@@ -32,7 +32,12 @@ class ApiEnvironment
     */
     setSessionData(data)
     {
-        //Overwrited by constructor opionts
+        this.sessionObject.setData(data);
+        this.session = this.sessionObject.data;
+    }
+    
+    setSessionExpiration(time) {
+        this.sessionObject.expirationTime = Date.now() + (time * 1000);
     }
 
     /**
@@ -41,7 +46,41 @@ class ApiEnvironment
     */
     setCookieData(data)
     {
-        //Overwrited by constructor opionts
+        const session = this.sessionObject;
+
+        try
+        {
+            for (var key in data)
+            {
+                session.cookies[key] = data[key];
+                this.cookie[key]     = data[key];
+            }
+        }
+        catch (e)
+        {
+            console.error(e);
+        }
+
+        if (Date.now() + 48 * 60 * 600000 > session.expirationTime)
+            session.broadcastSocketMessage({cookies: data});
+        else
+            session.broadcastSocketMessage({cookies: data, expiration: session.expirationTime});
+    }
+    
+    get client_ip() {
+        return this.$req.getClientIp();
+    }
+    
+    get $get() {
+        return this.$req.get;
+    }
+    
+    get file() {
+        return this.$req.file;
+    }
+    
+    get queryVars() {
+        return this.siteManager.apiQueryVars(this.sessionObject, this.name, this.post, this.client_ip, this.file, this.get)
     }
 
     /**
@@ -52,7 +91,7 @@ class ApiEnvironment
     api(name, post)
     {
         post = post || this.post;
-        return this.sessionObject.api(name, post, this.client_ip, this.file, this.$get);
+        return this.sessionObject.api(name, post, this.$req);
     }
 
     //----------------------------------------------------

@@ -1,7 +1,9 @@
-const renderer    = require('vue-server-renderer');
+//const renderer    = require('vue-server-renderer');
 const Path        = require('path');
 const PassThrough = require('stream').PassThrough;
 const Watcher     = plugins.require('web-server/Watcher');
+
+const renderer = require('../additionals/vue-server-renderer/custom/index.js');
 
 class RenderCache {
 
@@ -12,9 +14,15 @@ class RenderCache {
         this.urlApiData     = {};
         this.client_ip      = null; //ToDo get client ip from req
 
-        this.renderer = renderer.createRenderer({
+        /*this.renderer = renderer.createRenderer({
             basedir: process.cwd(),
             cache: this
+        });*/
+        
+        this.renderer = new renderer({
+            basedir: process.cwd(),
+            cache: this,
+            template: require('fs').readFileSync(__dirname + '/../modules-www/template.html').toString()
         });
 
         if(!RenderCache.bundle)
@@ -118,6 +126,40 @@ class RenderCache {
 
         return null;
     }
+    
+    onRouterDone(app, resolve, reject) {
+        const context = {
+            url: app.$route.path,
+            cssHash: 'dev',
+            jsHash: 'dev',
+            lang:    'en'
+        };
+        
+        this.renderer.renderToString(app, context, (err, html) => {
+            var code = 200;
+            if(app.$route.meta && app.$route.meta.httpCode && html)
+                code = app.$route.meta.httpCode;
+            
+            if(err) 
+                reject(err);
+            else 
+                resolve({ html, httpCode: code });
+        });
+    }
+    
+    renderToString(url, cb) {
+        const _this = this;
+        return new Promise(function(resolve, reject) {
+            const app = RenderCache.bundle.$app;
+
+            //if(app.$route.path === url && app.loaded)
+            //    return _this.onRouterDone(app, resolve, reject);
+
+            //app.loaded = true;
+            app.$router.push(url);
+            _this.onRouterDone(app, resolve, reject);
+        });
+    }
 
     getSalt(api, data) {
         var dataJ = JSON.stringify(data);
@@ -132,7 +174,7 @@ class RenderCache {
     }
 
     api(name, data) {
-        return this.session.api(name, data, this.client_ip, {});
+        return this.session.api(name, data, this.$req);
     }
 
     preload(componentData, componentName) {

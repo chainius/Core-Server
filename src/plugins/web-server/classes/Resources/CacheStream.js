@@ -45,15 +45,18 @@ class CacheStream extends Stream.Stream
 
         try
         {
-            if(this._buffers.length > 0)
+            if(this._buffers.length > 0) {
                 dest.emit('readable', this);
 
-            this._buffers.forEach(function(buffer) {
-                dest.write(buffer);
-            });
+                if(this._buffers.length > 1) {
+                    this._buffers = [ Buffer.concat(this._buffers) ];
+                }
+                
+                dest.write(this._buffers[0]);
+            }
 
             if (this._ended) {
-                    dest.end();
+                dest.end();
                 return dest;
             }
 

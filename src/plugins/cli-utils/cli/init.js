@@ -63,7 +63,7 @@ async function init()
     await mkdir(Path.join(process.cwd(), 'api'));
     await mkdir(Path.join(process.cwd(), 'config'));
     fs.writeFileSync(Path.join(process.cwd(), 'config', 'public-api.json'), JSON.stringify({connected:[], notconnected: [], everyone: [ '*/*' ]}, null, '\t'));
-    fs.writeFileSync(Path.join(process.cwd(), '.babelrc'), '{ "presets": ["es2015"] }');
+    fs.writeFileSync(Path.join(process.cwd(), '.babelrc'), '{ "presets": ["env"] }');
     fs.writeFileSync(Path.join(process.cwd(), '.gitignore'), 'node_modules/\ndist/\n.vscode\ncore-docs/');
 
     if(config.ui.substr(0,1).toLowerCase() === 'y')
@@ -101,7 +101,7 @@ async function init()
     };
 
     config.dependencies = {
-        'babel-preset-es2015': '^6.24.1',
+        "babel-preset-env": "^1.6.1",
         'bootstrap-notify': "^3.1.3",
         'jquery': "^3.2.1",
         'raven-js': "^3.15.0",

@@ -7,7 +7,7 @@ class ResourcesManger
     constructor(siteManager)
     {
         this.siteManager = siteManager;
-        this.cache = [];
+        this.cache = {};
 
         this.preload('/lib/bundle.js');
         this.preload('/css/bundle.css');
@@ -29,11 +29,6 @@ class ResourcesManger
         return object;
     }
 
-    logPerforamnce(url, time)
-    {
-        //console.info('resourceManger time:', url, time + ' ms');
-    }
-
     //------------------------------------------------
 
     createCacheName(path)
@@ -53,7 +48,7 @@ class ResourcesManger
     getObject(name, cacheName)
     {
         if (!cacheName)
-            cacheName = this.createCacheName(name);
+            cacheName = name;// this.createCacheName(name);
 
         if (this.cache[cacheName])
             return this.cache[cacheName];
@@ -82,13 +77,12 @@ class ResourcesManger
 
             res.once('readable', function()
             {
-                res.status(200);
-                res.setHeader('Content-Type', cacheObject.mime);
-
                 if (acceptEncoding.match(/\bdeflate\b/))
                     res.setHeader('Content-Encoding', 'deflate');
                 else if (acceptEncoding.match(/\bgzip\b/))
                     res.setHeader('Content-Encoding', 'gzip');
+                
+                res.writeHead(200, { 'Content-Type': cacheObject.mime });
             });
 
             //-------------------------------------------------------
@@ -122,14 +116,6 @@ class ResourcesManger
     {
         if (['img', 'fonts', 'lib', 'css'].indexOf(prepath) === -1)
             return prepath;
-
-        const start = Date.now();
-        const _this = this;
-
-        res.on('finish', function()
-        {
-            _this.logPerforamnce(req.url, Date.now() - start);
-        });
 
         try
         {

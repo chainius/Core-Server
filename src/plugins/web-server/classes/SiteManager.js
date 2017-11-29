@@ -6,9 +6,9 @@ const Watcher         = plugins.require('web-server/Watcher');
 /** SiteManager */
 class SiteManager
 {
-    constructor()
+    constructor(server)
     {
-        //this.title              = 'CoreServer';
+        this.server             = server;
         this.resourceManager    = new ResourceManager(this);
         this.configs            = {};
 
@@ -123,13 +123,12 @@ class SiteManager
     {
         try
         {
-            res.setHeader('Content-Type', 'text/html; charset=utf-8');
-            res.status(code);
-            res.send('An error occured on the requested page (code: ' + code + ')');
+            res.writeHead(code, { 'Content-Type': 'text/html; charset=utf-8' });
+            res.end('An error occured on the requested page (code: ' + code + ')');
         }
         catch (err)
         {
-            console.error(err);
+            console.error('{sendErrorPage}', err);
         }
     }
 
@@ -150,15 +149,12 @@ class SiteManager
     {
         try
         {
-            var path = req.url.split('/');
-            if(path[0] === '')
-                path.shift();
-
-            return this.preHandle(req, res, path[0]);
+            const firstSlash = req.url[0] === '/' ? 1 : 0;
+            return this.preHandle(req, res, req.url.substr(firstSlash, req.url.indexOf('/', 1) - firstSlash));
         }
         catch (e)
         {
-            console.error(e);
+            console.error('{handle}', e);
             this.sendErrorPage(500, req, res);
         }
 

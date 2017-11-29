@@ -1,8 +1,11 @@
+const helmet = require('helmet');
+
 class SiteManager extends SuperClass {
 
     constructor(httpServer) {
         super(httpServer);
 
+        this._helmet = helmet();
         const _this = this;
 
         process.nextTick(() => {
@@ -25,8 +28,6 @@ class SiteManager extends SuperClass {
     {
         try
         {
-            const _this = this;
-
             if(!super.handle(req, res))
             {
                 if(!this.pagesManager) {
@@ -46,23 +47,18 @@ class SiteManager extends SuperClass {
 
                 //-----------------------------------------------------------------
 
-                this.pagesManager.getRenderStream(req).then(function(r)
+                const _this = this;
+                this.pagesManager.renderToString(req.url).then(function(r)
                 {
-                    if(r.stream === null)
-                    {
-                        if(r.error !== null)
-                        {
-                            console.error(r.error);
-                        }
-
-                        res.status(500);
-                        res.setHeader('Content-Type', 'text/html; charset=utf-8');
-                        res.write('An unexpected error occured, please check if the ui option is enabled and the bundle has successfully been generated');
-                        res.end();
-                        return;
+                    if(res._headerSent) {
+                        res.writeHead(r.httpCode || 200, { 'Content-Type': 'text/html; charset=utf-8' });
+                        res.end(r.html);
+                    } else {
+                        _this._helmet(req, res, function() {
+                            res.writeHead(r.httpCode || 200, { 'Content-Type': 'text/html; charset=utf-8' });
+                            res.end(r.html);
+                        });
                     }
-
-                    _this.pagesManager.handleVueStream(r.stream, r.ctx, req, res);
                 })
                 .catch(function(err)
                 {

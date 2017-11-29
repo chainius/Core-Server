@@ -5,13 +5,20 @@ const minimatch     = require("minimatch")
 const ApiCreator    = plugins.require('api/ApiCreator');
 const Watcher       = plugins.require('web-server/Watcher');
 
+const EventEmitter = require('events');//tmp
+
 class SiteManager extends SuperClass
 {
     constructor(HttpServer)
     {
         super(HttpServer);
 
-        this.apiCreator = new ApiCreator(this);
+        this.apiCreator         = new ApiCreator(this);
+        this.permissionsConfig  = null;
+        
+        /*process.nextTick(() => {
+            this.stressTest();
+        })*/
     }
 
     /**
@@ -43,23 +50,63 @@ class SiteManager extends SuperClass
     */
     getPermissionsConfig(api)
     {
-        const config = this.getConfig('public-api');
-        const globsConfig = {};
-
-        for(var key in config) {
-            if(config[key].filter) {
-                const res = config[key].filter(function(obj) { return obj.indexOf('*') !== -1 });
-
-                if(res.length > 0)
-                    globsConfig[key] = res;
-            }
+        if(this.permissionsConfig !== null)
+            return this.permissionsConfig;
+        
+        this.permissionsConfig = {
+            config: null,
+            globsConfig: null
         }
 
-        return {
-            config: config,
-            globsConfig: globsConfig,
-            api: api
-        };
+        const basePath = Path.join(process.cwd(), 'config', 'public-api');
+        var configPath = basePath + '.json';
+        const _this    = this;
+        
+        function load() {
+            try
+            {
+                const fs          = require('fs');
+                const content     = fs.readFileSync(configPath);
+                const config      = JSON.parse(content);
+                
+                _this.permissionsConfig.config = config;
+                _this.permissionsConfig.globsConfig = {};
+                
+                for(var key in config) {
+                    if(config[key].filter) {
+                        const res = config[key].filter(function(obj) { return obj.indexOf('*') !== -1 });
+
+                        if(res.length > 0)
+                            _this.permissionsConfig.globsConfig[key] = res;
+                    }
+                }
+            }
+            catch (e)
+            {
+                if(e.code !== 'ENOENT')
+                    console.error(e);
+            }
+            
+            return _this.permissionsConfig;
+        }
+
+        if (process.env.NODE_ENV === 'production')
+        {
+            const prodPath = basePath + '-production.json';
+            const fs       = require('fs');
+
+            if (fs.existsSync(prodPath))
+                return load()
+        }
+        else {
+            Watcher.onFileChange(configPath, function()
+            {
+                console.warn('Permissions configuration changed');
+                load();
+            });
+        }
+
+        return load();
     }
 
     /**
@@ -231,10 +278,9 @@ class SiteManager extends SuperClass
 
     /**
     * This variables are globally accessible in every called api
-    * @param api_name {String}
     * @returns {Object}
     */
-    getApiContext(name)
+    getApiContext()
     {
         return {};
     }
@@ -289,24 +335,23 @@ class SiteManager extends SuperClass
     * @param token_changed_cb {Function}
     * @return {Promise<Object>} The reponse object of the api.
     */
-    async api(name, post, req, tokenChangeNotify)
+    api(name, post, req, tokenChangeNotify)
     {
         const oToken  = req.cookies.token;
         const session = this.sessionsManager.getFromCookies(req.cookies);
 
-        if (req !== undefined)
-            session.updateCookies(req.cookies);
+        session.updateCookies(req.cookies);
 
         if (session.token !== oToken && tokenChangeNotify)
             tokenChangeNotify(session.token, session.expirationTime, oToken);
 
-        await session.onReady();
+        return session.executeOnReady(() => {
+            const permission = this.checkPermission(session, name, post);
+            if (permission !== true)
+                throw(permission);
 
-        const permission = this.checkPermission(session, name, post);
-        if (permission !== true)
-            throw(permission);
-
-        return await session.api(name, post, req.client_ip, req.files, req.get);
+            return session.api(name, post, req);
+        });
     }
 
 
@@ -323,105 +368,197 @@ class SiteManager extends SuperClass
 
         if (offset === undefined)
             offset = 0;
-
-        try
+        
+        function handleResult(result, code)
         {
-            var path = req.url.substr(1 + offset);
+            if(req.timedout)
+                return console.error('{handleApi-Result}', path, 'Response received after timeout');
 
-            function handleResult(result)
+            try
             {
-                if(req.timedout) {
-                    console.error('{handleApi-Result}', path, 'Response received after timeout');
-                    return;
-                }
+                res.writeHead(code || 200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify(result));
+            }
+            catch (e)
+            {
+                console.error('{handleApi-Result}', e);
+                _this.sendErrorPage(500, req, res);
+            }
+        }
 
-                try
+        function handleCatch(err) {
+            var httpCode = err.httpCode || 400;
+
+            if(err.httpCode)
+                delete err.httpCode;
+
+            if (typeof (err) === 'object' || typeof (err) === 'array')
+            {
+                if (err.error !== undefined)
                 {
-                    res.setHeader('Content-Type', 'application/json');
-                    res.send(JSON.stringify(result));
+                    return handleResult(err, httpCode);
                 }
-                catch (e)
+                else if (err.message !== undefined)
                 {
-                    console.error('{handleApi-Result}', e);
-                    _this.sendErrorPage(500, req, res);
+                    console.error('{handleApi}', err);
+                    return handleResult({ error: err.message }, httpCode);
                 }
             }
-
-            if (path.indexOf('/') == -1)
-                return handleResult({ error: 'Bad api path format found' });
-
-            req.get = {};
-            if(path.indexOf('?') !== -1)
+            else if (typeof (err) === 'string')
             {
+                return handleResult({ error: err }, httpCode);
+            }
+
+            _this.sendErrorPage(400, req, res);
+        }
+        
+        /*return handleResult({
+            test: 'abc'
+        })*/
+
+        //------------------------------------------
+        
+        var path = req.url.substr(1 + offset);
+
+        if(path.indexOf('?') !== -1)
+        {
+            this.server.createCachedProperty(req, 'get', function() {
                 const querystring = require('querystring');
+                return querystring.parse(req.url.substr(req.url.indexOf("?")+1));
+            });
 
-                const getIndex = path.indexOf('?');
-                req.get = querystring.parse(path.substr(getIndex+1));
-                path = path.substr(0, getIndex);
-            }
+            path = path.substr(0, path.indexOf('?') );
+        }
+        else {
+            req.get = {};
+        }
+        
+        //------------------------------------------
+        
+        try {
 
-            this.api(path, req.body, req, function(token, expiration, otoken)
+            return this.api(path, req.body, req, function(token, expiration, otoken)
             {
                 const d = new Date();
                 d.setTime(expiration);
                 const expires = 'expires=' + d.toUTCString() + ';';
 
                 res.setHeader('Set-Cookie', 'token=' + token + ';' + expires + 'path=/');
-            })
-            .then(handleResult).catch(function(err)
-            {
-                try
-                {
-                    if (err.httpCode)
-                    {
-                        res.status(err.httpCode);
-                        delete err.httpCode;
-                    }
-                    else
-                    {
-                        res.status(400);
-                    }
-                }
-                catch (e)
-                {
-                    console.error('{handleApi}', e);
-                }
+            }).then(handleResult).catch(handleCatch);
 
-                if (typeof (err) === 'object' || typeof (err) === 'array')
-                {
-                    if (err.error !== undefined)
-                    {
-                        return handleResult(err);
-                    }
-                    else if (err.message !== undefined)
-                    {
-                        console.error('{handleApi}', err);
-                        return handleResult({ error: err.message });
-                    }
-                }
-                else if (typeof (err) === 'string')
-                {
-                    return handleResult({ error: err });
-                }
-
-                _this.sendErrorPage(400, req, res);
-            });
+        } catch(e) {
+            handleCatch(e);
         }
-        catch (e)
-        {
-            console.error('{handleApi}', e);
-            this.sendErrorPage(500, req, res);
+    }
+    
+    createTestCase(cb) {
+        const start = process.hrtime();
+        const event = new EventEmitter();
+        
+        const req = {
+            url: '/api/test/test',
+            headers: { 
+                'cache-control': 'no-cache',
+                'content-type': 'application/x-www-form-urlencoded',
+                'user-agent': 'PostmanRuntime/6.3.2',
+                accept: '*/*',
+                host: 'localhost:8082',
+                cookie: 'token=',
+                'accept-encoding': 'gzip, deflate',
+                'content-length': '39',
+                connection: 'keep-alive' 
+            },
+            
+            on(e, cb) {
+                if(e === 'data') {
+                    process.nextTick(() => {
+                        cb('username=skyhark-live&password=semimoon');
+                        event.emit('end');
+                    });
+                } else {
+                    event.on(e, cb);
+                }
+            },
+            
+            removeListener(e, cb) {
+                event.removeListener(e, cb);
+            }
         }
+        
+        const res = {
+            write() {
+                
+            },
+            
+            writeHead() {
+                this._headerSent = true;
+            },
+            
+            setHeader() {
+                this._headerSent = true;
+            },
+            
+            end() {
+                event.emit('close');
+                const diff = process.hrtime(start);
+                cb(diff[0] * 1e9 + diff[1]);
+            }
+        };
 
-        return this;
+        this.server.handleRequest(req, res);
     }
 
+    stressTest() {
+        const start     = Date.now();
+        const durations = [];
+        const _this     = this;
+        var rpm = 0;
+        
+        console.log('Start test');
+        console.time("test-api");
+        
+        function next() {
+            _this.createTestCase((duration) => {
+                durations.push(duration);
+                rpm++;
+
+                if(Date.now() - start < 1000)
+                    return next();
+
+                const avg = durations.reduce(function(a, b) { return a + b }) / durations.length;
+                console.success("Total time:", Date.now() - start);
+                console.success('RPM:', rpm)
+                console.success("AVG Time:", avg, "\n");
+                console.timeEnd("test-api");
+            })
+        }
+
+        next();
+    }
+    
     preHandle(req, res, prePath)
     {
         if(prePath !== 'api')
             return super.preHandle(req, res, prePath);
+        
+        /*process.nextTick(() => {
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({
+                test: 'abc'
+            }));
+        });
+        
+        return true;*/
 
-        this.handleApi(req, res, 4);
+        this.server.parseBody(req, res, () => {
+            //console.log(req.cookies)
+            this.handleApi(req, res, 4);
+            /*res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({
+                test: 'abc'
+            }));*/
+        });
+
         return true;
     }
 }

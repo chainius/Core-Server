@@ -11,7 +11,7 @@ class PagesManager
             this.siteManager    = siteManager;
 
             if(siteManager.getSession)
-                this.globalSession  = siteManager.getSession('global');
+                this.globalSession  = siteManager.getSession('__global__');
         }
     }
 
@@ -75,42 +75,45 @@ class PagesManager
     {
         return this.siteManager.resourceManager.getObject(name);
     }
+    
+    renderToString(url) {
+        const renderCache = this.globalSession.getComponentsCache();
+        return renderCache.renderToString(url);
+    }
 
     //--------------------------------
 
-    async handleError(code, req, res)
+    handleError(code, req, res)
     {
         try
         {
-            const r = await this.getRenderStream({ url: '/error/' + code });
-
-            if(r === null)
-            {
-                res.status(code);
-                res.setHeader('Content-Type', 'text/html; charset=utf-8');
-                res.write('An unexpected error occured');
-                res.end();
-                return;
-            }
-
-            return this.handleVueStream(r.stream, r.ctx, req, res, code);
+            return this.renderToString('/error/' + code).then(function(r) {
+                res.writeHead(code, { 'Content-Type': 'text/html; charset=utf-8' });
+                res.end(r.html);
+            }).catch(function(err) {
+                res.writeHead(code, { 'Content-Type': 'text/html; charset=utf-8' });
+                res.end(`An unexpected error occured ${err.message || err}`);
+            });
         }
         catch (e)
         {
             console.error(e);
         }
 
-        try
+        return new Promise(function(resolve) {
+            res.writeHead(code, { 'Content-Type': 'text/html; charset=utf-8' });
+            res.end('An unexpected error occured');
+            resolve();
+        })
+        /*try
         {
-            res.status(code);
-            res.setHeader('Content-Type', 'text/html; charset=utf-8');
-            res.write('An unexpected error occured');
-            res.end();
+            res.writeHead(code, { 'Content-Type': 'text/html; charset=utf-8' });
+            res.end('An unexpected error occured');
         }
         catch (e)
         {
             console.error(e);
-        }
+        }*/
     }
 
     handleVueStream(stream, ctx, req, res, code)
@@ -119,7 +122,7 @@ class PagesManager
         var isInited    = false;
         var lang        = 'en';
 
-        function init()
+        function init(chunk)
         {
             try
             {
@@ -129,33 +132,22 @@ class PagesManager
 
                 isInited = true;
                 code     = code || ctx.meta.httpCode || 200;
-                res.status(code);
-                res.setHeader('Content-Type', 'text/html; charset=utf-8');
-                res.write(`<html lang="en" data-vue-meta-server-rendered ${htmlAttrs.text()}>`);
-                res.write(`<head>`);
-                res.write(`<meta charset="utf-8">`);
-                res.write(`<meta name="viewport" content="width=device-width, initial-scale=1">`);
-                res.write(`<link rel="icon" type="image/png" href="/img/favicon.png" />`);
-                res.write(title.text ? title.text() : `<title>${_this.siteManager.title}</title>`);
-                res.write(`
-                  ${meta.text()}
-                  ${link.text()}
-                  ${style.text()}
-                  ${script.text()}
-                  ${noscript.text()}
-                `);
+                res.writeHead(code, { 'Content-Type': 'text/html; charset=utf-8' });
+                res.write(`<html lang="en" data-vue-meta-server-rendered ${htmlAttrs.text()}>
+                <head>
+                <meta charset="utf-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1">
+                <link rel="icon" type="image/png" href="/img/favicon.png" />
+                ${ title.text ? title.text() : `<title>${_this.siteManager.title}</title>` }
+                ${meta.text()}
+                ${link.text()}
+                ${style.text()}
+                ${script.text()}
+                ${noscript.text()}
+                ${chunk}`);
 
                 if(code !== 200 && code !== 404)
                     res.write(`<script>window.HTTP_STATUS = ${code}; </script>`);
-
-                /*try
-                {
-                    _this.siteManager.setPageMeta(req, res);
-                }
-                catch (e)
-                {
-                    console.error(e);
-                }*/
 
                 const hash = _this.isProduction ? _this.getCacheObject('/css/bundle.css').getHash() : 'dev';
                 res.write("<link href='/css/bundle.css?"+hash+"' rel='stylesheet' type='text/css'>");
@@ -173,9 +165,9 @@ class PagesManager
             try
              {
                 if (!isInited)
-                    init();
-
-                res.write(chunk);
+                    init(chunk);
+                else
+                    res.write(chunk);
             }
             catch (e)
             {
@@ -188,16 +180,15 @@ class PagesManager
             try
             {
                 const hash = _this.isProduction ? _this.getCacheObject('/lib/bundle.js').getHash() : 'dev';
-                res.write(`  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=Intl.~locale.${lang}"></script>`);
-
-                if(ctx.state)
-                    res.write(`<script>window.STATE = JSON.parse('${JSON.stringify(ctx.state)}')</script>`);
-
-                res.write(`<script>window.API_DATA = ${JSON.stringify(ctx.api_data)}</script>`);
-                res.write(`<script src="/lib/bundle.js?${hash}"></script>`);
-                res.write(`</body>`);
-                res.write(`</html>`);
-                res.end();
+                
+                //if(ctx.state)
+                //res.write(`<script>window.STATE = JSON.parse('${JSON.stringify(ctx.state)}')</script>`);
+                
+                res.end(`<script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=Intl.~locale.${lang}"></script>
+                        <script>window.API_DATA = ${JSON.stringify(ctx.api_data)}</script>
+                        <script src="/lib/bundle.js?${hash}"></script>
+                        </body>
+                        </html>`);
             }
             catch (e)
             {
@@ -220,7 +211,8 @@ class PagesManager
             console.error(error);
             try
             {
-                res.status(500).end('An internal error occured');
+                res.writeHead(500, { 'Content-Type': 'text/plain' });
+                res.end('An internal error occured');
             }
             catch (e)
             {
@@ -322,7 +314,7 @@ PagesManager.compile = function(mode, done) {
 
     var b = browserify(config)
                 .transform(vueify)
-                .transform(babelify, {presets: ['es2015']})
+                .transform(babelify, {presets: ['env']})
                 .transform(bulkify)
                 .transform({ global: isProduction }, envify({
                     _: 'purge',

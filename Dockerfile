@@ -1,4 +1,4 @@
-FROM node:7.8.0
+FROM node:9.2.0
 
 RUN mkdir -p /var/core-server
 RUN mkdir -p /var/www

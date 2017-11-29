@@ -22,6 +22,15 @@ const app = init({
     apiManager: api
 });
 
+export function createApp() {
+    return init({
+        onComponent() {},
+        apiManager: api
+    });
+}
+
+export let $app = app;
+
 //-----------------------------------------
 
 export function preloads()

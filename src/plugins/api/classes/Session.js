@@ -1,5 +1,23 @@
 const ApiEnvironment = plugins.require('api/ApiEnvironment');
 
+function cachedProperty(object, name, calculator) {
+    var value = null;
+
+    Object.defineProperty(object, name, {
+        get: function() {
+            if(value !== null)
+                return value;
+
+            value = calculator(object);
+            return value;
+        },
+
+        set: function(nValue) {
+            value = nValue;
+        }
+    });
+}
+
 /** session */
 class Session extends SuperClass
 {
@@ -10,99 +28,79 @@ class Session extends SuperClass
     * @param client_ip {String}
     * @param files {Object} optional
     */
-    async api(name, post, client_ip, file, get) {
-        const _this       = this;
+    api(name, post, client_ip, file, get) {
+        var req = client_ip;
+        if(typeof(client_ip) !== 'object')
+        {
+            req = {
+                getClientIp() { return client_ip },
+                file,
+                get
+            };
+        }
 
         const apiHandler = this.siteManager.autoCreateApi(name);
 
         if (!apiHandler)
-            throw({ error: 'The requested api could not be found.', api: name });
+            return new Promise(function(resolve, reject) {
+                reject({
+                    error: 'The requested api could not be found.',
+                    api: name
+                })
+            });
 
-        await this.onReady();
+        const environment = this.createApiEnvironment(name, post, req);
+        
+        return this.executeOnReady(function() {
+            return apiHandler.handler.call(environment, apiHandler.console, apiHandler.path, apiHandler.dirname).then(function(result) {
+                if ((typeof (result) === 'object' || typeof (result) === 'array') && result !== null)
+                {
+                    if (result['error'])
+                        throw(result);
 
-        const environment = new ApiEnvironment({
+                    return result;
+                }
+                else {
+                    return { result: result };
+                }
+            }).catch(function(err) {
+                if (typeof (err) === 'object' || typeof (err) === 'array')
+                {
+                    if (err.error === undefined)
+                    {
+                        if (err.message != undefined)
+                        {
+                            if(err.showIntercept !== false)
+                                console.error(err);
+
+                            err = { error: err.message };
+                        }
+                        else
+                        {
+                            console.error(err);
+                            err = { error: 'an internal error occured' };
+                        }
+                    }
+                }
+                else if (typeof (err) === 'string') {
+                    err = { error: err };
+                }
+
+                throw(err);
+            });
+        });
+    }
+    
+    createApiEnvironment(name, post, req) {
+        return new ApiEnvironment({
             siteManager:    this.siteManager,
             name:           name,
             session:        this.data,
             sessionObject:  this,
             cookie:         this.cookies,
             post:           post || {},
-            $get:           get || {},
-            file:           file || {},
-            client_ip:      client_ip,
-            queryVars:      this.siteManager.apiQueryVars(this, name, post, client_ip, file, get),
-
-            setSessionData: function(data)
-            {
-                _this.setData(data);
-                environment.session = _this.data;
-            },
-
-            setCookieData: function(data)
-            {
-                try
-                {
-                    for (var key in data)
-                    {
-                        _this.cookies[key] = data[key];
-                        environment.cookie[key] = data[key];
-                    }
-                }
-                catch (e)
-                {
-                    console.error(e);
-                }
-
-                if (Date.now() + 48 * 60 * 600000 > _this.expirationTime)
-                    _this.broadcastSocketMessage({cookies: data});
-                else
-                    _this.broadcastSocketMessage({cookies: data, expiration: _this.expirationTime});
-            },
-
-            setSessionExpiration: function(time)
-            {
-                _this.expirationTime = Date.now() + (time * 1000);
-            }
+            $req:           req || {}
         });
-
-        try {
-            const result = await apiHandler.handler.call(environment, apiHandler.console, apiHandler.path, apiHandler.dirname);
-
-            if ((typeof (result) === 'object' || typeof (result) === 'array') && result !== null)
-            {
-                if (result['error'])
-                    throw(result);
-
-                return result;
-            }
-            else
-                return { result: result };
-        }
-        catch(err) {
-            if (typeof (err) === 'object' || typeof (err) === 'array')
-            {
-                if (err.error === undefined)
-                {
-                    if (err.message != undefined)
-                    {
-                        if(err.showIntercept !== false)
-                            console.error(err);
-
-                        err = { error: err.message };
-                    }
-                    else
-                    {
-                        console.error(err);
-                        err = { error: 'an internal error occured' };
-                    }
-                }
-            }
-            else if (typeof (err) === 'string') {
-                err = { error: err };
-            }
-
-            throw(err);
-        }
     }
 
     handleSocketApi(socket, api, post, salt)

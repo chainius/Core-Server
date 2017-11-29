@@ -1,0 +1,24 @@
+<html lang="en" data-vue-meta-server-rendered {{{meta.htmlAttrs}}}>
+    <head {{{meta.headAttrs}}}>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="icon" type="image/png" href="/img/favicon.png" />
+        <link href='/css/bundle.css?..' rel='stylesheet' type='text/css'>
+        
+        {{{ meta.title }}}
+        {{{ meta.meta }}}
+        {{{ meta.link }}}
+        {{{ meta.style }}}
+        {{{ meta.script }}}
+        {{{ meta.noscript }}}
+        {{{ meta.httpCode && meta.httpCode !== 200 && meta.httpCode !== 404 ? `<script>window.HTTP_STATUS = ${meta.httpCode}; </script>` : '' }}}
+
+        <link href='/css/bundle.css?{{cssHash}}' rel='stylesheet' type='text/css'>
+    </head>
+    <body {{{meta.bodyAttrs}}}>
+        <!--vue-ssr-outlet-->
+        <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=Intl.~locale.{{lang}}"></script>
+        <script>window.API_DATA = JSON.stringify({})</script>
+        <script src="/lib/bundle.js?{{jsHash}}"></script>
+    </body>
+</html>

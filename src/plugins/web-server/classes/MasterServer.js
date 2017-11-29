@@ -4,7 +4,7 @@ const cluster       = require('cluster');
 const EventEmitter  = require('events');
 const net           = require('net');
 
-cluster.schedulingPolicy = cluster.SCHED_NONE;
+//cluster.schedulingPolicy = cluster.SCHED_NONE;
 
 function getAppVersion(basePath) {
     const Path = require('path');
@@ -29,8 +29,8 @@ class MasterServer
         this.threads          = process.options.threads || ((process.env.NODE_ENV === 'production') ? require('os').cpus().length : 1);
         this.isMaster         = true;
 
-        if(this.threads > 1 || process.options.forceCluster !== undefined)
-            this.start(process.options.port || 8080);
+        //if(this.threads > 1 || process.options.forceCluster !== undefined)
+        //    this.start(process.options.port || 8080);
 
         console.info('Setup using', this.threads, 'threads');
         this.updateWorkers();

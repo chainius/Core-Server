@@ -14,11 +14,35 @@ class Session
         this.cookies        = {};
         this.data           = {};
         this.updateTime     = 0;
+        this.ready          = true;
     }
 
     onReady()
     {
+        this.ready = true;
         return true;
+    }
+
+    executeOnReady(fn) { //Async fn as input
+        if(this.ready)
+            return fn();
+        
+        const onR = this.onReady();
+        
+        if(!onR.then)
+            return fn();
+        
+        return new Promise((resolve, reject) => {
+            onR.then(function() {
+                fn().then(function(result) {
+                    resolve(result);
+                }).catch(function(err) {
+                    reject(err);
+                });
+            }).catch(function(err) {
+                reject(err);
+            });
+        })
     }
 
     updateCookies(cookies)
