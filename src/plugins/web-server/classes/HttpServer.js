@@ -77,12 +77,12 @@ class HttpServer
             this.server = http.createServer(this.handleRequest.bind(this));
         }
 
-        const threads = parseInt(process.options.threads) || ((process.env.NODE_ENV === 'production') ? require('os').cpus().length : 1);
-        if(threads === 1 && process.options.forceCluster === undefined) {
+        //const threads = parseInt(process.options.threads) || ((process.env.NODE_ENV === 'production') ? require('os').cpus().length : 1);
+        //if(threads === 1 && process.options.forceCluster === undefined) {
             const port = process.options.port || 8080;
             console.info('Starting server on port', port);
             this.server.listen(port);
-        }
+        //}
 
         process.nextTick(function() { _this.setup(); })
         
@@ -93,7 +93,6 @@ class HttpServer
 
     setup()
     {
-        console.info('Setup http(s) server');
         this.siteManager   = new (plugins.require('web-server/SiteManager'))(this);
 
         const sockjs       = require('sockjs');

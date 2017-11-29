@@ -4,7 +4,7 @@ var assign = require('object-assign')
 var ensureRequire = require('../ensure-require')
 
 var defaultBabelOptions = {
-  presets: ['es2015'],
+  presets: ['env'],
   plugins: ['transform-runtime']
 }
 

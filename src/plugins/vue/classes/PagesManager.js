@@ -325,7 +325,7 @@ PagesManager.compile = function(mode, done) {
 
     var b = browserify(config)
                 .transform(vueify)
-                .transform(babelify, {presets: ['es2015']})
+                .transform(babelify, {presets: ['env']})
                 .transform(bulkify)
                 .transform({ global: isProduction }, envify({
                     _: 'purge',
