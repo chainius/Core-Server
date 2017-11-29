@@ -29,6 +29,7 @@ class Session extends SuperClass
     * @param files {Object} optional
     */
     api(name, post, client_ip, file, get) {
+
         var req = client_ip;
         if(typeof(client_ip) !== 'object')
         {
@@ -50,8 +51,9 @@ class Session extends SuperClass
             });
 
         const environment = this.createApiEnvironment(name, post, req);
-        
+
         return this.executeOnReady(function() {
+
             return apiHandler.handler.call(environment, apiHandler.console, apiHandler.path, apiHandler.dirname).then(function(result) {
                 if ((typeof (result) === 'object' || typeof (result) === 'array') && result !== null)
                 {
@@ -105,34 +107,32 @@ class Session extends SuperClass
 
     handleSocketApi(socket, api, post, salt)
     {
-        const permission = this.siteManager.checkPermission(this, api, post);
         const _this = this;
+        
+        this.executeOnReady(() => {
+            const permission = this.siteManager.checkPermission(this, api, post);
+            if (permission !== true)
+            {
+                return new Promise(function(resolve, reject) {
+                    reject(permission);
+                });
+            }
 
-        if (permission !== true)
-        {
-            return _this.sendSocketMessage(socket, {
-                apiError: api,
-                error: permission,
-                salt: salt
-            });
-        }
-
-        this.api(api, post, socket.remoteAddress).then(function(result)
+            return this.api(api, post, socket.remoteAddress);
+        }).then(function(result)
         {
             _this.sendSocketMessage(socket, {
                 api: api,
                 data: result,
                 salt: salt
             });
-        })
-        .catch(function(err)
-        {
+        }).catch(function(err) {
             _this.sendSocketMessage(socket, {
                 apiError: api,
                 error: err,
                 salt: salt
             });
-        });
+        })
     }
 
     handleSocketMessage(socket, message) {

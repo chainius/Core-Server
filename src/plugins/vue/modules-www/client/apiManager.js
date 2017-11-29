@@ -17,11 +17,10 @@ class ApiManager extends BaseManager
 
         if (!this.token)
             this.generateToken();
-        else if (this.token.length != 28)
+        else if (this.token.length < 10 || this.token.length > 20)
             this.generateToken();
-        else
-            this.socketConnect();
 
+        this.socketConnect();
         this.deleteOldCache();
 
         const _this = this;
@@ -251,7 +250,10 @@ class ApiManager extends BaseManager
 
         this.socket = false;
         this.fetchingApis = [];
-        this.socketConnect();
+        
+        setTimeout(() => {
+            this.socketConnect();
+        }, 100);
     }
 
     emitSocketMessage(msg) {

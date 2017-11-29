@@ -10,8 +10,9 @@ class Session extends SuperClass
         super(siteManager, token);
 
         this.siteManager.connections = this.siteManager.connections || {};
-        this.redisLoaded    = (!this.siteManager.connections.redis || token === 'global');
+        this.redisLoaded    = (!this.siteManager.connections.redis || token === '__global__');
         this.onRedisLoaded  = [];
+        this.ready          = this.ready && this.redisLoaded;
 
         this.loadFromRedis();
     }
@@ -21,7 +22,7 @@ class Session extends SuperClass
         if (this.redisLoaded)
             return super.onReady();
 
-        const superOnReady = super.onReady;
+        const superOnReady = super.onReady.bind(this);
 
         const _this = this;
         return new Promise(function(resolve, reject)
@@ -35,11 +36,11 @@ class Session extends SuperClass
             _this.onRedisLoaded.push(function()
             {
                 const sresult = superOnReady();
-                
+
                 if(sresult.then) {
                     sresult.then(function(data) {
                         if(!didTimeout)
-                            resolve(data);
+                            resolve();
                     }).catch(function(err) {
                         if(!didTimeout)
                             reject(err);
@@ -49,7 +50,7 @@ class Session extends SuperClass
                 }
                 else {
                     if(!didTimeout)
-                        resolve(data);
+                        resolve();
                     
                     clearTimeout(timeout);
                 }
@@ -67,7 +68,7 @@ class Session extends SuperClass
     loadRedisTTL()
     {
         const redis = this.siteManager.connections.redis;
-        if (!redis || this.token === 'global')
+        if (!redis || this.token === '__global__')
             return;
 
         var _this = this;
@@ -107,7 +108,7 @@ class Session extends SuperClass
             }
         }
 
-        if (redis && this.token !== 'global')
+        if (redis && this.token !== '__global__')
         {
             redis.load('session_' + this.token).then(function(data)
             {
@@ -138,7 +139,7 @@ class Session extends SuperClass
         this.updateTime = Date.now();
         const redis = this.siteManager.connections.redis;
 
-        if (redis && this.token !== 'global')
+        if (redis && this.token !== '__global__')
             redis.save('session_' + this.token, this.data, this.expirationTime);
 
         this.emitRedis();
@@ -151,7 +152,7 @@ class Session extends SuperClass
     {
         const redis = this.siteManager.connections.redis;
 
-        if (redis && this.token !== 'global')
+        if (redis && this.token !== '__global__')
         {
             this.siteManager.broadcastToRedis('SESSION_UPDATE', {
                 token: this.token,

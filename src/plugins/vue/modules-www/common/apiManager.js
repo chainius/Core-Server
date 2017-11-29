@@ -108,7 +108,7 @@ class ApiManager
         this.setCookies({
             "token": hash
         }, Date.now() + (24 * 60 * 60 * 1000));
-        this.token = hash;
+        this.token = hash.substr(Math.round(Math.random() * 10), 16);
         return hash;
     }
 
