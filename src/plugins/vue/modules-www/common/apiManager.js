@@ -4,10 +4,92 @@ import PermissionsManager from './permissions.js';
 import ApiMerger          from './merger.js';
 import { mergePost }      from './init.js';
 
+Vue.mixin({
+
+    computed: {
+        socketConnected() {
+            return this.$api.socketConnected;
+        },
+    },
+
+    destroyed: function () {
+        this.$api.unbindVue(this);
+
+        if (this.listenerId) {
+            this.$api.unbindListener(this.listenerId);
+        }
+
+        if(this.$intervals) {
+            this.$intervals.forEach(function(id) {
+                clearInterval(id);
+            });
+        }
+    },
+
+    methods: {
+        $logCatch: function () {
+            var arg = Array.prototype.slice.call(arguments);
+
+            if (this.name)
+                arg.unshift(this._name);
+
+            console.error.apply(console, arg);
+        },
+
+        $bindApi: function (api, data) {
+            this.$api.bindVue(this, api, data);
+        },
+
+        $replaceApi: function (api, data) {
+            const uid = this._uid;
+            const binded = this.$api.bindedVueElements.find(function(obj) {
+                return (obj.objectId == uid);
+            });
+
+            if(!binded || binded.api !== api || JSON.stringify(data) !== JSON.stringify(binded.data)) {
+                this.$api.replaceVueApi(this, api, data);
+            }
+        },
+
+        $refreshApi(api, post) {
+            var postIn = post;
+
+            if(!api) 
+                postIn || this.api_data;
+
+            this.$api.refresh(api || this.api, postIn || {});
+        },
+        
+        $setInterval(fn, time) {
+            const id = setInterval(fn, time);
+            this.$intervals.push(id);
+        }
+    },
+
+    watch: {
+        api(val, oldVal) {
+            if(val === oldVal)
+                return;
+
+            this.$nextTick(() => {
+                this.$replaceApi(this.api, this.api_data);
+            });
+        },
+
+        api_data(val, oldVal) {
+            if(val === oldVal)
+                return;
+
+            this.$nextTick(() => {
+                this.$replaceApi(this.api, this.api_data);
+            });
+        }
+    }
+});
+
 class ApiManager
 {
     constructor() {
-        const _this             = this;
         this.isDev              = (process.env.NODE_ENV === 'development');
         this.idIncrementer      = 0;
         this.fetchingApis       = [];
@@ -19,40 +101,6 @@ class ApiManager
         this.userConnection     = null;
         this.socketHooks        = [];
         this.permissionsManager = new PermissionsManager(this);
-
-        Vue.mixin({
-            computed: {
-              socketConnected() {
-                return this.$api.socketConnected;
-              },
-            },
-            destroyed: function () {
-                _this.unbindVue(this);
-
-                if (this.listenerId) {
-                    _this.unbindListener(this.listenerId);
-                }
-            },
-
-            methods: {
-                logCatch: function () {
-                    var arg = Array.prototype.slice.call(arguments);
-
-                    if (this.name)
-                        arg.unshift(this._name);
-
-                    console.error.apply(console, arg);
-                },
-
-                bindApi: function (api, data) {
-                    _this.bindVue(this, api, data);
-                },
-
-                replaceApi: function (api, data) {
-                    _this.replaceVueApi(this, api, data);
-                }
-            }
-        });
     }
 
     generateToken() {
@@ -67,6 +115,7 @@ class ApiManager
     install(app, options)
     {
         app.prototype.$api = this;
+        app.prototype.$intervals = [];
 
         app.prototype.$submitForm = function(form)
         {
@@ -333,7 +382,9 @@ class ApiManager
         this.bindedVueElements.push({
             listenerId: listenerId,
             objectId: object._uid,
-            object: object
+            object: object,
+            api:    api,
+            data:   data
         })
 
         return object;

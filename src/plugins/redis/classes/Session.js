@@ -16,10 +16,10 @@ class Session extends SuperClass
         this.loadFromRedis();
     }
 
-    onReady(cb)
+    onReady()
     {
         if (this.redisLoaded)
-            return super.onReady(cb);
+            return super.onReady();
 
         const superOnReady = super.onReady;
 
@@ -34,15 +34,25 @@ class Session extends SuperClass
 
             _this.onRedisLoaded.push(function()
             {
-                superOnReady(cb).then(function(data) {
+                const sresult = superOnReady();
+                
+                if(sresult.then) {
+                    sresult.then(function(data) {
+                        if(!didTimeout)
+                            resolve(data);
+                    }).catch(function(err) {
+                        if(!didTimeout)
+                            reject(err);
+                    }).then(function() {
+                        clearTimeout(timeout);
+                    });
+                }
+                else {
                     if(!didTimeout)
                         resolve(data);
-                }).catch(function(err) {
-                    if(!didTimeout)
-                        reject(err);
-                }).then(function() {
+                    
                     clearTimeout(timeout);
-                });
+                }
             });
         });
     }

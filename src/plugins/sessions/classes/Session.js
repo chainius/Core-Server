@@ -16,11 +16,8 @@ class Session
         this.updateTime     = 0;
     }
 
-    async onReady(cb)
+    onReady()
     {
-        if(cb)
-            cb.apply(this, this);
-
         return true;
     }
 

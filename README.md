@@ -2,7 +2,7 @@
 <img width="100" src="./wiki/img/logo/logo-128.png" >
 <br>
 <b>Core Server</b><br>
-<b>https://www.core-server.io</b>
+<b><a href="https://www.core-server.io">https://www.core-server.io</a></b>
 </p>
 
 ## Quick Installation
