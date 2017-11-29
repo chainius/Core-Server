@@ -174,7 +174,7 @@ class RenderCache {
     }
 
     api(name, data) {
-        return this.session.api(name, data, this.client_ip, {});
+        return this.session.api(name, data, this.$req);
     }
 
     preload(componentData, componentName) {

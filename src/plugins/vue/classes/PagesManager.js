@@ -94,17 +94,6 @@ class PagesManager
                 res.writeHead(code, { 'Content-Type': 'text/html; charset=utf-8' });
                 res.end(`An unexpected error occured ${err.message || err}`);
             });
-                                  
-            /*const r = await this.getRenderStream({ url: '/error/' + code });
-
-            if(r === null)
-            {
-                res.writeHead(code, { 'Content-Type': 'text/html; charset=utf-8' });
-                res.end('An unexpected error occured');
-                return;
-            }
-
-            return this.handleVueStream(r.stream, r.ctx, req, res, code);*/
         }
         catch (e)
         {

@@ -30,7 +30,7 @@ class Session extends SuperClass
     */
     api(name, post, client_ip, file, get) {
         var req = client_ip;
-        if(typeof(client_ip) === 'string')
+        if(typeof(client_ip) !== 'object')
         {
             req = {
                 getClientIp() { return client_ip },
@@ -99,7 +99,7 @@ class Session extends SuperClass
             sessionObject:  this,
             cookie:         this.cookies,
             post:           post || {},
-            req:            req
+            $req:           req || {}
         });
     }
 

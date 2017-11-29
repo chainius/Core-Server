@@ -28,8 +28,6 @@ class SiteManager extends SuperClass {
     {
         try
         {
-            const _this = this;
-
             if(!super.handle(req, res))
             {
                 if(!this.pagesManager) {
@@ -49,25 +47,18 @@ class SiteManager extends SuperClass {
 
                 //-----------------------------------------------------------------
 
+                const _this = this;
                 this.pagesManager.renderToString(req.url).then(function(r)
                 {
-                    /*if(r.stream === null)
-                    {
-                        if(r.error !== null)
-                        {
-                            console.error(r.error);
-                        }
-
-                        res.writeHead(500, { 'Content-Type': 'text/html; charset=utf-8' });
-                        res.end('An unexpected error occured, please check if the ui option is enabled and the bundle has successfully been generated');
-                        return;
-                    }*/
-
-                    _this._helmet(req, res, function() {
+                    if(res._headerSent) {
                         res.writeHead(r.httpCode || 200, { 'Content-Type': 'text/html; charset=utf-8' });
                         res.end(r.html);
-                        //_this.pagesManager.handleVueStream(r.stream, r.ctx, req, res);
-                    });
+                    } else {
+                        _this._helmet(req, res, function() {
+                            res.writeHead(r.httpCode || 200, { 'Content-Type': 'text/html; charset=utf-8' });
+                            res.end(r.html);
+                        });
+                    }
                 })
                 .catch(function(err)
                 {
