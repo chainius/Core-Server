@@ -94,7 +94,7 @@ class HttpServer
     setup()
     {
         this.siteManager   = new (plugins.require('web-server/SiteManager'))(this);
-
+        this.siteManager.server = this; //if someone did inherit the siteManager without sending the server instance to his super class, set the server manually
         const sockjs       = require('sockjs');
 
         this.echo = sockjs.createServer({ sockjs_url: 'https://cdn.jsdelivr.net/sockjs/1.1.4/sockjs.min.js',

@@ -40,7 +40,7 @@ function workerCompile(value) {
 
 module.exports = function(value) {
 
-    if(cluster.isWorker)
+    if(cluster.isWorker || value !== null)
     {
         workerCompile(value);
     }

@@ -128,13 +128,13 @@ class ApiEnvironment
             return typeof (val) === 'string' || typeof (val) === 'number';
             break;
         case 'numeric':
-            return is_numeric(val);
+            return isNumeric(val);
             break;
         case 'positive':
-            return is_numeric(val) && val >= 0;
+            return isNumeric(val) && val >= 0;
             break;
         case 'positive+':
-            return is_numeric(val) && val > 0;
+            return isNumeric(val) && val > 0;
             break;
         case 'array':
             return Array.isArray(val);

@@ -1,6 +1,4 @@
 {
-    "depencies": [ ],
-
     "classes": {
         "SiteManager":  null,
         "MasterServer": null,

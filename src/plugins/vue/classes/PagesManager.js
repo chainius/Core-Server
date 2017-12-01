@@ -237,7 +237,14 @@ function ensureExists(path, mask, cb)
     });
 }
 
+PagesManager.ensureExists = ensureExists;
 PagesManager.compile = function(mode, done) {
+    
+    if (['client', 'server'].indexOf(mode) === -1)
+    {
+        throw('Wrong bundle type given', mode);
+        return false;
+    }
 
     //const snapRequire  = require('./additionals/snapshotRequire.js');
 
