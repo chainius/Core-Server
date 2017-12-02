@@ -26,7 +26,7 @@ function getBabelRc () {
 module.exports = function (raw, cb, compiler, filePath) {
   if (babelOptions === defaultBabelOptions) {
     try {
-      ensureRequire('babel', ['babel-preset-es2015', 'babel-runtime', 'babel-plugin-transform-runtime'])
+      ensureRequire('babel', ['babel-preset-env', 'babel-runtime', 'babel-plugin-transform-runtime'])
     } catch (e) {
       console.error(e.message)
       console.error(

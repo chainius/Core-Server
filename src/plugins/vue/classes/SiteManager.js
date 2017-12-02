@@ -65,8 +65,6 @@ class SiteManager extends SuperClass {
                     console.error(err);
                 });
             }
-
-            return true;
         }
         catch (e)
         {
@@ -74,7 +72,7 @@ class SiteManager extends SuperClass {
             this.sendErrorPage(500, req, res);
         }
 
-        return false;
+        return true;
     }
 }
 
