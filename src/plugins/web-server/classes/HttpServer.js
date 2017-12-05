@@ -70,7 +70,7 @@ class HttpServer
                     protocols: [ 'h2', 'spdy/3.1', 'http/1.1' ],
                     plain: false
                 }
-            }, this.app);
+            }, this.handleRequest.bind(this));
         }
         else
         {
