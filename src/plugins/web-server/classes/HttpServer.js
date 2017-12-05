@@ -260,7 +260,7 @@ class HttpServer
     {
         try
         {
-            if (this.siteManager !== null)
+            if (this.siteManager !== null && this.siteManager !== undefined)
             {
                 this.siteManager.sendErrorPage(code, req, res);
                 return;

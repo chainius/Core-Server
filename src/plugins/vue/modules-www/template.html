@@ -3,7 +3,7 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <link rel="icon" type="image/png" href="/img/favicon.png" />
-        <link href='/css/bundle.css?..' rel='stylesheet' type='text/css'>
+        <link href='/css/bundle.css?{{cssHash}}' rel='stylesheet' type='text/css' />
         
         {{{ meta.title }}}
         {{{ meta.meta }}}
@@ -12,8 +12,6 @@
         {{{ meta.script }}}
         {{{ meta.noscript }}}
         {{{ meta.httpCode && meta.httpCode !== 200 && meta.httpCode !== 404 ? `<script>window.HTTP_STATUS = ${meta.httpCode}; </script>` : '' }}}
-
-        <link href='/css/bundle.css?{{cssHash}}' rel='stylesheet' type='text/css'>
     </head>
     <body {{{meta.bodyAttrs}}}>
         <!--vue-ssr-outlet-->
