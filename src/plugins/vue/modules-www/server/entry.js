@@ -8,7 +8,7 @@ function prepareSSRComponent(name, component)
 {
     component.serverCacheKey = function(props)
     {
-        return JSON.stringify(props || {});
+        return name + '-' + JSON.stringify(props || {});
     };
 
     if(component.preload === true)

@@ -7535,6 +7535,8 @@ const deepmerge = require('deepmerge');
 function handleComponentMetaData(node, context) {
     if(node.context.$options.metaInfo)
     {
+        const tagIDKeyName = 'vmid';
+
         var meta   = node.context.$options.metaInfo;
         if (typeof(meta) === 'function')
             meta = meta.call(node.context)
