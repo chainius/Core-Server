@@ -62,6 +62,7 @@ class ApiManager extends BaseManager
 
         if (this.socket) {
             try {
+                console.warn('Closing old socket');
                 this.socket.close();
             } catch (e) {
                 console.error(e);
@@ -69,8 +70,10 @@ class ApiManager extends BaseManager
         }
 
         var _this = this;
-        this.socket = new SockJS(this.base() + 'socketapi?token=' + this.token);
+        const socket = new SockJS(this.base() + 'socketapi?token=' + this.token);
+        this.socket = socket
         this.socket.onopen = function () {
+            _this.socket = socket
             _this.socketConnected = true;
             _this.emitSocketOpen();
         };
@@ -146,7 +149,9 @@ class ApiManager extends BaseManager
 
             if (key === 'token') {
                 this.token = cookies[key];
-                this.socketConnect();
+
+                if(this.socket)
+                    this.socket.close();
             }
         }
     }
@@ -248,10 +253,12 @@ class ApiManager extends BaseManager
         if (this.isDev)
             console.warn('Socket closed');
 
+        this.socketConnected = false;
         this.socket = false;
         this.fetchingApis = [];
         
         setTimeout(() => {
+            console.log('Socket closed, reconnecting')
             this.socketConnect();
         }, 100);
     }
@@ -337,6 +344,7 @@ class ApiManager extends BaseManager
             });
         }
 
+
         this.socket.send(msg);
         return this;
     }
@@ -344,7 +352,7 @@ class ApiManager extends BaseManager
     onSocketOpen(cb) {
         if (this.socketConnected) {
             try {
-                cb();
+                cb.call(this);
             } catch (e) {
                 console.error(e);
             }
