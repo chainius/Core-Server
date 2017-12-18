@@ -166,15 +166,24 @@ class Renderer {
 
                     for (let key in info) {
                         if (info.hasOwnProperty(key) && key !== 'titleTemplate' && key !== 'titleChunk') {
-                            context.meta[key] = gen(key, info[key]);
+
+                            if(Array.isArray(info[key])) {
+                                info[key] = info[key].filter(function(value, index, self) {
+                                    const json = JSON.stringify(value);
+                                    return self.findIndex(function(o) { return JSON.stringify(o) === json }) === index;
+                                });
+                            }
                             
+                            context.meta[key] = gen(key, info[key]);
+                                
                             if(context.meta[key].text)
-                                context.meta[key] = context.meta[key].text()
+                                context.meta[key] = context.meta[key].text();
                         }
                     }
 
                     result = templateRenderer.renderSync(result, context);
                 }
+
                 cb(null, result);
             });
         } catch (e) {
