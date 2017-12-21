@@ -7533,11 +7533,12 @@ function registerComponentForCache (options, write) {
 const deepmerge = require('deepmerge');
 
 function handleComponentMetaData(node, context) {
-    if(node.componentOptions.Ctor.options.metaInfo)
+
+    if(node.componentOptions.Ctor.options.metaInfo || node.context.$options.metaInfo)
     {
         const tagIDKeyName = 'vmid';
 
-        var meta   = node.componentOptions.Ctor.options.metaInfo;
+        var meta   = node.componentOptions.Ctor.options.metaInfo || node.context.$options.metaInfo;
         if (typeof(meta) === 'function')
             meta = meta.call(node.context)
 

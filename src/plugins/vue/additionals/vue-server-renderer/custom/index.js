@@ -280,10 +280,12 @@ class Renderer {
                 var buffer = lastState.buffer;
                 var bufferIndex = lastState.bufferIndex;
                 var componentBuffer = lastState.componentBuffer;
+
                 var key = lastState.key;
                 var result = {
                     html: buffer[bufferIndex],
-                    components: componentBuffer[bufferIndex]
+                    components: componentBuffer[bufferIndex],
+                    meta: lastState.meta || {}
                 };
                 this.cache.set(key, result);
                 if (bufferIndex === 0) {
