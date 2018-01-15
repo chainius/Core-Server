@@ -35,7 +35,7 @@ class ApiManager extends BaseManager
                         const post     = _this.mergePost(this.api_data);
                         const api_salt = _this.getSalt(this.api, post);
 
-                        if(window.API_DATA[api_salt])
+                        if(window.API_DATA && window.API_DATA[api_salt])
                         {
                             ApiMerger(this, window.API_DATA[api_salt]);
                         }
@@ -213,7 +213,7 @@ class ApiManager extends BaseManager
                 try {
                     localObject = JSON.parse(localObject);
 
-                    if(localObject === null && window.API_DATA[api_salt])
+                    if(localObject === null && window.API_DATA && window.API_DATA[api_salt])
                     {
                         localObject = window.API_DATA[api_salt];
                     }
@@ -224,6 +224,9 @@ class ApiManager extends BaseManager
         } catch (e) {
             console.error(e);
         }
+        
+        if(!window.API_DATA)
+            return null;
 
         return window.API_DATA[api_salt] || null;
     }

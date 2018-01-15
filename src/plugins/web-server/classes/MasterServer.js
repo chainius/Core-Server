@@ -243,6 +243,8 @@ class Worker extends EventEmitter
 
         if (message == 'restartWorker')
             this.restart();
+        else if(typeof(message) === 'object' && message.type == 'gracefull-exit')
+            process.exit(message.code || 0);
     }
 
     unbindWorker()
@@ -368,6 +370,13 @@ class Worker extends EventEmitter
 
 if(cluster.isWorker)
 {
+    process.coreExit = function(code) {
+        process.send({
+            type: 'gracefull-exit',
+            code: code
+        })
+    }
+    
     const Server = plugins.require('web-server/HttpServer');
     Server.Worker = Worker;
     module.exports = Server;

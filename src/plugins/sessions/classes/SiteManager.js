@@ -24,10 +24,7 @@ class SiteManager extends SuperClass {
     * @param Selector Optional mongodb style {Object}
     */
     broadcast(api, data, selector) {
-        throw('ToDo implement function')
-        //...
-
-        //ToDo send over redis, on redis broadcast received => send to liveInternal
+        return this.broadcastInternal(api, data, selector);
     }
 
     /**
@@ -43,7 +40,7 @@ class SiteManager extends SuperClass {
             salt = undefined;
         }
 
-        this.sessionsManager.broadcast({
+        return this.sessionsManager.broadcast({
             api: api,
             data: data,
             salt: salt || this.getSalt(api, {})

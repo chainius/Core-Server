@@ -28,6 +28,10 @@ class ResourcesManger
 
         return object;
     }
+    
+    has(name) {
+        return this.cache[name] ? true : false;
+    }
 
     //------------------------------------------------
 

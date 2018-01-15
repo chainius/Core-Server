@@ -2,6 +2,7 @@
 const Path        = require('path');
 const PassThrough = require('stream').PassThrough;
 const Watcher     = plugins.require('web-server/Watcher');
+const fs          = require('fs');
 
 const renderer = require('../additionals/vue-server-renderer/custom/index.js');
 
@@ -13,17 +14,14 @@ class RenderCache {
         this.preloadedApis  = {};
         this.urlApiData     = {};
         this.client_ip      = null; //ToDo get client ip from req
-
+        
+        this.createRenderer();
+        
         /*this.renderer = renderer.createRenderer({
             basedir: process.cwd(),
             cache: this
         });*/
         
-        this.renderer = new renderer({
-            basedir: process.cwd(),
-            cache: this,
-            template: require('fs').readFileSync(__dirname + '/../modules-www/template.html').toString()
-        });
 
         if(!RenderCache.bundle)
             loadPreloads();
@@ -37,6 +35,34 @@ class RenderCache {
         }
     }
 
+    createRenderer() {
+        const overwriteTemplate = Path.join(process.cwd(), 'resources', 'template.html');
+        this.templatePath       = fs.existsSync(overwriteTemplate) ? overwriteTemplate : Path.normalize(__dirname + '/../modules-www/template.html');
+
+        if (process.env.NODE_ENV !== 'production') {
+            Watcher.onFileChange(overwriteTemplate, () => {
+                console.log('HTML Template changed');
+                
+                this.templatePath = overwriteTemplate;
+                const template = fs.readFileSync(overwriteTemplate).toString();
+                
+                this.renderer = new renderer({
+                    basedir: process.cwd(),
+                    cache: this,
+                    template: template
+                });
+            });
+        }
+        
+        const template = fs.readFileSync(this.templatePath).toString();
+
+        this.renderer = new renderer({
+            basedir: process.cwd(),
+            cache: this,
+            template: template
+        });
+    }
+    
     deleteCache() {
         this.cache          = {};
         this.urlApiData     = {};

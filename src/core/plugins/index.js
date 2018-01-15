@@ -11,6 +11,10 @@ class PluginSystem {
         this.loadedPlugins = {};
         this.entries       = {};
     }
+    
+    get config() {
+        return this.loadedPlugins;
+    }
 
     registerPath(path) {
         if(this.loadedPlugins[path])

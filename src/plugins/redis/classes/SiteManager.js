@@ -32,11 +32,27 @@ class SiteManager extends SuperClass
 
             this.connections.redis = new Redis(config);
             this.sessionsManager.setupRedis();
+            
+            this.onRedisBroadcast('SMBroadcast', ({ api, data, selector }) => {
+                super.broadcast(api, data, selector);
+            });
         }
         catch (e)
         {
             console.error('{setupRedis}', e);
         }
+    }
+    
+    broadcast(api, data, selector) {
+        if(this.connections && this.connections.redis) {
+            return this.broadcastToRedis('SMBroadcast', {
+                api,
+                data,
+                selector
+            })
+        }
+
+        return super.broadcast(api, data, selector);
     }
 
 
