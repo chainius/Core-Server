@@ -225,6 +225,12 @@ class HttpServer
                 res: res,
                 openTime: Date.now()
             });
+            
+            if(!this.siteManager) {
+                res.writeHead(404, { 'Content-Type': 'text/html; charset=utf-8' });
+                res.end('The requested resource could not be found');
+                return;
+            }
 
             if(this.siteManager.handle(req, res) === false) {
                 res.writeHead(404, { 'Content-Type': 'text/html; charset=utf-8' });

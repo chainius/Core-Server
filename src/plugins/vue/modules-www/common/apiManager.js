@@ -105,11 +105,11 @@ class ApiManager
 
     generateToken() {
         const hash = sha1(Date.now() + '-' + Math.random() + '-' + Math.random() + 'CoreApi').substr(4, 28);
-        this.setCookies({
-            "token": hash
-        }, Date.now() + (24 * 60 * 60 * 1000));
         this.token = hash.substr(Math.round(Math.random() * 10), 16);
-        return hash;
+        this.setCookies({
+            "token": this.token
+        }, Date.now() + (24 * 60 * 60 * 1000));
+        return this.token;
     }
 
     install(app, options)
