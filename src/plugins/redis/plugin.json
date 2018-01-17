@@ -2,7 +2,7 @@
     "classes": {
         "Session":          "sessions/Session",
         "SessionsManager":  "sessions/SessionsManager",
-        "SiteManager":      "web-server/SiteManager",
+        "SiteManager":      "sessions/SiteManager",
         "Redis":            null
     }
 }
