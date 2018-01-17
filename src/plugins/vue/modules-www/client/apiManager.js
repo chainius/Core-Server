@@ -91,7 +91,7 @@ class ApiManager extends BaseManager
         if (this.base_url)
             return this.base_url;
 
-        var base = location.href;
+        var base = window.api_url || location.href;
         var index = base.indexOf('//');
 
         if (index != -1) {
@@ -157,6 +157,9 @@ class ApiManager extends BaseManager
 
     deleteOldCache() {
         try {
+            if(location.href.indexOf('file://') === 0)
+                return;
+
             if (typeof (localStorage) == "object") {
                 for (var i = localStorage.length - 1; i >= 0; i--) {
                     var key = localStorage.key(i);
@@ -174,6 +177,9 @@ class ApiManager extends BaseManager
 
     deleteAllCache() {
         try {
+            if(location.href.indexOf('file://') === 0)
+                return;
+
             if (typeof (localStorage) == "object") {
                 for (var i = localStorage.length - 1; i >= 0; i--) {
                     var key = localStorage.key(i);
@@ -187,6 +193,9 @@ class ApiManager extends BaseManager
 
     deleteLocalCache(api_salt, data) {
         try {
+            if(location.href.indexOf('file://') === 0)
+                return;
+
             if (typeof (localStorage) == "object" && localStorage !== undefined && localStorage !== null) {
                 localStorage.removeItem(this.token + '_' + api_salt);
             }
@@ -197,6 +206,9 @@ class ApiManager extends BaseManager
 
     saveLocalCache(api_salt, data) {
         try {
+            if(location.href.indexOf('file://') === 0)
+                return;
+
             if (typeof (localStorage) == "object" && localStorage !== undefined && localStorage !== null) {
                 localStorage.setItem(this.token + '_' + api_salt, JSON.stringify(data));
             }
@@ -207,6 +219,9 @@ class ApiManager extends BaseManager
 
     getLocalCache(api_salt) {
         try {
+            if(location.href.indexOf('file://') === 0)
+                return;
+
             if (typeof (localStorage) == "object") {
                 var localObject = localStorage.getItem(this.token + '_' + api_salt);
                 try {
