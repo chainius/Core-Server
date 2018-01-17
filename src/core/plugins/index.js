@@ -158,6 +158,25 @@ class PluginSystem {
 
     //------------------------
 
+    getProjectConfig(name)
+    {
+        try {
+            if (process.env.NODE_ENV === 'production')
+            {
+                const fs = require('fs');
+                const onlinePath = Path.join(process.cwd(), 'config', name + '-production.json');
+                if (fs.existsSync(onlinePath))
+                    return require(onlinePath);
+            }
+
+            return require(Path.join(process.cwd(), 'config', name + '.json'));
+        } catch(e) {
+            console.error(e);
+        }
+        
+        return {};
+    }
+    
     loadConfig() {
         //php & tsv disabled in default config
         const config = {
@@ -174,6 +193,8 @@ class PluginSystem {
             if(e.code !== 'MODULE_NOT_FOUND')
                 throw(e);
         }
+
+        this.projectConfig = config;
         
         //ToDo load git repositories
 

@@ -1,24 +1,4 @@
-//import $ from 'jquery';
 import { mergePost } from '../common/init.js';
-
-require('bootstrap-notify');
-
-$.fn.serializeObject = function()
-{
-    var o = {};
-    var a = this.serializeArray();
-    $.each(a, function() {
-        if (o[this.name] !== undefined) {
-            if (!o[this.name].push) {
-                o[this.name] = [o[this.name]];
-            }
-            o[this.name].push(this.value || '');
-        } else {
-            o[this.name] = this.value || '';
-        }
-    });
-    return o;
-};
 
 class FormPoster
 {
@@ -33,7 +13,7 @@ class FormPoster
             'api-done':     this.handleApiDone
         };
 
-        $(document).off('submit', 'form');
+        /*$(document).off('submit', 'form');
         $(document).on('submit', 'form', function(e)
         {
             if(!$(this).attr('action'))
@@ -41,7 +21,11 @@ class FormPoster
 
             e.preventDefault();
             _this.handleFormSubmit(this);
-        });
+        });*/
+    }
+    
+    notify(type, message) {
+        console.log('todo notify', type, message);
     }
 
     handleApiError(form, data)
@@ -57,32 +41,31 @@ class FormPoster
         else if(typeof(err) == "string")
             msg = err;
 
-        $.notify({ message: msg },{ type: 'danger' });
+        this.notify('danger', msg);
     }
 
     handleApiSuccess(form, data)
     {
-        const that= $(form);
         const msg = data.result;
 
-        if(that.attr('SuccessMessage'))
-           return $.notify(that.attr('SuccessMessage'), 'success');
+        if(form.hasAttribute('SuccessMessage'))
+           return this.notify('success', form.getAttribute('SuccessMessage'));
 
         if(typeof(msg) == 'string')
-            return $.notify(msg, 'success');
+            return this.notify('success', msg);
 
         if(typeof(msg) == 'object')
         {
             if(typeof(msg.result) == 'string')
-                return $.notify(msg.result, 'success');
+                return this.notify('success', msg.result);
         }
 
-        return $.notify(msg, 'Data successfully updated!');
+        return this.notify('success', msg.message || 'Data successfully updated!');
     }
 
     handleApiPrepare(form, data)
     {
-        $(form).find('input, textarea, select, button').not(':disabled').attr('disabled', true).attr('predisabled', true);
+        //$(form).find('input, textarea, select, button').not(':disabled').attr('disabled', true).attr('predisabled', true);
 
         //ToDo: set loader icon
     }
@@ -94,7 +77,7 @@ class FormPoster
 
     handleApiDone(form)
     {
-        $(form).find('[predisabled]').removeAttr('disabled').removeAttr('predisabled');
+        //$(form).find('[predisabled]').removeAttr('disabled').removeAttr('predisabled');
     }
 
     trigger(elm, eventName, data)
@@ -155,12 +138,11 @@ class FormPoster
     handleFormSubmit(elm)
     {
         const _this = this;
-        const api   = $(elm).attr('action');
-        var that = $(elm);
+        const api   = elm.getAttribute('action');
         var data = null;
 
         //that.trigger('api-before-submit', elm);
-        _this.trigger(elm, 'api-before-submit', { api: api });
+        this.trigger(elm, 'api-before-submit', { api: api });
 
         if(that.find('input[type="file"]:not([disabled])').length > 0)
         {
@@ -169,12 +151,13 @@ class FormPoster
         }
         else
         {
-            that.attr('enctype', 'application/json');
-            data = that.serializeObject();
-            data = JSON.stringify( mergePost(data) );
+            form.setAttribute('enctype', 'application/json');
+            //data = that.serializeObject();
+            //data = JSON.stringify( mergePost(data) );
         }
 
-        $.event.global.ajaxError = false;
+        console.log('ToDo standard handleFormSubmit');
+        /*$.event.global.ajaxError = false;
 
         $.ajax({
             url: '/api/'+api,
@@ -250,7 +233,7 @@ class FormPoster
             cache: false,
             contentType: that.attr('enctype'),
             processData: false
-        });
+        });*/
     }
 }
 

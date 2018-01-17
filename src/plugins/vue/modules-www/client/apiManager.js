@@ -1,5 +1,4 @@
 import BaseManager from '../common/apiManager.js';
-import formPoster  from './formPoster';
 import { mergePost } from '../common/init.js';
 import ApiMerger     from '../common/merger.js';
 
@@ -11,7 +10,7 @@ class ApiManager extends BaseManager
     {
         super();
         this.isClient   = true;
-        this.formPoster = formPoster;
+        this.formPoster = __FormPosterReqPath;
         this.socketConnected = false;
         this.saltApiForcers  = {};
 

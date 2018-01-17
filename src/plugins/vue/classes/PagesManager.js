@@ -238,8 +238,14 @@ function ensureExists(path, mask, cb)
 }
 
 PagesManager.ensureExists = ensureExists;
-PagesManager.compile = function(mode, done) {
-    
+PagesManager.compile = function(mode, done, globConfig) {
+
+    if(!globConfig) {
+        globConfig = {
+            jquery: (plugins.projectConfig.jquery === false ? false : true)
+        }
+    }
+
     if (['client', 'server'].indexOf(mode) === -1)
     {
         throw('Wrong bundle type given', mode);
@@ -270,6 +276,37 @@ PagesManager.compile = function(mode, done) {
     const vuePath = fs.existsSync(Path.join(__dirname, '..', 'node_modules', 'vue')) ? Path.join(__dirname, '..', 'node_modules', 'vue') : Path.join(process.pwd(), 'node_modules', 'vue');
     //const jqueryPath = fs.existsSync(Path.join(__dirname, '..', 'node_modules', 'jquery')) ? Path.join(__dirname, '..', 'node_modules', 'jquery') : Path.join(process.pwd(), 'node_modules', 'jquery');
 
+    const insertGlobalVars = {
+        InitReq: function(file, dir)
+        {
+            const fdir = Path.join(process.cwd(), 'resources', 'lib', 'init.js');
+            return 'require("'+fdir+'")';
+        },
+
+        Vue: function(file, dir)
+        {
+            return 'require("'+vuePath+'")';
+        },
+        
+        __FormPosterReqPath: function(file, dir) {
+            const path = Path.join(__dirname, '..', 'modules-www', 'client', 'formPoster-vue.js');
+            return 'require("'+path+'")';
+        }
+    }
+    
+    if(globConfig.jquery !== false) {
+        insertGlobalVars.jQuery = insertGlobalVars.$ = function(file, dir) {
+            return 'require("jquery")';
+        }
+        
+        insertGlobalVars.__FormPosterReqPath = function(file, dir) {
+            const path = Path.join(__dirname, '..', 'modules-www', 'client', 'formPoster-jquery.js');
+            return 'require("'+path+'")';
+        }
+    }
+    
+    //--------------------------------------------------------
+
     const cache = BrowserifyCache.getCache(cacheFile);
     const config = {
         //entries: Path.join('resources', 'core-lib', mode, 'entry.js'),
@@ -290,29 +327,7 @@ PagesManager.compile = function(mode, done) {
             }
         },
 
-        insertGlobalVars: {
-            jQuery: function(file, dir)
-            {
-                return 'require("jquery")';
-            },
-
-            '$': function(file, dir)
-            {
-                return 'require("jquery")';
-            },
-
-            InitReq: function(file, dir)
-            {
-                const fdir = Path.join(process.cwd(), 'resources', 'lib', 'init.js');
-                return 'require("'+fdir+'")';
-            },
-
-            Vue: function(file, dir)
-            {
-                return 'require("'+vuePath+'")';
-            }
-        },
-
+        insertGlobalVars: insertGlobalVars,
         isServer: isServer
     };
 
