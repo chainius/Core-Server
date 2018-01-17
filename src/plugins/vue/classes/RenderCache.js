@@ -152,7 +152,7 @@ class RenderCache {
 
         return null;
     }
-    
+
     onRouterDone(app, resolve, reject) {
         const context = {
             url: app.$route.path,
@@ -173,7 +173,7 @@ class RenderCache {
         });
     }
     
-    renderToString(url, cb) {
+    renderToString(url) {
         const _this = this;
         return new Promise(function(resolve, reject) {
             const app = RenderCache.bundle.$app;

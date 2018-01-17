@@ -30,6 +30,7 @@ class PagesManager
             {
                 try
                 {
+                    //ToDo if no session create cache..
                     const renderCache = _this.globalSession.getComponentsCache();
                     const result      = renderCache.renderToStream(req.url);
 
