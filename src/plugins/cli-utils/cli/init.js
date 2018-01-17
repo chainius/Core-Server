@@ -104,7 +104,7 @@ async function init()
         "babel-preset-env": "^1.6.1",
         'bootstrap-notify': "^3.1.3",
         'jquery': "^3.2.1",
-        'raven-js': "^3.15.0",
+        //'raven-js': "^3.15.0",
         'sockjs-client': "^1.1.4",
         'vue-hot-reload-api': "^2.1.0",
         'vue-router': "^2.5.3"
