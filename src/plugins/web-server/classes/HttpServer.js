@@ -138,12 +138,14 @@ class HttpServer
         
         function onEnd() {
             try {
+                req.rawBody = body;
+
                 if(body.length === 0) {
                     req.body = {};
                     return next();
                 }
 
-                switch(req.headers['content-type'].toLowerCase()) {
+                switch(req.headers['content-type'].toLowerCase().split(';')[0]) {
                     case 'application/x-www-form-urlencoded':
                         req.body = queryString.parse(body, undefined, undefined, {
                             maxKeys: 1000
