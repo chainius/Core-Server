@@ -15,6 +15,8 @@ function registerComponent(name, component)
 {
     if(options.onComponent)
         options.onComponent(name, component);
+    
+    var componentRoutes = [];
 
     if(name.substr(name.length-7) === '-layout')
     {
@@ -47,16 +49,20 @@ function registerComponent(name, component)
         if(ser.length === 0)
         {
             routes.push(config);
+            componentRoutes.push(config);
         }
 
         for(var key in ser)
         {
-            routes.push({
+            const r = {
                 path: '/' + page + ser[key],
                 component: config.component,
                 meta: meta,
                 props: true
-            });
+            };
+
+            componentRoutes.push(r);
+            routes.push(r);
         }
     }
     else
@@ -65,6 +71,10 @@ function registerComponent(name, component)
             name = name.substr(6);
 
         Vue.component(name, component);
+    }
+    
+    return {
+        routes: componentRoutes
     }
 }
 

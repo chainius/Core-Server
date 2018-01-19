@@ -238,105 +238,108 @@ function ensureExists(path, mask, cb)
     });
 }
 
-PagesManager.ensureExists = ensureExists;
-PagesManager.compile = function(mode, done, globConfig) {
+PagesManager.BrowserifySetup = {
 
-    if(!globConfig) {
-        globConfig = {
-            jquery: (plugins.projectConfig.jquery === false ? false : true)
-        }
-    }
-
-    if (['client', 'server'].indexOf(mode) === -1)
-    {
-        throw('Wrong bundle type given', mode);
-        return false;
-    }
-
-    //const snapRequire  = require('./additionals/snapshotRequire.js');
-
-    const Path              = require('path');
-    const fs                = require('fs');
-    const browserify        = require('browserify');
-    const babelify          = require('babelify');
-    const watchify          = require('watchify');
-    const envify            = require('envify/custom');
-    const BrowserifyCache   = require('../additionals/watchify-cache.js');
-    const bulkify           = require('../additionals/bulkify.js');
-    const blukifyWatch      = require('../additionals/bulkify-watch.js');
-    const vueify            = require('../vueify');
-    const extractCss        = require('../vueify/plugins/extract-css.js');
-    const browhmr           = plugins.require('vue/hmr/index');
-
-    //--------------------------------------------------------
-
-    const isServer = (mode === 'server');
-    const isProduction = (process.env.NODE_ENV === 'production');
-    const cacheFile = Path.join(process.cwd(), 'dist', 'cache-' + mode + '.json');
-
-    const vuePath = fs.existsSync(Path.join(__dirname, '..', 'node_modules', 'vue')) ? Path.join(__dirname, '..', 'node_modules', 'vue') : Path.join(process.pwd(), 'node_modules', 'vue');
-    //const jqueryPath = fs.existsSync(Path.join(__dirname, '..', 'node_modules', 'jquery')) ? Path.join(__dirname, '..', 'node_modules', 'jquery') : Path.join(process.pwd(), 'node_modules', 'jquery');
-
-    const insertGlobalVars = {
-        InitReq: function(file, dir)
-        {
-            const fdir = Path.join(process.cwd(), 'resources', 'lib', 'init.js');
-            return 'require("'+fdir+'")';
-        },
-
-        Vue: function(file, dir)
-        {
-            return 'require("'+vuePath+'")';
-        },
+    createConfig(mode, globConfig) {
         
-        __FormPosterReqPath: function(file, dir) {
-            const path = Path.join(__dirname, '..', 'modules-www', 'client', 'formPoster-vue.js');
-            return 'require("'+path+'")';
-        }
-    }
-    
-    if(globConfig.jquery !== false) {
-        insertGlobalVars.jQuery = insertGlobalVars.$ = function(file, dir) {
-            return 'require("jquery")';
-        }
+        const Path              = require('path');
+        const fs                = require('fs');
+        const BrowserifyCache   = require('../additionals/watchify-cache.js');
         
-        insertGlobalVars.__FormPosterReqPath = function(file, dir) {
-            const path = Path.join(__dirname, '..', 'modules-www', 'client', 'formPoster-jquery.js');
-            return 'require("'+path+'")';
-        }
-    }
-    
-    //--------------------------------------------------------
+        //-----------------------------------------------------
 
-    const cache = BrowserifyCache.getCache(cacheFile);
-    const config = {
-        //entries: Path.join('resources', 'core-lib', mode, 'entry.js'),
-        entries: Path.join(__dirname, '..', 'modules-www', mode, 'entry.js'),
-        basedir: process.cwd(),
-        cache: cache.cache,
-        packageCache: cache.package,
-        stylesCache: cache.styles,
-        cacheFile: cacheFile,
-        fullPaths: !isProduction,
-        paths: [Path.join(process.cwd(), 'node_modules'), process.cwd(), Path.join(process.pwd(), 'node_modules'), Path.join(__dirname, '..', 'node_modules')],
-
-        process: {
-            env: {
-                NODE_ENV: process.env.NODE_ENV,
-                NODE_PATH: Path.join(process.cwd(), 'node_modules'),
-                READABLE_STREAM: 'disable'
+        if(!globConfig)
+            globConfig = {
+                jquery: (plugins.projectConfig.jquery === false ? false : true)
             }
-        },
 
-        insertGlobalVars: insertGlobalVars,
-        isServer: isServer
-    };
+        if (['client', 'server'].indexOf(mode) === -1)
+            throw('Wrong bundle type given', mode);
 
-    if (isServer)
-        config.standalone = 'server';
+        //-----------------------------------------------------
 
-    var b = browserify(config)
-                .transform(vueify)
+        const isProduction = (process.env.NODE_ENV === 'production');
+        const cacheFile = Path.join(process.cwd(), 'dist', 'cache-' + mode + '.json');
+
+        const vuePath = fs.existsSync(Path.join(__dirname, '..', 'node_modules', 'vue')) ? 
+                            Path.join(__dirname, '..', 'node_modules', 'vue') : 
+                            Path.join(process.pwd(), 'node_modules', 'vue');
+
+        const insertGlobalVars = {
+            InitReq: function(file, dir)
+            {
+                const fdir = Path.join(process.cwd(), 'resources', 'lib', 'init.js');
+                return 'require("'+fdir+'")';
+            },
+
+            Vue: function(file, dir)
+            {
+                return 'require("'+vuePath+'")';
+            },
+
+            __FormPosterReqPath: function(file, dir) {
+                const path = Path.join(__dirname, '..', 'modules-www', 'client', 'formPoster-vue.js');
+                return 'require("'+path+'")';
+            }
+        }
+
+        if(globConfig.jquery !== false) {
+            insertGlobalVars.jQuery = insertGlobalVars.$ = function(file, dir) {
+                return 'require("jquery")';
+            }
+
+            insertGlobalVars.__FormPosterReqPath = function(file, dir) {
+                const path = Path.join(__dirname, '..', 'modules-www', 'client', 'formPoster-jquery.js');
+                return 'require("'+path+'")';
+            }
+        }
+
+        //--------------------------------------------------------
+
+        const cache = BrowserifyCache.getCache(cacheFile);
+        const config = {
+            entries: Path.join(__dirname, '..', 'modules-www', mode, 'entry.js'),
+            basedir: process.cwd(),
+            cache: cache.cache,
+            packageCache: cache.package,
+            stylesCache: cache.styles,
+            cacheFile: cacheFile,
+            fullPaths: !isProduction,
+            paths: [
+                Path.join(process.cwd(), 'node_modules'),
+                process.cwd(),
+                Path.join(process.pwd(), 'node_modules'),
+                Path.join(__dirname, '..', 'node_modules')
+            ],
+
+            process: {
+                env: {
+                    NODE_ENV: process.env.NODE_ENV,
+                    NODE_PATH: Path.join(process.cwd(), 'node_modules'),
+                    READABLE_STREAM: 'disable'
+                }
+            },
+
+            insertGlobalVars: insertGlobalVars,
+            isServer: (mode === 'server')
+        };
+
+        if (config.isServer)
+            config.standalone = 'server';
+        
+        return config;
+    },
+    
+    setupPlugins(config, mode, distFolder) {
+
+        const isProduction      = (process.env.NODE_ENV === 'production');
+        const babelify          = require('babelify');
+        const vueify            = require('../vueify');
+        const bulkify           = require('../additionals/bulkify.js');
+        const envify            = require('envify/custom');
+        const Path              = require('path');
+
+        this.transform(vueify)
                 .transform(babelify, {presets: ['env']})
                 .transform(bulkify)
                 .transform({ global: isProduction }, envify({
@@ -346,35 +349,74 @@ PagesManager.compile = function(mode, done, globConfig) {
                     COMPILE_ENV: 'browserify',
                     DEBUG: false
                 }));
+        
+        //-------------
 
-    //b.plugin(snapRequire);
+        if (!config.isServer)
+        {
+            const extractCss  = require('../vueify/plugins/extract-css.js');
 
-    const distFolder = Path.join(process.cwd(), 'dist');
-    if (!isServer)
-    {
-        b.plugin(extractCss, {
-            out: Path.join(distFolder, 'bundle.css'),
-            minify: isProduction
-        });
+            this.plugin(extractCss, {
+                out: Path.join(distFolder, 'bundle.css'),
+                minify: isProduction
+            });
+        }
+        
+        //-------------
+        
+        if (!isProduction && process.options.hot !== undefined)
+        {
+            const BrowserifyCache   = require('../additionals/watchify-cache.js');
+            const watchify          = require('watchify');
+            const blukifyWatch      = require('../additionals/bulkify-watch.js');
+
+            this.plugin(BrowserifyCache)
+                .plugin(watchify)
+                .plugin(blukifyWatch);
+
+            if (!config.isServer && !config.disableHmr) {
+                const browhmr = plugins.require('vue/hmr/index');
+                this.plugin(browhmr);
+            }
+        }
     }
+}
+
+
+PagesManager.ensureExists = ensureExists;
+PagesManager.compile = function(mode, done, globConfig) {
+
+    const Path              = require('path');
+    const fs                = require('fs');
+    const isProduction      = (process.env.NODE_ENV === 'production');
+
+    const browserify        = require('browserify');
+    const distFolder        = Path.join(process.cwd(), 'dist');
+    
+    //--------------------------------------------------------
+    
+    const config = PagesManager.BrowserifySetup.createConfig(mode, globConfig);
+    
+    if(typeof(config) !== 'object')
+        throw('Wrong config type create for browserify ' + typeof(config))
+    
+    const bundler = browserify(config);
+    
+    PagesManager.BrowserifySetup.setupPlugins.call(bundler, config, mode, distFolder, bundler);
+
+    //--------------------------------------------------------
+
 
     if (!isProduction && process.options.hot !== undefined)
     {
-        //browserifyInc(b, {cacheFile: process.cwd() + '/dist/browserify-cache-' + mode + '.json'});
-        b.plugin(BrowserifyCache).plugin(watchify);
-        b.plugin(blukifyWatch);
-
-        b.on('update', function()
+        bundler.on('update', function()
         {
-            b.bundle(function()
+            bundler.bundle(function()
             {
                 done.apply(this, arguments);
             })
-             .pipe(fs.createWriteStream(Path.join(distFolder, 'bundle-' + mode + '.js')));
+            .pipe(fs.createWriteStream(Path.join(distFolder, 'bundle-' + mode + '.js')));
         });
-
-        if (!isServer)
-            b.plugin(browhmr);
     }
 
     ensureExists(distFolder, 0o744, function(err)
@@ -389,7 +431,7 @@ PagesManager.compile = function(mode, done, globConfig) {
 
             stream.on('close', function()
             {
-                done.apply(b, arguments);
+                done.apply(bundler, arguments);
             });
 
             stream.on('error', function(err)
@@ -397,7 +439,7 @@ PagesManager.compile = function(mode, done, globConfig) {
                 console.error('browserify-stream:', err);
             });
 
-            b.bundle().on('error', function(err)
+            bundler.bundle().on('error', function(err)
             {
                 console.error('Browserify-bundle:', err);
             })
@@ -405,7 +447,7 @@ PagesManager.compile = function(mode, done, globConfig) {
         }
     });
 
-    return b;
+    return bundler;
 }
 
 module.exports = PagesManager;

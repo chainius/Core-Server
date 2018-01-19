@@ -24,13 +24,12 @@ class RenderCache {
         
 
         if(!RenderCache.bundle)
-            loadPreloads();
+            this.loadPreloads();
 
         if (process.env.NODE_ENV !== 'production') {
             const _this = this;
             Watcher.onFileChange(RenderCache.serverJavascriptPath, function () {
                 _this.bundleChanged();
-                loadPreloads();
             });
         }
     }
@@ -73,6 +72,7 @@ class RenderCache {
         try {
             console.warn('Bundle changed, deleting cache');
             this.deleteCache();
+            this.loadPreloads();
         } catch (e) {
             console.error(e);
         }
@@ -143,7 +143,7 @@ class RenderCache {
             if(RenderCache.bundle === {})
             {
                 console.warn('Force reloading bundle');
-                loadPreloads();
+                this.loadPreloads();
                 return null;
             }
 
@@ -289,6 +289,25 @@ class RenderCache {
         return cb(false);
     }
 
+    //-------------------------------------------------------
+    
+    loadPreloads() {
+        try {
+            delete require.cache[require.resolve(RenderCache.serverJavascriptPath)];
+            RenderCache.bundle   = require(RenderCache.serverJavascriptPath);
+            RenderCache.preloads = RenderCache.bundle.preloads();
+            RenderCache.error    = null;
+        } catch (e) {
+            RenderCache.bundle = null;
+            RenderCache.error  = e;
+
+            setTimeout(() =>
+            {
+                if(RenderCache.bundle === null)
+                    this.loadPreloads();
+            }, 100);
+        }
+    }
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -298,25 +317,5 @@ RenderCache.serverJavascriptPath = Path.join(process.cwd(), 'dist', 'bundle-serv
 RenderCache.bundle = null;
 RenderCache.preloads = {};
 RenderCache.error = null;
-
-function loadPreloads() {
-    try {
-        delete require.cache[require.resolve(RenderCache.serverJavascriptPath)];
-        RenderCache.bundle   = require(RenderCache.serverJavascriptPath);
-        RenderCache.preloads = RenderCache.bundle.preloads();
-        RenderCache.error    = null;
-    } catch (e) {
-        RenderCache.bundle = null;
-        RenderCache.error  = e;
-
-        setTimeout(function()
-        {
-            if(RenderCache.bundle === null)
-                loadPreloads();
-        }, 100);
-    }
-}
-
-loadPreloads();
 
 module.exports = RenderCache;
