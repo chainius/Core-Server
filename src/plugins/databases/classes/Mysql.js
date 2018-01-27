@@ -403,7 +403,8 @@ class Mysql
                                 _this.actualPing = -1;
                                 _this.actualHost = null;
                             }
-                            if(err.message === "Table 'performance_schema.global_status' doesn't exist" && !console)
+
+                            if(err.message === "Table 'performance_schema.global_status' doesn't exist")
                             {
                                 reject(err);
                                 return;
