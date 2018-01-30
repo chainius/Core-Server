@@ -35,13 +35,16 @@ export default function serializeProperites(component)
 
     for(var key in props)
     {
+        if(props[key].urlProp === false)
+            continue;
+
         if(typeof(key) !== 'string')
         {
             path += '/:' + props[key];
         }
         else
         {
-            if(props[key].default)
+            if((props[key].default !== undefined && props[key].default !== null) || props[key].required === false)
                 routes.push(path);
 
             path += '/:' + key;

@@ -295,17 +295,22 @@ class RenderCache {
         try {
             delete require.cache[require.resolve(RenderCache.serverJavascriptPath)];
             RenderCache.bundle   = require(RenderCache.serverJavascriptPath);
-            RenderCache.preloads = RenderCache.bundle.preloads();
-            RenderCache.error    = null;
+            
+            if(RenderCache.bundle.preloads) {
+                RenderCache.preloads = RenderCache.bundle.preloads();
+                RenderCache.error    = null;
+            }
         } catch (e) {
-            RenderCache.bundle = null;
+            console.error(e);
+
+            /*RenderCache.bundle = null;
             RenderCache.error  = e;
 
             setTimeout(() =>
             {
                 if(RenderCache.bundle === null)
                     this.loadPreloads();
-            }, 100);
+            }, 100);*/
         }
     }
 }
