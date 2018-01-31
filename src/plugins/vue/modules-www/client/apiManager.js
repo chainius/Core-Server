@@ -439,6 +439,10 @@ class ApiManager extends BaseManager
                 callback: function (res) {
                     _this.unbindListener(res.id);
                     resolve(res);
+                },
+                errorCallback: function(res) {
+                    _this.unbindListener(res.id);
+                    reject(res);
                 }
             });
 

@@ -129,9 +129,6 @@ class ApiManager
     //---------------------------------------------------------
 
     handleApiError(api, error, salt) {
-        if (this.isDev)
-            console.error('Api error', salt, error);
-
         if (error.httpCode === 401) {
             this.deleteAllCache();
 
@@ -149,6 +146,25 @@ class ApiManager
                 this.fetchingApis.splice(i, 1);
             }
         }
+        
+        var found = false;
+        for (var key in this.onApiCallbacks) {
+            try {
+                const post = this.mergePost(JSON.parse(JSON.stringify(this.onApiCallbacks[key].post)));
+
+                if (this.getSalt(this.onApiCallbacks[key].api, post) === salt && this.onApiCallbacks[key].errorCallback)
+                {
+                    found = true;
+                    this.onApiCallbacks[key].errorCallback.call(this, error, api, this.onApiCallbacks[key].id);
+                }
+            } catch (e)
+            {
+                console.error(e);
+            }
+        }
+        
+        if(!found && this.isDev)
+            console.error('Api Error', api, error);
     }
 
     getSalt(api, data) {

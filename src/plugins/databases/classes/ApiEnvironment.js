@@ -57,6 +57,9 @@ class ApiEnvironment extends SuperClass {
     */
     query_prepare(sql, vars)
     {
+        if (vars === undefined || vars === null)
+            vars = this.post;
+
         const database = this.getConnections().mysql;
 
         if(!database)
