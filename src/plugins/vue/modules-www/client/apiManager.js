@@ -13,6 +13,9 @@ class ApiManager extends BaseManager
         this.formPoster = __FormPosterReqPath;
         this.socketConnected = false;
         this.saltApiForcers  = {};
+        
+        if(this.formPoster.default)
+            this.formPoster = this.formPoster.default;
 
         if (!this.token)
             this.generateToken();

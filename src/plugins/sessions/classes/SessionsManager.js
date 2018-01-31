@@ -82,6 +82,33 @@ class SessionsManager
     //-----------------------------------------------------
     //Session socket
 
+    find(selector) {
+        const sift = require('sift');
+        const sifter = sift(selector);
+        const all = [];
+        
+        for (var key in this.sessions)
+        {
+            if(sifter(this.sessions[key].data))
+                all.push(this.sessions[key]);
+        }
+        
+        return all;
+    }
+    
+    findOne(selector) {
+        const sift = require('sift');
+        const sifter = sift(selector);
+        
+        for (var key in this.sessions)
+        {
+            if(sifter(this.sessions[key].data))
+                return this.sessions[key];
+        }
+        
+        return null;
+    }
+    
     handleSocket(socket)
     {
         try
