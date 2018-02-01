@@ -244,7 +244,6 @@ PagesManager.BrowserifySetup = {
         
         const Path              = require('path');
         const fs                = require('fs');
-        const BrowserifyCache   = require('../additionals/watchify-cache.js');
         
         //-----------------------------------------------------
 
@@ -259,7 +258,6 @@ PagesManager.BrowserifySetup = {
         //-----------------------------------------------------
 
         const isProduction = (process.env.NODE_ENV === 'production');
-        const cacheFile = Path.join(process.cwd(), 'dist', 'cache-' + mode + '.json');
 
         const vuePath = fs.existsSync(Path.join(__dirname, '..', 'node_modules', 'vue')) ? 
                             Path.join(__dirname, '..', 'node_modules', 'vue') : 
@@ -296,15 +294,14 @@ PagesManager.BrowserifySetup = {
 
         //--------------------------------------------------------
 
-        const cache = BrowserifyCache.getCache(cacheFile);
         const config = {
-            entries: Path.join(__dirname, '..', 'modules-www', mode, 'entry.js'),
-            basedir: process.cwd(),
-            cache: cache.cache,
-            packageCache: cache.package,
-            stylesCache: cache.styles,
-            cacheFile: cacheFile,
-            fullPaths: !isProduction,
+            entries:        Path.join(__dirname, '..', 'modules-www', mode, 'entry.js'),
+            basedir:        process.cwd(),
+//            cache:          cache.cache,
+//            packageCache:   cache.package,
+//            stylesCache:    cache.styles,
+//            cacheFile:      cacheFile,
+            fullPaths:      !isProduction,
             paths: [
                 Path.join(process.cwd(), 'node_modules'),
                 process.cwd(),
@@ -314,15 +311,32 @@ PagesManager.BrowserifySetup = {
 
             process: {
                 env: {
-                    NODE_ENV: process.env.NODE_ENV,
-                    NODE_PATH: Path.join(process.cwd(), 'node_modules'),
-                    READABLE_STREAM: 'disable'
+                    NODE_ENV:         process.env.NODE_ENV,
+                    NODE_PATH:        Path.join(process.cwd(), 'node_modules'),
+                    READABLE_STREAM:  'disable'
                 }
             },
 
             insertGlobalVars: insertGlobalVars,
             isServer: (mode === 'server')
         };
+        
+        //--------------------------------------------------------
+        
+        if(!isProduction) {
+            const BrowserifyCache = require('../additionals/watchify-cache.js');
+            const cacheFile     = Path.join(process.cwd(), 'dist', 'cache-' + mode + '.json');
+            const cache         = BrowserifyCache.getCache(cacheFile);
+
+            config.cache        = cache.cache;
+            config.packageCache = cache.package;
+            config.stylesCache  = cache.styles;
+            config.cacheFile    = cache.cacheFile;
+        } else {
+            config.cache        = {};
+            config.packageCache = {};
+            config.stylesCache  = {};
+        }
 
         if (config.isServer)
             config.standalone = 'server';
