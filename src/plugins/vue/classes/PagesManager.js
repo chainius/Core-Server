@@ -331,7 +331,7 @@ PagesManager.BrowserifySetup = {
             config.cache        = cache.cache;
             config.packageCache = cache.package;
             config.stylesCache  = cache.styles;
-            config.cacheFile    = cache.cacheFile;
+            config.cacheFile    = cacheFile;
         } else {
             config.cache        = {};
             config.packageCache = {};
