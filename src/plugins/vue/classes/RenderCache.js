@@ -5,6 +5,7 @@ const Watcher     = plugins.require('web-server/Watcher');
 const fs          = require('fs');
 
 const renderer = require('../additionals/vue-server-renderer/custom/index.js');
+const isProduction = (process.env.NODE_ENV === 'production');
 
 class RenderCache {
 
@@ -26,7 +27,7 @@ class RenderCache {
         if(!RenderCache.bundle)
             this.loadPreloads();
 
-        if (process.env.NODE_ENV !== 'production') {
+        if (!isProduction) {
             const _this = this;
             Watcher.onFileChange(RenderCache.serverJavascriptPath, function () {
                 _this.bundleChanged();
@@ -154,10 +155,12 @@ class RenderCache {
     }
 
     onRouterDone(app, resolve, reject) {
+        const resources = this.session.siteManager.resourceManager;
+        
         const context = {
             url: app.$route.path,
-            cssHash: 'dev',
-            jsHash: 'dev',
+            cssHash: isProduction ? resources.getObject('/css/bundle.css').getHash() : 'dev',
+            jsHash:  isProduction ? resources.getObject('/lib/bundle.js').getHash() : 'dev',
             lang:    'en'
         };
         

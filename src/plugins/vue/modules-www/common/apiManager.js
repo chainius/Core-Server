@@ -50,6 +50,18 @@ Vue.mixin({
                 this.$api.replaceVueApi(this, api, data);
             }
         },
+        
+        $onApi(api, data, cb) {
+            const $id = this.$api.on(api, data, cb);
+            
+            this.$api.bindedVueElements.push({
+                listenerId: $id,
+                objectId: this._uid,
+                object: this,
+                api:    api,
+                data:   data
+            });
+        },
 
         $refreshApi(api, post) {
             var postIn = post;
@@ -401,7 +413,7 @@ class ApiManager
             object: object,
             api:    api,
             data:   data
-        })
+        });
 
         return object;
     }
