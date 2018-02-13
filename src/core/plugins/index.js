@@ -3,6 +3,9 @@ const Console = require('../logs/console.js');
 const console = Console.create('PluginSystem');
 const Path    = require('path');
 const CustomRequire = require('./require.js');
+const Module  = require('module');
+
+//const Watcher         = plugins.require('web-server/Watcher');
 
 class PluginSystem {
 
@@ -56,6 +59,38 @@ class PluginSystem {
 
         this.registerPath(path);
     }
+    
+    watch(path) {
+        var watcher = null; 
+
+        if (process.env.NODE_ENV === 'production')
+            return;
+        
+        try {
+            watcher = this.require('web-server/Watcher');
+        } catch(e) {
+            if(e.code === 'CLASS_NOT_FOUND')
+                return;
+
+            throw(e);
+        }
+
+        if(watcher === null)
+            return;
+
+        watcher.onChange(path, (filePath) => {
+            this.classes       = {};
+            this.loadedPlugins = {};
+            this.entries       = {};
+
+            this.loadConfig();
+
+            if(Module._cache[filePath])
+                delete Module._cache[filePath];
+            
+            console.warn('Deleted plugins cache');
+        });
+    }
 
     require(name) {
         if(this.classes[name])
@@ -91,6 +126,8 @@ class PluginSystem {
 
             const path      = Path.join(key, 'classes', name + '.js');
             const BaseClass = CustomRequire.plugin(path);
+            
+            //this.watch(plugin + '/' + name, path);
 
             return this.createHeritedClass(BaseClass, this.loadedPlugins[key].name + '/' + name, name);
         }
@@ -112,6 +149,8 @@ class PluginSystem {
                         //Create herited class
                         const path        = Path.join(key, 'classes', subClass + '.js');
                         BaseClass         = CustomRequire.plugin(path, BaseClass);
+                        
+                        //this.watch(name, path);
 
                         //Continue creating class with sub herited classes
                         BaseClass = this.createHeritedClass(BaseClass, this.loadedPlugins[key].name + '/' + className, className);
@@ -227,6 +266,8 @@ class PluginSystem {
             if(e.code !== "ENOENT")
                 console.error(e);
         }
+        
+        this.watch(path);
     }
 }
 

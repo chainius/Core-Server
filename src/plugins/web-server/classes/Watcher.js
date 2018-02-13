@@ -105,8 +105,7 @@ class Watcher
     {
         try
         {
-            if (relativePath.substr(0, obj.dir.length) === obj.dir)
-
+            if (relativePath.substr(0, obj.dir.length) === obj.dir || obj.dir === fullPath.substr(0, obj.dir.length))
                 obj.callback(fullPath, relativePath);
         }
         catch (e)
@@ -121,7 +120,6 @@ class Watcher
         {
             const listeners = this.siteChangeListeners;
             for (var key in listeners)
-
                 this.executeCallback(listeners[key], relativePath, fullPath);
         }
         catch (e)
