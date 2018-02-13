@@ -66,6 +66,13 @@ class PluginSystem {
         if (process.env.NODE_ENV === 'production')
             return;
         
+        this.watchings = this.watchings || [];
+        
+        if(this.watchings.indexOf(path) !== -1)
+            return;
+        
+        this.watchings.push(path);
+        
         try {
             watcher = this.require('web-server/Watcher');
         } catch(e) {
