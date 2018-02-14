@@ -22,7 +22,7 @@ function vueMerge(vueObject, nData)
 
         if(nData.items instanceof Array)
         {
-            if(nData.items.length === 1)
+            if(nData.items.length === 1 && !Array.isArray(vueObject.items))
             {
                 nData = nData.items[0];
 
