@@ -396,12 +396,31 @@ PagesManager.BrowserifySetup = {
     }
 }
 
+function bundle(path, bundler, done) {
+    const fs     = require('fs');
+    const stream = fs.createWriteStream(path);
+
+    stream.on('close', function()
+    {
+        done.apply(bundler, arguments);
+    });
+
+    stream.on('error', function(err)
+    {
+        console.error('browserify-stream:', err);
+    });
+
+    bundler.bundle().on('error', function(err)
+    {
+        console.error('Browserify-bundle:', err);
+    })
+    .pipe(stream);
+}
 
 PagesManager.ensureExists = ensureExists;
 PagesManager.compile = function(mode, done, globConfig) {
 
     const Path              = require('path');
-    const fs                = require('fs');
     const isProduction      = (process.env.NODE_ENV === 'production');
 
     const browserify        = require('browserify');
@@ -420,16 +439,18 @@ PagesManager.compile = function(mode, done, globConfig) {
 
     //--------------------------------------------------------
 
+    const destPath = Path.join(distFolder, 'bundle-' + mode + '.js');
 
     if (!isProduction && process.options.hot !== undefined)
     {
         bundler.on('update', function()
         {
-            bundler.bundle(function()
+            bundle(destPath, bundler, done);
+            /*bundler.bundle(function()
             {
                 done.apply(this, arguments);
             })
-            .pipe(fs.createWriteStream(Path.join(distFolder, 'bundle-' + mode + '.js')));
+            .pipe(fs.createWriteStream(Path.join(distFolder, 'bundle-' + mode + '.js')));*/
         });
     }
 
@@ -441,7 +462,7 @@ PagesManager.compile = function(mode, done, globConfig) {
         }
         else
         {
-            const stream = fs.createWriteStream(Path.join(distFolder, 'bundle-' + mode + '.js'));
+            /*const stream = fs.createWriteStream(Path.join(distFolder, 'bundle-' + mode + '.js'));
 
             stream.on('close', function()
             {
@@ -457,7 +478,8 @@ PagesManager.compile = function(mode, done, globConfig) {
             {
                 console.error('Browserify-bundle:', err);
             })
-            .pipe(stream);
+            .pipe(stream);*/
+            bundle(destPath, bundler, done);
         }
     });
 
