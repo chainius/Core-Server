@@ -28,7 +28,7 @@ class Session extends SuperClass
     * @param client_ip {String}
     * @param files {Object} optional
     */
-    api(name, post, client_ip, file, get) {
+    api(name, post, client_ip, file, get, socket) {
 
         var req = client_ip;
         if(typeof(client_ip) !== 'object')
@@ -51,6 +51,7 @@ class Session extends SuperClass
             });
 
         const environment = this.createApiEnvironment(name, post, req);
+        environment.socket = socket;
 
         return this.executeOnReady(function() {
 
@@ -118,7 +119,7 @@ class Session extends SuperClass
                 });
             }
 
-            return this.api(api, post, socket.remoteAddress);
+            return this.api(api, post, socket.remoteAddress, {}, {}, socket);
         }).then(function(result)
         {
             _this.sendSocketMessage(socket, {
