@@ -17,13 +17,9 @@ class RenderCache {
         this.client_ip      = null;
         this.cacheTTL       = 10 * 60 * 1000;
         
+        this.lru = this;
+        
         this.createRenderer();
-        
-        /*this.renderer = renderer.createRenderer({
-            basedir: process.cwd(),
-            cache: this
-        });*/
-        
 
         if(!RenderCache.bundle)
             this.loadPreloads();
@@ -51,9 +47,9 @@ class RenderCache {
                 this.templatePath = overwriteTemplate;
                 const template = fs.readFileSync(overwriteTemplate).toString();
                 
-                this.renderer = new renderer({
+                this.renderer = renderer.createRenderer({
                     basedir: process.cwd(),
-                    cache: this,
+                    cache: this.lru,
                     template: template
                 });
             });
@@ -63,15 +59,9 @@ class RenderCache {
 
         this.renderer = renderer.createRenderer({
             basedir: process.cwd(),
-            cache: this,
+            cache: this.lru,
             template: template
         });
-        
-        /*new renderer({
-            basedir: process.cwd(),
-            cache: this,
-            template: template
-        });*/
     }
     
     deleteCache() {
@@ -93,7 +83,30 @@ class RenderCache {
             console.error(e);
         }
     }
+    
+    createContext(url) {
+        const _this     = this;
+        const resources = this.session.siteManager.resourceManager;
 
+        return {
+            url: url,
+            api: function (name, post) {
+                const salt = _this.getSalt(name, post || {});
+                const data = _this.preloadedApis[salt];
+
+                if (data)
+                    api_data[salt] = data;
+
+                return data;
+            },
+
+            cssHash: isProduction ? resources.getObject('/css/bundle.css').getHash() : 'dev',
+            jsHash:  isProduction ? resources.getObject('/lib/bundle.js').getHash() : 'dev',
+            lang:    'en',
+            //meta:    {}
+        };
+    }
+    
     createStream(context)
     {
         const res = new PassThrough();
@@ -129,20 +142,8 @@ class RenderCache {
         try
         {
             const api_data = this.urlApiData[url] || {};
-            const _this = this;
 
-            const ctx = {
-                url: url,
-                api: function (name, post) {
-                    const salt = _this.getSalt(name, post || {});
-                    const data = _this.preloadedApis[salt];
-
-                    if (data)
-                        api_data[salt] = data;
-
-                    return data;
-                }
-            };
+            const ctx = this.createContext(url);
 
             const stream = this.createStream(ctx);
             ctx.api_data = api_data;
@@ -169,26 +170,12 @@ class RenderCache {
         return null;
     }
 
-    onRouterDone(app, resolve, reject) {
-        const resources = this.session.siteManager.resourceManager;
-
-        const meta = app.$meta().inject();
-        
-        for(var key in meta) {
-            if(meta[key].text && key.indexOf('__') === -1)
-                meta[key] = meta[key].text();
-        }
-
-        const context = {
-            url: app.$route.path,
-            cssHash: isProduction ? resources.getObject('/css/bundle.css').getHash() : 'dev',
-            jsHash:  isProduction ? resources.getObject('/lib/bundle.js').getHash() : 'dev',
-            lang:    'en',
-            meta:    meta
-        };
+    onRouterDone(app, context, resolve, reject) {
+        //const context = this.createContext(app.$route.path);
 
         this.renderer.renderToString(app, context, (err, html) => {
             var code = 200;
+
             if(app.$route.meta && app.$route.meta.httpCode && html)
                 code = app.$route.meta.httpCode;
             
@@ -202,17 +189,15 @@ class RenderCache {
     renderToString(url) {
         const _this = this;
         return new Promise(function(resolve, reject) {
-            const app = RenderCache.bundle.createApp();
-
-            //if(app.$route.path === url && app.loaded)
-            //    return _this.onRouterDone(app, resolve, reject);
-
-            //app.loaded = true;
-
-            app.$router.push(url);
-            _this.onRouterDone(app, resolve, reject);
+            const ctx = _this.createContext(url);
+            
+            RenderCache.bundle.default(ctx).then((app) => {
+                _this.onRouterDone(app, ctx, resolve, reject);
+            }).catch(reject);
         });
     }
+    
+    //-------------------------------------------------------
 
     getSalt(api, data) {
         var dataJ = JSON.stringify(data);
@@ -278,6 +263,7 @@ class RenderCache {
     }
 
     has(key, cb) {
+        console.log('has', key)
         if (this.cache[key])
             return cb(true);
 
@@ -329,15 +315,6 @@ class RenderCache {
             }
         } catch (e) {
             console.error(e);
-
-            /*RenderCache.bundle = null;
-            RenderCache.error  = e;
-
-            setTimeout(() =>
-            {
-                if(RenderCache.bundle === null)
-                    this.loadPreloads();
-            }, 100);*/
         }
     }
 }

@@ -3,6 +3,7 @@
         "MasterServer": "web-server/MasterServer",
         "SiteManager": "web-server/SiteManager",
         "Session":      "sessions/Session",
+        "Resources/Manager": "web-server/Resources/Manager",
         "PagesManager": null,
         "RenderCache":  null,
         "hmr/socket-server": null,

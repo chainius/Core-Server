@@ -6,13 +6,13 @@ const _preloads = {};
 
 function prepareSSRComponent(name, component)
 {
-    component.serverCacheKey = function(props)
+    /*component.serverCacheKey = function(props)
     {
         return name + '-' + JSON.stringify(props || {});
     };
 
     if(component.preload === true)
-        _preloads[name] = component.data;
+        _preloads[name] = component.data;*/
 }
 
 //-----------------------------------------
@@ -48,6 +48,8 @@ export function transformPost(post)
 }
 
 export default (ctx) => {
+    const app = initApp(options);
+    
     api.ctx = ctx;
     app.$router.push(ctx.url);
 
@@ -57,10 +59,20 @@ export default (ctx) => {
         if(app.$store)
             ctx.state = app.$store.state; // set initial state
 
-        ctx.meta  = app.$route.meta;
+        ctx.routeMeta  = app.$route.meta;
+        ctx.httpCode   = app.$route.meta.httpCode || 200;
     }).then(() => {
         const metatags = app.$meta();
-        ctx.metatags = metatags;
+
+        ctx.meta = { inject: function () {
+            const injected = metatags.inject();
+            
+            for(var key in injected) {
+                if(injected[key].text && key.indexOf('__') === -1)
+                    this[key] = injected[key].text();
+            }
+        }}
+
         return app;
     });
 };
