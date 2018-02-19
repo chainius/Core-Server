@@ -263,7 +263,6 @@ class RenderCache {
     }
 
     has(key, cb) {
-        console.log('has', key)
         if (this.cache[key])
             return cb(true);
 
