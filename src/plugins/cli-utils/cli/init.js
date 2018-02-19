@@ -88,8 +88,7 @@ async function init()
     }
     else
     {
-        fs.writeFileSync(Path.join(process.cwd(), 'config', 'servers.json'), JSON.stringify({ ui: false }, null, '\t'));
-        fs.writeFileSync(Path.join(process.cwd(), 'config', 'servers-production.json'), JSON.stringify({ ui: false }, null, '\t'));
+        fs.writeFileSync(Path.join(process.cwd(), 'config', 'plugins.json'), JSON.stringify({ vue: false }, null, '\t'));
     }
 
     //-----------------------------

@@ -1,4 +1,4 @@
-import init from '../common/init.js';
+import { initApp, initGlobalApp } from '../common/init.js';
 import {mergePost} from '../common/init.js';
 import api  from './apiManager.js';
 
@@ -17,19 +17,23 @@ function prepareSSRComponent(name, component)
 
 //-----------------------------------------
 
-const app = init({
+/*const app = init({
     onComponent: prepareSSRComponent,
     apiManager: api
 });
 
-export function createApp() {
-    return init({
-        onComponent() {},
-        apiManager: api
-    });
-}
+export let $app = app;*/
 
-export let $app = app;
+const options = {
+    onComponent: prepareSSRComponent,
+    apiManager: api
+};
+
+initGlobalApp(options);
+
+export function createApp() {
+    return initApp(options);
+}
 
 //-----------------------------------------
 

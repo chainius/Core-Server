@@ -1,11 +1,11 @@
-const SocketServer = plugins.require('vue/hmr/socket-server');
+//const SocketServer = plugins.require('vue/hmr/socket-server');
 
 class PagesManager
 {
     constructor(siteManager)
     {
         this.isProduction   = (process.env.NODE_ENV === 'production');
-        this.hmrSocket      = new SocketServer(this);
+        //this.hmrSocket      = new SocketServer(this);
 
         if(siteManager) {
             this.siteManager    = siteManager;
@@ -297,10 +297,6 @@ PagesManager.BrowserifySetup = {
         const config = {
             entries:        Path.join(__dirname, '..', 'modules-www', mode, 'entry.js'),
             basedir:        process.cwd(),
-//            cache:          cache.cache,
-//            packageCache:   cache.package,
-//            stylesCache:    cache.styles,
-//            cacheFile:      cacheFile,
             fullPaths:      !isProduction,
             paths: [
                 Path.join(process.cwd(), 'node_modules'),
@@ -388,10 +384,10 @@ PagesManager.BrowserifySetup = {
                 .plugin(watchify)
                 .plugin(blukifyWatch);
 
-            if (!config.isServer && !config.disableHmr) {
+            /*if (!config.isServer && !config.disableHmr) {
                 const browhmr = plugins.require('vue/hmr/index');
                 this.plugin(browhmr);
-            }
+            }*/
         }
     }
 }
@@ -446,11 +442,6 @@ PagesManager.compile = function(mode, done, globConfig) {
         bundler.on('update', function()
         {
             bundle(destPath, bundler, done);
-            /*bundler.bundle(function()
-            {
-                done.apply(this, arguments);
-            })
-            .pipe(fs.createWriteStream(Path.join(distFolder, 'bundle-' + mode + '.js')));*/
         });
     }
 
@@ -462,23 +453,6 @@ PagesManager.compile = function(mode, done, globConfig) {
         }
         else
         {
-            /*const stream = fs.createWriteStream(Path.join(distFolder, 'bundle-' + mode + '.js'));
-
-            stream.on('close', function()
-            {
-                done.apply(bundler, arguments);
-            });
-
-            stream.on('error', function(err)
-            {
-                console.error('browserify-stream:', err);
-            });
-
-            bundler.bundle().on('error', function(err)
-            {
-                console.error('Browserify-bundle:', err);
-            })
-            .pipe(stream);*/
             bundle(destPath, bundler, done);
         }
     });

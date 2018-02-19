@@ -79,8 +79,8 @@ class Session extends SuperClass
                         }
                         else
                         {
-                            console.error(err);
-                            err = { error: 'an internal error occured' };
+                            //console.error(err);
+                            //err = { error: 'an internal error occured' };
                         }
                     }
                 }

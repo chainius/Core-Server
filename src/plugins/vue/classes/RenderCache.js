@@ -4,7 +4,7 @@ const PassThrough = require('stream').PassThrough;
 const Watcher     = plugins.require('web-server/Watcher');
 const fs          = require('fs');
 
-const renderer = require('../additionals/vue-server-renderer/custom/index.js');
+const renderer = require('vue-server-renderer') // require('../additionals/vue-server-renderer/custom/index.js');
 const isProduction = (process.env.NODE_ENV === 'production');
 
 class RenderCache {
@@ -14,7 +14,8 @@ class RenderCache {
         this.cache          = {};
         this.preloadedApis  = {};
         this.urlApiData     = {};
-        this.client_ip      = null; //ToDo get client ip from req
+        this.client_ip      = null;
+        this.cacheTTL       = 10 * 60 * 1000;
         
         this.createRenderer();
         
@@ -33,6 +34,10 @@ class RenderCache {
                 _this.bundleChanged();
             });
         }
+
+        setTimeout(() => {
+            this.deleteCache();
+        }, this.cacheTTL);
     }
 
     createRenderer() {
@@ -53,20 +58,30 @@ class RenderCache {
                 });
             });
         }
-        
+
         const template = fs.readFileSync(this.templatePath).toString();
 
-        this.renderer = new renderer({
+        this.renderer = renderer.createRenderer({
             basedir: process.cwd(),
             cache: this,
             template: template
         });
+        
+        /*new renderer({
+            basedir: process.cwd(),
+            cache: this,
+            template: template
+        });*/
     }
     
     deleteCache() {
         this.cache          = {};
         this.urlApiData     = {};
         this.preloadedApis  = {};
+        
+        setTimeout(() => {
+            this.deleteCache();
+        }, this.cacheTTL);
     }
 
     bundleChanged() {
@@ -156,14 +171,22 @@ class RenderCache {
 
     onRouterDone(app, resolve, reject) {
         const resources = this.session.siteManager.resourceManager;
+
+        const meta = app.$meta().inject();
         
+        for(var key in meta) {
+            if(meta[key].text && key.indexOf('__') === -1)
+                meta[key] = meta[key].text();
+        }
+
         const context = {
             url: app.$route.path,
             cssHash: isProduction ? resources.getObject('/css/bundle.css').getHash() : 'dev',
             jsHash:  isProduction ? resources.getObject('/lib/bundle.js').getHash() : 'dev',
-            lang:    'en'
+            lang:    'en',
+            meta:    meta
         };
-        
+
         this.renderer.renderToString(app, context, (err, html) => {
             var code = 200;
             if(app.$route.meta && app.$route.meta.httpCode && html)
@@ -175,16 +198,17 @@ class RenderCache {
                 resolve({ html, httpCode: code });
         });
     }
-    
+
     renderToString(url) {
         const _this = this;
         return new Promise(function(resolve, reject) {
-            const app = RenderCache.bundle.$app;
+            const app = RenderCache.bundle.createApp();
 
             //if(app.$route.path === url && app.loaded)
             //    return _this.onRouterDone(app, resolve, reject);
 
             //app.loaded = true;
+
             app.$router.push(url);
             _this.onRouterDone(app, resolve, reject);
         });
