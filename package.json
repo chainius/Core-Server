@@ -1,6 +1,6 @@
 {
   "name": "core-server",
-  "version": "0.6.5",
+  "version": "0.6.6",
   "description": "CoreServer",
   "main": "src/index.js",
   "bin": "src/index.js",
