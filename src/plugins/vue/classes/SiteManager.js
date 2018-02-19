@@ -1,11 +1,13 @@
 const helmet = require('helmet');
+const CacheObject = plugins.require('web-server/Resources/CacheObject');
 
 class SiteManager extends SuperClass {
 
     constructor(httpServer) {
         super(httpServer);
 
-        this._helmet = helmet();
+        this._helmet    = helmet();
+        this.pagesCache = {};
         const _this = this;
 
         process.nextTick(() => {
@@ -47,8 +49,11 @@ class SiteManager extends SuperClass {
 
                 //-----------------------------------------------------------------
 
+                var index = req.url.indexOf('?');
+                var url = index >= 0 ? req.url.substr(0, index) : req.url;
+                
                 const _this = this;
-                this.pagesManager.renderToString(req.url).then(function(r)
+                /*this.pagesManager.renderToString(req.url).then(function(r)
                 {
                     if(res._headerSent) {
                         res.writeHead(r.httpCode || 200, { 'Content-Type': 'text/html; charset=utf-8' });
@@ -63,7 +68,31 @@ class SiteManager extends SuperClass {
                 .catch(function(err)
                 {
                     console.error(err);
-                });
+                });*/
+
+                function handle() {
+                    if(this.pagesCache[url] && process.env.NODE_ENV === 'production') {
+                        const r = this.pagesCache[url];
+
+                        res.writeHead(r.httpCode || 200, { 'Content-Type': 'text/html; charset=utf-8' });
+                        res.end(r.html);
+                        return;
+                    }
+                    
+                    this.pagesManager.handleRequest(req, res).then((r) => {
+                        this.pagesCache[url] = r;
+                    }).catch(function(err) {
+                        console.error(err);
+                    });
+                }
+
+                if(res._headerSent) {
+                    handle.call(this);
+                } else {
+                    this._helmet(req, res, () => {
+                        handle.call(this);
+                    });
+                }
             }
         }
         catch (e)

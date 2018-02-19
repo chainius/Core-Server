@@ -176,6 +176,13 @@ class PluginSystem {
         return BaseClass;
     }
 
+    createExtendedClass(BaseClass, NClassPath) {
+        if(typeof(BaseClass) === 'string')
+            BaseClass = this.require(BaseClass);
+
+        return CustomRequire.plugin(NClassPath, BaseClass);
+    }
+
     executeCLI() {
         return CLI.execute(this);
     }

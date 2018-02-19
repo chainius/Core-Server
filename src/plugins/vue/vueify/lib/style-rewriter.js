@@ -46,7 +46,9 @@ module.exports = function (id, css, scoped, options) {
     return Promise.resolve(val)
   } else {
     var plugins = []
-    var opts = {}
+    var opts = {
+        from: undefined
+    }
 
     if (options.postcss instanceof Array) {
       plugins = options.postcss.slice()

@@ -522,8 +522,9 @@ class SiteManager extends SuperClass
                 durations.push(duration);
                 rpm++;
 
-                if(Date.now() - start < 1000)
-                    return next();
+                if(Date.now() - start < 1000) {
+                    return process.nextTick(next);
+                }
 
                 const avg = durations.reduce(function(a, b) { return a + b }) / durations.length;
                 console.success("Total time:", Date.now() - start);

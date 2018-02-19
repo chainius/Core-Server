@@ -1,11 +1,11 @@
-const SocketServer = plugins.require('vue/hmr/socket-server');
+//const SocketServer = plugins.require('vue/hmr/socket-server');
 
 class PagesManager
 {
     constructor(siteManager)
     {
         this.isProduction   = (process.env.NODE_ENV === 'production');
-        this.hmrSocket      = new SocketServer(this);
+        //this.hmrSocket      = new SocketServer(this);
 
         if(siteManager) {
             this.siteManager    = siteManager;
@@ -17,64 +17,44 @@ class PagesManager
 
     //--------------------------------
 
-    getRenderStream(req)
-    {
-        const _this        = this;
+    handleRequest(req, res) {
+        const ToString = true;
+        
+        if(ToString) {
+            return this.renderToString(req.url).then(function(r) {
+                res.writeHead(r.httpCode || 200, { 'Content-Type': 'text/html; charset=utf-8' });
+                res.end(r.html);
+                return r;
+            })
+        } else {
+            res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
 
-        return new Promise(function(resolve, reject)
-        {
-            if(!_this.globalSession)
-                reject('No session found for the cache streams');
-
-            function tryCreate()
+            const stream = this.getRenderStream(req);
+        
+            stream.stream.on('data', function(chunk)
             {
-                try
-                {
-                    //ToDo if no session create cache..
-                    const renderCache = _this.globalSession.getComponentsCache();
-                    const result      = renderCache.renderToStream(req.url);
+                res.write(chunk);
+            });
 
-                    if (req.timedout)
-                    {
-                        reject('Request timeout reached');
-                    }
-                    else
-                    {
-                        resolve(result);
-                    }
-
-                    return true;
-                }
-                catch (e)
-                {
-                    console.error(e);
-
-                    if (req.timedout)
-                    {
-                        reject(e);
-                        return true;
-                    }
-
-                    return false;
-                }
-            }
-
-            if (!tryCreate())
+            stream.stream.on('end', function(chunk)
             {
-                console.warn('Awaiting bundle in order to serve client request..');
+                res.end();
+            });
 
-                const interval = setInterval(function()
-                {
-                    if (tryCreate())
-                        clearInterval(interval);
-                }, 100);
-            }
-        });
+            return stream;
+        }
     }
-
+    
     getCacheObject(name)
     {
         return this.siteManager.resourceManager.getObject(name);
+    }
+    
+    getRenderStream(req)
+    {
+        const renderCache = this.globalSession.getComponentsCache();
+        const result      = renderCache.renderToStream(req.url);
+        return result;
     }
     
     renderToString(url) {
@@ -115,111 +95,6 @@ class PagesManager
         {
             console.error(e);
         }*/
-    }
-
-    handleVueStream(stream, ctx, req, res, code)
-    {
-        const _this     = this;
-        var isInited    = false;
-        var lang        = 'en';
-
-        function init(chunk)
-        {
-            try
-            {
-                const {
-                  title, htmlAttrs, bodyAttrs, link, style, script, noscript, meta,
-                } = ctx.metatags.inject();
-
-                isInited = true;
-                code     = code || ctx.meta.httpCode || 200;
-                res.writeHead(code, { 'Content-Type': 'text/html; charset=utf-8' });
-                res.write(`<html lang="en" data-vue-meta-server-rendered ${htmlAttrs.text()}>
-                <head>
-                <meta charset="utf-8">
-                <meta name="viewport" content="width=device-width, initial-scale=1">
-                <link rel="icon" type="image/png" href="/img/favicon.png" />
-                ${ title.text ? title.text() : `<title>${_this.siteManager.title}</title>` }
-                ${meta.text()}
-                ${link.text()}
-                ${style.text()}
-                ${script.text()}
-                ${noscript.text()}
-                ${chunk}`);
-
-                if(code !== 200 && code !== 404)
-                    res.write(`<script>window.HTTP_STATUS = ${code}; </script>`);
-
-                const hash = _this.isProduction ? _this.getCacheObject('/css/bundle.css').getHash() : 'dev';
-                res.write("<link href='/css/bundle.css?"+hash+"' rel='stylesheet' type='text/css'>");
-                res.write(`</head>`);
-                res.write(`<body ${bodyAttrs.text()}>`);
-            }
-            catch (e)
-            {
-                console.error(e);
-            }
-        }
-
-        stream.on('data', function(chunk)
-        {
-            try
-             {
-                if (!isInited)
-                    init(chunk);
-                else
-                    res.write(chunk);
-            }
-            catch (e)
-            {
-                console.error(e);
-            }
-        });
-
-        stream.on('end', function()
-        {
-            try
-            {
-                const hash = _this.isProduction ? _this.getCacheObject('/lib/bundle.js').getHash() : 'dev';
-                
-                //if(ctx.state)
-                //res.write(`<script>window.STATE = JSON.parse('${JSON.stringify(ctx.state)}')</script>`);
-                
-                res.end(`<script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=Intl.~locale.${lang}"></script>
-                        <script>window.API_DATA = ${JSON.stringify(ctx.api_data)}</script>
-                        <script src="/lib/bundle.js?${hash}"></script>
-                        </body>
-                        </html>`);
-            }
-            catch (e)
-            {
-                console.error(e);
-            }
-        });
-
-        stream.on('error', function(error)
-        {
-            if (error.message === "Cannot read property 'render' of undefined")
-            {
-                setTimeout(function()
-                {
-                    _this.handle(req, res);
-                }, 150);
-
-                return;
-            }
-
-            console.error(error);
-            try
-            {
-                res.writeHead(500, { 'Content-Type': 'text/plain' });
-                res.end('An internal error occured');
-            }
-            catch (e)
-            {
-                console.error(e);
-            }
-        });
     }
 }
 
@@ -297,10 +172,6 @@ PagesManager.BrowserifySetup = {
         const config = {
             entries:        Path.join(__dirname, '..', 'modules-www', mode, 'entry.js'),
             basedir:        process.cwd(),
-//            cache:          cache.cache,
-//            packageCache:   cache.package,
-//            stylesCache:    cache.styles,
-//            cacheFile:      cacheFile,
             fullPaths:      !isProduction,
             paths: [
                 Path.join(process.cwd(), 'node_modules'),
@@ -388,20 +259,39 @@ PagesManager.BrowserifySetup = {
                 .plugin(watchify)
                 .plugin(blukifyWatch);
 
-            if (!config.isServer && !config.disableHmr) {
+            /*if (!config.isServer && !config.disableHmr) {
                 const browhmr = plugins.require('vue/hmr/index');
                 this.plugin(browhmr);
-            }
+            }*/
         }
     }
 }
 
+function bundle(path, bundler, done) {
+    const fs     = require('fs');
+    const stream = fs.createWriteStream(path);
+
+    stream.on('close', function()
+    {
+        done.apply(bundler, arguments);
+    });
+
+    stream.on('error', function(err)
+    {
+        console.error('browserify-stream:', err);
+    });
+
+    bundler.bundle().on('error', function(err)
+    {
+        console.error('Browserify-bundle:', err);
+    })
+    .pipe(stream);
+}
 
 PagesManager.ensureExists = ensureExists;
 PagesManager.compile = function(mode, done, globConfig) {
 
     const Path              = require('path');
-    const fs                = require('fs');
     const isProduction      = (process.env.NODE_ENV === 'production');
 
     const browserify        = require('browserify');
@@ -420,16 +310,13 @@ PagesManager.compile = function(mode, done, globConfig) {
 
     //--------------------------------------------------------
 
+    const destPath = Path.join(distFolder, 'bundle-' + mode + '.js');
 
     if (!isProduction && process.options.hot !== undefined)
     {
         bundler.on('update', function()
         {
-            bundler.bundle(function()
-            {
-                done.apply(this, arguments);
-            })
-            .pipe(fs.createWriteStream(Path.join(distFolder, 'bundle-' + mode + '.js')));
+            bundle(destPath, bundler, done);
         });
     }
 
@@ -441,23 +328,7 @@ PagesManager.compile = function(mode, done, globConfig) {
         }
         else
         {
-            const stream = fs.createWriteStream(Path.join(distFolder, 'bundle-' + mode + '.js'));
-
-            stream.on('close', function()
-            {
-                done.apply(bundler, arguments);
-            });
-
-            stream.on('error', function(err)
-            {
-                console.error('browserify-stream:', err);
-            });
-
-            bundler.bundle().on('error', function(err)
-            {
-                console.error('Browserify-bundle:', err);
-            })
-            .pipe(stream);
+            bundle(destPath, bundler, done);
         }
     });
 

@@ -1,4 +1,4 @@
-import init from '../common/init.js';
+import { initApp, initGlobalApp } from '../common/init.js';
 import {mergePost} from '../common/init.js';
 import api  from './apiManager.js';
 
@@ -6,30 +6,34 @@ const _preloads = {};
 
 function prepareSSRComponent(name, component)
 {
-    component.serverCacheKey = function(props)
+    /*component.serverCacheKey = function(props)
     {
         return name + '-' + JSON.stringify(props || {});
     };
 
     if(component.preload === true)
-        _preloads[name] = component.data;
+        _preloads[name] = component.data;*/
 }
 
 //-----------------------------------------
 
-const app = init({
+/*const app = init({
     onComponent: prepareSSRComponent,
     apiManager: api
 });
 
-export function createApp() {
-    return init({
-        onComponent() {},
-        apiManager: api
-    });
-}
+export let $app = app;*/
 
-export let $app = app;
+const options = {
+    onComponent: prepareSSRComponent,
+    apiManager: api
+};
+
+initGlobalApp(options);
+
+export function createApp() {
+    return initApp(options);
+}
 
 //-----------------------------------------
 
@@ -44,6 +48,8 @@ export function transformPost(post)
 }
 
 export default (ctx) => {
+    const app = initApp(options);
+    
     api.ctx = ctx;
     app.$router.push(ctx.url);
 
@@ -53,10 +59,20 @@ export default (ctx) => {
         if(app.$store)
             ctx.state = app.$store.state; // set initial state
 
-        ctx.meta  = app.$route.meta;
+        ctx.routeMeta  = app.$route.meta;
+        ctx.httpCode   = app.$route.meta.httpCode || 200;
     }).then(() => {
         const metatags = app.$meta();
-        ctx.metatags = metatags;
+
+        ctx.meta = { inject: function () {
+            const injected = metatags.inject();
+            
+            for(var key in injected) {
+                if(injected[key].text && key.indexOf('__') === -1)
+                    this[key] = injected[key].text();
+            }
+        }}
+
         return app;
     });
 };

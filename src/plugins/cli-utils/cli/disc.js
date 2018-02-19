@@ -23,12 +23,12 @@ module.exports = function(value)
 
     var serverStart = Date.now();
 
-    PagesManager.compile('client', function() {
+    PagesManager.compile(value, function() {
         subConsole.info(value.substr(0,1).toUpperCase() + value.substr(1), 'bundle done (' + (Date.now() - serverStart) + ' ms)');
 
         subConsole.log('Exporting bundle disc..');
 
-        disc.bundle(fs.readFileSync(Path.join(process.cwd(), 'dist', 'bundle-client.js')),
+        disc.bundle(fs.readFileSync(Path.join(process.cwd(), 'dist', 'bundle-'+value+'.js')),
         {
             mode: 'size'
         }, function(err, html)

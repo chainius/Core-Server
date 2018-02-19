@@ -109,16 +109,20 @@ export function mergePost(post)
     return post;
 }
 
-export default function initApp( _options )
-{
+export function initGlobalApp(_options) {
+    options = _options || {};
+    
     InitReq.setupEnvironment( _options.apiManager, _options.apiManager.isClient );
-
-    options = _options || {};
     InitReq.initComponents( registerComponent );
 
     if(errorComponent !== null)
         routes.push({ path: '*', component: errorComponent, meta: { httpCode: 404 } });
+    
+    Vue.use(_options.apiManager);
+}
 
+export function initApp( _options )
+{
     const router = new Router({
         mode: 'history',
         abstract: true,
@@ -134,14 +138,13 @@ export default function initApp( _options )
 
     router.beforeEach(checkRoutePermission);
 
-    const app   = InitReq.getApp(router, _options.apiManager.isClient);
-    Vue.use(options.apiManager);
+    const app = InitReq.getApp(router, _options.apiManager.isClient);
 
     return new Vue(
         Vue.util.extend({
             //i18n,
             router: router,
-            api: options.apiManager
+            api: _options.apiManager
         }, app)
     );
 }

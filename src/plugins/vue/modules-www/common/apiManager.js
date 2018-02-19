@@ -75,6 +75,7 @@ Vue.mixin({
         $setInterval(fn, time) {
             const id = setInterval(fn, time);
             this.$intervals.push(id);
+            return id;
         }
     },
 
