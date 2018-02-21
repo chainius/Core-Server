@@ -298,13 +298,18 @@ class ApiEnvironment
     * Get http request
     * @param url {String}
     */
-    httpGet(url)
+    httpGet(url, extraConfig)
     {
-        return request({
+        const config = {
             uri: url,
             json: true,
             method: 'GET'
-        });
+        };
+        
+        for(var key in extraConfig)
+            config[key] = extraConfig[key];
+        
+        return request(config);
     }
 
     /**
@@ -312,14 +317,19 @@ class ApiEnvironment
     * @param url {String}
     * @param data {Object}
     */
-    httpPost(url, data)
+    httpPost(url, data, extraConfig)
     {
-        return request({
+        const config = {
             uri: url,
             json: true,
             method: 'POST',
             body: data
-        });
+        };
+        
+        for(var key in extraConfig)
+            config[key] = extraConfig[key];
+        
+        return request(config);
     }
 
 }
