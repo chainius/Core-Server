@@ -1,13 +1,17 @@
 const MongoClient = require('mongodb').MongoClient
-const events      = require('events');
+const Event       = plugins.require('web-server/Event');
 
-class MongoDb extends events.EventEmitter
+class MongoDb
 {
     constructor(config)
     {
-        super();
         this.config = config;
         this.client = null;
+
+        this.__connectedEvent = new Event({
+            retainTrigger: true,
+            console
+        })
 
         this.connect();
     }
@@ -15,26 +19,28 @@ class MongoDb extends events.EventEmitter
     connect()
     {
         const _this = this;
-        MongoClient.connect('mongodb://' + this.config.server + '/' + this.config.project, function(err, db) {
+        MongoClient.connect('mongodb://' + this.config.server, function(err, client) {
             if(err !== null)
             {
                 console.error('Could not connect to the mongodb server');
 
-                setTimeout(function()
+                return setTimeout(function()
                 {
                     _this.connect();
                 }, 10000); //10 seconds
             }
 
-            _this.client = db;
+            _this.client = client.db(_this.config.project);
             console.info('MongoDb client successfully connected');
-            _this.emit('connected', _this);
+            _this.__connectedEvent.trigger(true);
         });
     }
 
-    onConnected(timeout)
+    connected()
     {
-        const _this = this;
+        return this.__connectedEvent.once();
+        
+        /*const _this = this;
         return new Promise(function(resolve, reject)
         {
             if(_this.client !== null)
@@ -57,7 +63,7 @@ class MongoDb extends events.EventEmitter
                     reject('Timeout expired');
                 }
             }, timeout || 5000);
-        });
+        });*/
     }
 
     collection(name)
@@ -67,7 +73,7 @@ class MongoDb extends events.EventEmitter
 
     async nativeCall(fn)
     {
-        const client = await this.onConnected();
+        const client = await this.connected();
         return await (new Promise(function(resolve, reject)
         {
             fn(client, function(err, result)
@@ -103,7 +109,8 @@ class Collection
         if(this.native !== null)
             return this.native;
 
-        await this.mongodb.onConnected();
+        await this.mongodb.connected();
+
         this.native = this.mongodb.client.collection(this.name);
         return this.native;
     }
@@ -177,6 +184,14 @@ class Collection
         return this.nativeCall(function(collection, cb)
         {
             collection.find(data).toArray(cb);
+        });
+    }
+    
+    findOne(data)
+    {
+        return this.nativeCall(function(collection, cb)
+        {
+            collection.findOne(data, cb);
         });
     }
 

@@ -88,7 +88,6 @@ class PluginSystem {
         watcher.onChange(path, (filePath) => {
             this.classes       = {};
             this.loadedPlugins = {};
-            this.entries       = {};
 
             this.loadConfig();
 

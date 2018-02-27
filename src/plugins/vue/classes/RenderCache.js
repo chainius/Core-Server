@@ -115,6 +115,9 @@ class RenderCache {
         if(RenderCache.bundle === null)
             return null; //ToDo if ui option is enabled => await RenderCache.bundle is not null
 
+        if(!RenderCache.bundle.default)
+            throw('The Bundle contains some errors and could not be loaded');
+        
         RenderCache.bundle.default(context).then(function (app)
         {
             const renderStream = _this.renderer.renderToStream(app, context)
@@ -190,6 +193,9 @@ class RenderCache {
         const _this = this;
         return new Promise(function(resolve, reject) {
             const ctx = _this.createContext(url);
+            
+            if(!RenderCache.bundle.default)
+                return reject('The Bundle contains some errors and could not be loaded');
             
             RenderCache.bundle.default(ctx).then((app) => {
                 _this.onRouterDone(app, ctx, resolve, reject);

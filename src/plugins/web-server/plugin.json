@@ -5,6 +5,7 @@
         "HttpServer":   null,
         "Crypter":      null,
         "Watcher":      null,
+        "Event":        null,
         "Resources/Manager": null,
         "Resources/CacheObject": null,
         "Resources/CacheStream": null

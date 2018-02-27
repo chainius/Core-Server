@@ -126,42 +126,50 @@ class ApiEnvironment
     */
     check_varvalue(val, type)
     {
+        if(typeof(type) === 'function') {
+            const match = type && type.toString().match(/^\s*function (\w+)/)
+            type = (match ? match[1] : '').toLowerCase();
+        }
+
         switch (type)
         {
-        case 'string':
-            return typeof (val) === 'string' || typeof (val) === 'number';
-            break;
-        case 'numeric':
-            return isNumeric(val);
-            break;
-        case 'positive':
-            return isNumeric(val) && val >= 0;
-            break;
-        case 'positive+':
-            return isNumeric(val) && val > 0;
-            break;
-        case 'array':
-            return Array.isArray(val);
-            break;
-        case 'object':
-            return typeof (val) === 'object';
-            break;
-        case 'no':
-            return true;
-            break;
-        case 'email':
-            const mvalidator = require('email-validator');
-            return mvalidator.validate(val);
-        case 'username':
-            var regex = /^[A-Za-z][A-Za-z0-9]*(?:_[A-Za-z0-9]+)*$/;
-            return regex.test(val);
-        case 'password-difficulty':
-            var regex = /^(?=.*[a-zA-Z])(?=.*[0-9])(?=.{7,})/;
-            return regex.test(val);
-            //case 'action_id':
-            //    return preg_match("/([A-Z]{3})-([0-9]{3})\s/", $var.' ');
-            //    break;
+            case 'string':
+                return typeof (val) === 'string' || typeof (val) === 'number';
+                break;
+            case 'numeric':
+            case 'number':
+                return isNumeric(val);
+                break;
+            case 'positive':
+                return isNumeric(val) && val >= 0;
+                break;
+            case 'positive+':
+                return isNumeric(val) && val > 0;
+                break;
+            case 'array':
+                return Array.isArray(val);
+                break;
+            case 'object':
+                return typeof (val) === 'object';
+                break;
+            case 'no':
+                return true;
+                break;
+            case 'email':
+                const mvalidator = require('email-validator');
+                return mvalidator.validate(val);
+            case 'username':
+                var regex = /^[A-Za-z][A-Za-z0-9]*(?:_[A-Za-z0-9]+)*$/;
+                return regex.test(val);
+            case 'password-difficulty':
+                var regex = /^(?=.*[a-zA-Z])(?=.*[0-9])(?=.{7,})/;
+                return regex.test(val);
+                //case 'action_id':
+                //    return preg_match("/([A-Z]{3})-([0-9]{3})\s/", $var.' ');
+                //    break;
         }
+
+        return false;
     }
 
     /**
