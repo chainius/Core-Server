@@ -179,6 +179,14 @@ PagesManager.BrowserifySetup = {
                 Path.join(process.pwd(), 'node_modules'),
                 Path.join(__dirname, '..', 'node_modules')
             ],
+            
+            environment: {
+                _: 'purge',
+                NODE_ENV: process.env.NODE_ENV,
+                VUE_ENV: mode,
+                COMPILE_ENV: 'browserify',
+                DEBUG: false
+            },
 
             process: {
                 env: {
@@ -216,7 +224,6 @@ PagesManager.BrowserifySetup = {
     },
     
     setupPlugins(config, mode, distFolder) {
-
         const isProduction      = (process.env.NODE_ENV === 'production');
         const babelify          = require('babelify');
         const vueify            = require('../vueify');
@@ -227,13 +234,7 @@ PagesManager.BrowserifySetup = {
         this.transform(vueify)
                 .transform(babelify, {presets: ['env']})
                 .transform(bulkify)
-                .transform({ global: isProduction }, envify({
-                    _: 'purge',
-                    NODE_ENV: process.env.NODE_ENV,
-                    VUE_ENV: mode,
-                    COMPILE_ENV: 'browserify',
-                    DEBUG: false
-                }));
+                .transform({ global: isProduction }, envify(config.environment));
         
         //-------------
 
