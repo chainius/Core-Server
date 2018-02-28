@@ -15,16 +15,19 @@ class Event {
         } catch(e) {
             this.console.error(e);
         }
+        
+        return this;
     }
     
     on(cb) {
         if(this.triggerData !== null)
-            cb(this.triggerData);
+            this.execCallback(cb, this.triggerData);
         
         this.callbacks.push(cb);
+        return this;
     }
 
-    once(cb) {
+    once(cb, errCb) {
         if(!cb) {
             return new Promise((resolve, reject) => {
                 this.once(function(res, err) {
@@ -36,12 +39,17 @@ class Event {
             });
         }
         
-        if(this.triggerData !== null)
-            return cb(this.triggerData);
+        if(this.triggerData !== null) {
+            return this.execCallback(cb, this.triggerData);
+        }
 
-        function cc() {
+        function cc(data, err) {
             try {
-                cb();
+                if(err && errCb)
+                    errCb(err);
+                else
+                    cb(data, err);
+
                 this.remove(cc);
             } catch(e) {
                 this.remove(cc);
@@ -50,6 +58,7 @@ class Event {
         }
 
         this.callbacks.push(cc.bind(this));
+        return this;
     }
 
     remove(cb) {
@@ -59,8 +68,18 @@ class Event {
             this.callbacks.splice(index, 1);
     }
 
-    trigger(data, err) {
+    then(cb, errCb) {
+        return this.once(cb);
+    }
 
+    catch(cb) {
+        return this.once((res, err) => {
+            if(err)
+                cb(err);
+        });
+    }
+    
+    trigger(data, err) {
         if(this.retainTrigger)
             this.triggerData   = data;
 
