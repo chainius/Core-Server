@@ -87,6 +87,17 @@ class Event {
             this.execCallback(cb, data, err);
         });
     }
+    
+    valueOf() {
+        if(!this.retainTrigger)
+            return null;
+
+        return this.triggerData;
+    }
+    
+    toString() {
+        return String(this.valueOf());
+    }
 }
 
 module.exports = Event;

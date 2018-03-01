@@ -11,6 +11,10 @@ Vue.mixin({
             return this.$api.socketConnected;
         },
     },
+    
+    created() {
+        this.$intervals = [];
+    },
 
     destroyed: function () {
         this.$api.unbindVue(this);
@@ -128,7 +132,6 @@ class ApiManager
     install(app, options)
     {
         app.prototype.$api = this;
-        app.prototype.$intervals = [];
 
         app.prototype.$submitForm = function(form)
         {
