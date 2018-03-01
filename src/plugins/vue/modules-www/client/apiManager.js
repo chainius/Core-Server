@@ -216,6 +216,12 @@ class ApiManager extends BaseManager
                 localStorage.setItem(this.token + '_' + api_salt, JSON.stringify(data));
             }
         } catch (e) {
+            if(e.code === 22) {
+                console.warn('Cache quota exceeded, purging cache.');
+                this.deleteAllCache();
+                return;
+            }
+
             console.error(e);
         }
     }
