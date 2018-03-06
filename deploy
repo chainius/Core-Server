@@ -1,0 +1,13 @@
+#!/bin/bash
+
+VERSION=$(cat package.json | grep 'version' | awk '{print $2}'  | tr -d \" | tr -d ,);
+
+echo "Building version" $VERSION;
+
+npm publish
+
+eval "$(boot2docker shellinit)"
+
+docker build . -t skyhark/core-server:v$VERSION
+
+docker push skyhark/core-server:v$VERSION
