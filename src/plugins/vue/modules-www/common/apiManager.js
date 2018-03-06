@@ -6,12 +6,6 @@ import { mergePost }      from './init.js';
 
 Vue.mixin({
 
-    computed: {
-        socketConnected() {
-            return this.$api.socketConnected;
-        },
-    },
-    
     created() {
         this.$intervals = [];
     },

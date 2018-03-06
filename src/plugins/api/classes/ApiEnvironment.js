@@ -201,7 +201,13 @@ class ApiEnvironment
                 {
                     if (!this.check_vartype(key, lst[key]))
                     {
-                        throw('Variable ' + key + ' has a wrong type (needed: ' + lst[key] + ')');
+                        var name = lst[key];
+                        if(typeof(name) === 'function') {
+                            const match = name && name.toString().match(/^\s*function (\w+)/)
+                            name = (match ? match[1] : '').toLowerCase();
+                        }
+                        
+                        throw('Variable ' + key + ' has a wrong type (needed: ' + name + ')');
                     }
                 }
                 else if (typeof (lst[key]) === 'string')
