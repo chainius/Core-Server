@@ -68,16 +68,14 @@ class FormPoster
         if(that.attr('SuccessMessage'))
            return $.notify(that.attr('SuccessMessage'), 'success');
 
-        if(typeof(msg) == 'string')
+        if(typeof(msg) === 'string')
             return $.notify(msg, 'success');
 
-        if(typeof(msg) == 'object')
+        if(typeof(msg) === 'object')
         {
-            if(typeof(msg.result) == 'string')
+            if(typeof(msg.result) === 'string')
                 return $.notify(msg.result, 'success');
         }
-
-        return $.notify(msg, 'Data successfully updated!');
     }
 
     handleApiPrepare(form, data)

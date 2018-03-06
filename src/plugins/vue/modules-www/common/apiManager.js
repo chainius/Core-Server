@@ -59,6 +59,22 @@ Vue.mixin({
                 api:    api,
                 data:   data
             });
+
+            return $id;
+        },
+        
+        $requireApi(api, data, cb) {
+            const $id = this.$api.require(api, data, cb);
+            
+            this.$api.bindedVueElements.push({
+                listenerId: $id,
+                objectId: this._uid,
+                object: this,
+                api:    api,
+                data:   data
+            });
+
+            return $id;
         },
 
         $refreshApi(api, post) {
