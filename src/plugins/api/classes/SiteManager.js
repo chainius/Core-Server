@@ -432,7 +432,7 @@ class SiteManager extends SuperClass
         else {
             req.get = {};
         }
-        
+
         //------------------------------------------
         
         try {

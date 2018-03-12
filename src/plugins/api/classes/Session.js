@@ -109,6 +109,13 @@ class Session extends SuperClass
     handleSocketApi(socket, api, post, salt)
     {
         const _this = this;
+        var get     = {};
+
+        if(api.indexOf('?') !== -1) {
+            const querystring = require('querystring');
+            get = querystring.parse(api.substr(api.indexOf('?')+1));
+            api = api.substr(0, api.indexOf('?'));
+        }
         
         this.executeOnReady(() => {
             const permission = this.siteManager.checkPermission(this, api, post);
@@ -119,7 +126,7 @@ class Session extends SuperClass
                 });
             }
 
-            return this.api(api, post, socket.remoteAddress, {}, {}, socket);
+            return this.api(api, post, socket.remoteAddress, {}, get, socket);
         }).then(function(result)
         {
             _this.sendSocketMessage(socket, {
