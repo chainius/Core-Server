@@ -174,10 +174,10 @@ PagesManager.BrowserifySetup = {
             basedir:        process.cwd(),
             fullPaths:      !isProduction,
             paths: [
-                Path.join(process.cwd(), 'node_modules'),
-                process.cwd(),
                 Path.join(process.pwd(), 'node_modules'),
-                Path.join(__dirname, '..', 'node_modules')
+                Path.join(__dirname, '..', 'node_modules'),
+                Path.join(process.cwd(), 'node_modules'),
+                process.cwd()
             ],
             
             environment: {
@@ -223,19 +223,25 @@ PagesManager.BrowserifySetup = {
         return config;
     },
     
-    setupPlugins(config, mode, distFolder) {
+    setupTransforms(config, mode, distFolder) {
         const isProduction      = (process.env.NODE_ENV === 'production');
         const babelify          = require('babelify');
         const vueify            = require('../vueify');
         const bulkify           = require('../additionals/bulkify.js');
         const envify            = require('envify/custom');
-        const Path              = require('path');
 
         this.transform(vueify)
                 .transform(babelify, {presets: ['env']})
                 .transform(bulkify)
                 .transform({ global: isProduction }, envify(config.environment));
-        
+    },
+    
+    setupPlugins(config, mode, distFolder) {
+        const isProduction      = (process.env.NODE_ENV === 'production');
+        const Path              = require('path');
+
+        PagesManager.BrowserifySetup.setupTransforms.apply(this, arguments);
+
         //-------------
 
         if (!config.isServer)

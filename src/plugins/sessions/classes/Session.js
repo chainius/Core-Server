@@ -52,9 +52,17 @@ class Session
     }
 
     setData(data) {
+        if(Object.keys(data).length === 0) {
+            this.data = {};
+            return;
+        }
+
         for (var key in data)
         {
-            this.data[key] = data[key];
+            if(data[key] === undefined && this.data[key])
+                delete this.data[key];
+            else if(data[key] !== undefined)
+                this.data[key] = data[key];
         }
     }
 
