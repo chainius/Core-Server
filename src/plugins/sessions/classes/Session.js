@@ -52,7 +52,7 @@ class Session
     }
 
     setData(data) {
-        if(Object.keys(data).length === 0) {
+        if(Object.keys(data).length === 0 || data === null) {
             this.data = {};
             return;
         }
