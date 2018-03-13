@@ -42,8 +42,8 @@ class SiteManager extends SuperClass {
 
         return this.sessionsManager.broadcast({
             api: api,
-            data: data,
-            salt: salt || this.getSalt(api, {})
+            data: data || {},
+            salt: salt || this.getSalt(api, data || {})
         }, selector);
     }
 
