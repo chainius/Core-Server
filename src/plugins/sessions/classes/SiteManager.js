@@ -6,6 +6,7 @@ class SiteManager extends SuperClass {
         super(HttpServer);
 
         this.sessionsManager    = new SessionsManager(this);
+        this.broadcastListeners = {};
     }
 
     /**
@@ -26,6 +27,11 @@ class SiteManager extends SuperClass {
     broadcast(api, data, selector) {
         return this.broadcastInternal(api, data, selector);
     }
+    
+    onBroadcast(channel, cb) {
+        this.broadcastListeners[channel] = this.broadcastListeners[channel] || [];
+        this.broadcastListeners[channel].push(cb);
+    }
 
     /**
     * Broadcast a message to all users that are connected to this node
@@ -38,6 +44,16 @@ class SiteManager extends SuperClass {
         {
             selector = salt;
             salt = undefined;
+        }
+        
+        if(this.broadcastListeners[api]) {
+            this.broadcastListeners.forEach((cb) => {
+                try {
+                    cb(data, selector);
+                } catch(e) {
+                    console.error(e);
+                }
+            })
         }
 
         return this.sessionsManager.broadcast({
