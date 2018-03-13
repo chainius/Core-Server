@@ -47,19 +47,20 @@ class SiteManager extends SuperClass {
         }
         
         if(this.broadcastListeners[api]) {
-            this.broadcastListeners.forEach((cb) => {
+            this.broadcastListeners[api].forEach((cb) => {
                 try {
                     cb(data, selector);
                 } catch(e) {
                     console.error(e);
                 }
-            })
+            });
+            return true;
         }
 
         return this.sessionsManager.broadcast({
             api: api,
             data: data || {},
-            salt: salt || this.getSalt(api, data || {})
+            salt: salt || this.getSalt(api, {})
         }, selector);
     }
 
