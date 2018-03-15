@@ -15,11 +15,28 @@ class MongoDb
 
         this.connect();
     }
+    
+    get connectionString() {
+        var connectionstring = 'mongodb://';
+        
+        if(this.config.user) {
+            connectionstring += this.config.user;
+            
+            if(this.config.password)
+                connectionstring += ':' + this.config.password;
+            
+            connectionstring += '@';
+        }
+        
+        return  connectionstring + this.config.server;
+    }
 
     connect()
     {
         const _this = this;
-        MongoClient.connect('mongodb://' + this.config.server, function(err, client) {
+        const connStr = this.connectionString;
+
+        MongoClient.connect(connStr, function(err, client) {
             if(err !== null)
             {
                 console.error('Could not connect to the mongodb server');

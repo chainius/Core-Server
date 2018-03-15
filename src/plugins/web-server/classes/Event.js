@@ -2,7 +2,9 @@ const nativeConsole = console;
 
 class Event {
     
-    constructor({ retainTrigger, console }) {
+    constructor(config) {
+        const { retainTrigger, console } = config || {};
+
         this.callbacks      = [];
         this.retainTrigger  = retainTrigger;
         this.triggerData    = null;
@@ -38,12 +40,11 @@ class Event {
                 });
             });
         }
-        
-        if(this.triggerData !== null) {
-            return this.execCallback(cb, this.triggerData);
-        }
 
-        function cc(data, err) {
+        if(this.triggerData !== null)
+            return this.execCallback(cb, this.triggerData);
+
+        var cc = (function ccx(data, err) {
             try {
                 if(err && errCb)
                     errCb(err);
@@ -55,21 +56,21 @@ class Event {
                 this.remove(cc);
                 throw(e);
             }
-        }
+        }).bind(this)
 
-        this.callbacks.push(cc.bind(this));
+        this.callbacks.push(cc);
         return this;
     }
 
     remove(cb) {
         var index = this.callbacks.indexOf(cb);
-        
+
         if(index !== -1)
             this.callbacks.splice(index, 1);
     }
 
     then(cb, errCb) {
-        return this.once(cb);
+        return this.once(cb, errCb);
     }
 
     catch(cb) {
@@ -78,16 +79,20 @@ class Event {
                 cb(err);
         });
     }
-    
+
     trigger(data, err) {
         if(this.retainTrigger)
             this.triggerData   = data;
 
-        this.callbacks.forEach((cb) => {
+        const cbCopy = [];
+
+        this.callbacks.forEach((cb) => cbCopy.push(cb));
+        
+        cbCopy.forEach((cb) => {
             this.execCallback(cb, data, err);
         });
     }
-    
+
     valueOf() {
         if(!this.retainTrigger)
             return null;

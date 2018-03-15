@@ -229,9 +229,20 @@ PagesManager.BrowserifySetup = {
         const vueify            = require('../vueify');
         const bulkify           = require('../additionals/bulkify.js');
         const envify            = require('envify/custom');
+        const fs                = require('fs');
+        
+        var babelrc = { presets: ['env'] };
+        
+        try {
+            const babelContent = fs.readFileSync(process.cwd() + '/.babelrc')
+            babelrc = JSON.parse(babelContent);
+        } catch(e) {
+            if(e.code !== 'ENOENT')
+                console.error(e);
+        }
 
         this.transform(vueify)
-                .transform(babelify, {presets: ['env']})
+                .transform(babelify, babelrc)
                 .transform(bulkify)
                 .transform({ global: isProduction }, envify(config.environment));
     },
