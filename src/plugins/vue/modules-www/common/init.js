@@ -93,15 +93,15 @@ function checkRoutePermission(to, from, next) {
     next();
 }
 
-export function mergePost(post)
+export function mergePost(post, api, apiManager, force)
 {
     if(InitReq.getDefaultPost)
     {
-        const npost = InitReq.getDefaultPost();
+        const npost = InitReq.getDefaultPost.call(apiManager, api, post);
 
         for(var key in npost)
         {
-            if(post[key] === undefined)
+            if(post[key] === undefined || force)
                 post[key] = npost[key];
         }
     }

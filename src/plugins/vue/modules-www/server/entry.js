@@ -42,9 +42,9 @@ export function preloads()
     return _preloads;
 }
 
-export function transformPost(post)
+export function transformPost(post, api, manager)
 {
-    return mergePost(post);
+    return mergePost(post, api, manager);
 }
 
 export default (ctx) => {

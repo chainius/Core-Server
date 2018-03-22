@@ -60,7 +60,7 @@ class SiteManager extends SuperClass {
         return this.sessionsManager.broadcast({
             api: api,
             data: data || {},
-            salt: salt || this.getSalt(api, {})
+            salt: salt //|| this.getSalt(api, {})
         }, selector);
     }
 

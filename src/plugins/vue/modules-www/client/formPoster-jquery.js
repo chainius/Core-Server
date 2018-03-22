@@ -1,5 +1,3 @@
-import { mergePost } from '../common/init.js';
-
 window.$ = require('jquery');
 require('bootstrap-notify');
 
@@ -169,7 +167,7 @@ class FormPoster
         {
             that.attr('enctype', 'application/json');
             data = that.serializeObject();
-            data = JSON.stringify( mergePost(data) );
+            data = JSON.stringify( this.$api.mergePost(data, api) );
         }
 
         $.event.global.ajaxError = false;

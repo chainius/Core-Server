@@ -1,5 +1,4 @@
 import BaseManager from '../common/apiManager.js';
-import { mergePost } from '../common/init.js';
 import ApiMerger     from '../common/merger.js';
 
 const SockJS = require('sockjs-client');
@@ -16,6 +15,8 @@ class ApiManager extends BaseManager
         
         if(this.formPoster.default)
             this.formPoster = this.formPoster.default;
+        
+        this.formPoster.$api = this;
 
         if (!this.token)
             this.generateToken();
@@ -34,7 +35,7 @@ class ApiManager extends BaseManager
                 {
                     if(this.$options.preload && this.api)
                     {
-                        const post     = _this.mergePost(this.api_data);
+                        const post     = _this.mergePost(this.api_data, this.api);
                         const api_salt = _this.getSalt(this.api, post);
 
                         if(window.API_DATA && window.API_DATA[api_salt])
@@ -320,13 +321,21 @@ class ApiManager extends BaseManager
             console.error(e);
         }
     }
+    
+    verifyCallbackSalt(inputSalt, inputApi, callback) {
+        if(!inputSalt)
+            return callback.api === inputApi;
+
+        const post = this.mergePost(JSON.parse(JSON.stringify(callback.post)), callback.api);
+        return this.getSalt(callback.api, post) === inputSalt;
+    }
 
     emitApi(api, data, salt) {
         this.saveLocalCache(salt, data);
         var found = false;
 
         if (salt === undefined) {
-            salt = this.getSalt(api, mergePost({}));
+            //salt = this.getSalt(api, this.mergePost({}, api));
         }
 
         if(this.saltApiForcers[salt])
@@ -335,9 +344,10 @@ class ApiManager extends BaseManager
         for (var key in this.onApiCallbacks) {
             try {
 
-                const post = mergePost(JSON.parse(JSON.stringify(this.onApiCallbacks[key].post)));
+                //const post = this.mergePost(JSON.parse(JSON.stringify(this.onApiCallbacks[key].post)), api);
+                //if (salt === undefined || this.getSalt(this.onApiCallbacks[key].api, post) === salt)
 
-                if (this.getSalt(this.onApiCallbacks[key].api, post) === salt)
+                if(this.verifyCallbackSalt(salt, api, this.onApiCallbacks[key]))
                 {
                     found = true;
                     this.onApiCallbacks[key].callback.call(this, data, api, this.onApiCallbacks[key].id);

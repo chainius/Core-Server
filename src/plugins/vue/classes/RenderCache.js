@@ -227,7 +227,7 @@ class RenderCache {
 
         if (RenderCache.bundle) {
             if (RenderCache.bundle.transformPost)
-                post = RenderCache.bundle.transformPost(post);
+                post = RenderCache.bundle.transformPost(post, api);
         }
 
         if (!api) {

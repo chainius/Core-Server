@@ -51,6 +51,11 @@ Vue.mixin({
         },
         
         $onApi(api, data, cb) {
+            if (typeof (data) === 'function' || data === undefined || data === null) {
+                cb = data;
+                data = {};
+            }
+            
             const $id = this.$api.on(api, data, cb);
             
             this.$api.bindedVueElements.push({
@@ -65,15 +70,13 @@ Vue.mixin({
         },
         
         $requireApi(api, data, cb) {
-            const $id = this.$api.require(api, data, cb);
-            
-            this.$api.bindedVueElements.push({
-                listenerId: $id,
-                objectId: this._uid,
-                object: this,
-                api:    api,
-                data:   data
-            });
+            if (typeof (data) === 'function' || data === undefined || data === null) {
+                cb = data;
+                data = {};
+            }
+
+            const $id = this.$onApi(api, data, cb);
+            this.$api.require(api, data);
 
             return $id;
         },
@@ -83,6 +86,9 @@ Vue.mixin({
 
             if(!api) 
                 postIn || this.api_data;
+
+            if(!api && !this.api)
+                return;
 
             this.$api.refresh(api || this.api, postIn || {});
         },
@@ -183,7 +189,7 @@ class ApiManager
         var found = false;
         for (var key in this.onApiCallbacks) {
             try {
-                const post = this.mergePost(JSON.parse(JSON.stringify(this.onApiCallbacks[key].post)));
+                const post = this.mergePost(JSON.parse(JSON.stringify(this.onApiCallbacks[key].post)), api);
 
                 if (this.getSalt(this.onApiCallbacks[key].api, post) === salt && this.onApiCallbacks[key].errorCallback)
                 {
@@ -284,9 +290,9 @@ class ApiManager
 
     //---------------------------------------------------------
 
-    mergePost(data)
+    mergePost(data, api, force)
     {
-        return mergePost(data || {});
+        return mergePost(data || {}, api, this, force);
     }
 
     on(api, data, cb, salt)
@@ -298,7 +304,7 @@ class ApiManager
 
         if (!salt)
         {
-            data = mergePost(data);
+            data = this.mergePost(data, api);
             salt = this.getSalt(api, data);
         }
 
@@ -335,7 +341,7 @@ class ApiManager
             data = {};
         }
 
-        data = mergePost(data);
+        data = this.mergePost(data, api);
 
         var id = 0;
         const salt = this.getSalt(api, data);
@@ -360,7 +366,7 @@ class ApiManager
             data = {};
         }
 
-        data = mergePost(data);
+        data = this.mergePost(data, api);
 
         return {
             data: data,
@@ -373,7 +379,7 @@ class ApiManager
         this.idIncrementer++;
         const _this = this;
         const id    = this.idIncrementer;
-        data        = mergePost(data);
+        data        = this.mergePost(data, api);
 
         return {
             salt: this.getSalt(api, data),

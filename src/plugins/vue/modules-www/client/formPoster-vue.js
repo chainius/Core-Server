@@ -1,5 +1,3 @@
-import { mergePost } from '../common/init.js';
-
 class FormPoster
 {
     constructor()
@@ -153,87 +151,20 @@ class FormPoster
         {
             form.setAttribute('enctype', 'application/json');
             //data = that.serializeObject();
-            //data = JSON.stringify( mergePost(data) );
+            //data = JSON.stringify( this.$api.mergePost(data, api) );
         }
 
-        console.log('ToDo standard handleFormSubmit');
-        /*$.event.global.ajaxError = false;
-
-        $.ajax({
-            url: '/api/'+api,
-            type: 'POST',
-            global: false,
-            xhr: function()
-            {
-                var myXhr = $.ajaxSettings.xhr();
-                if(myXhr.upload){ // Check if upload property exists
-                    myXhr.upload.addEventListener('progress',function(p)
-                    {
-                        const progress = Math.round(p.position * 100 / p.totalSize, 3);
-                        _this.trigger(elm, 'api-progress', { progress: progress, progressEvent: p, api: api });
-                    }, false);
-                }
-                return myXhr;
-            },
-            beforeSend: function()
-            {
-                _this.trigger(elm, 'api-prepare', { api: api });
-            },
-            success: function(e)
-            {
-                if(typeof(e) != 'object')
-                {
-                    try
-                    {
-                        e = JSON.parse(e);
-                    }
-                    catch(e)
-                    {
-                        _this.trigger(elm, 'api-error', { api: api, result: { error: 'An internal conversion error occured' }, error: 'An internal conversion error occured' });
-                        return;
-                    }
-                }
-
-                if(e.error)
-                {
-                    _this.trigger(elm, 'api-error', { error: e.error, result: e, api: api });
-                }
-                else
-                {
-                    _this.trigger(elm, 'api-success', { api: api, result: e });
-                }
-
-                _this.trigger(elm, 'api-done', { api: api, result: e });
-            },
-            error: function(err)
-            {
-                if(err.responseText)
-                {
-                    try
-                    {
-                        const json = JSON.parse(err.responseText);
-                        const res =  { result: json, api: api, error: json.error };
-
-                        _this.trigger(elm, 'api-error', res);
-                        _this.trigger(elm, 'api-done',  res);
-                        return;
-                    }
-                    catch(e)
-                    {
-                        _this.trigger(elm, 'api-error', { result: err, error: err.responseText, api: api });
-                        _this.trigger(elm, 'api-done', { result: err, error: err.responseText, api: api });
-                        return;
-                    }
-                }
-
-                _this.trigger(elm, 'api-error', { result: err, error: err, api: api });
-                _this.trigger(elm, 'api-done',  { result: err, error: err, api: api });
-            },
-            data: data,
-            cache: false,
-            contentType: that.attr('enctype'),
-            processData: false
-        });*/
+        this.trigger(elm, 'api-prepare', { api: api });
+        
+        return this.$api.post('/api/'+api, data).then((res) => {
+            this.trigger(elm, 'api-success', { api: api, result: res });
+            return res;
+        }).catch((err) => {
+            this.trigger(elm, 'api-error', { api: api, result: err, error: err.error || err.message || err });
+            return err;
+        }).then((res) => {
+            this.trigger(elm, 'api-done', { api: api, result: res });
+        });
     }
 }
 
