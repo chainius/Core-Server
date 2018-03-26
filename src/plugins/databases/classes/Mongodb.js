@@ -13,9 +13,10 @@ class MongoDb
             console
         })
 
-        this.connect();
+        if(!config.disableAutoConnect)
+            this.connect();
     }
-    
+
     get connectionString() {
         var connectionstring = 'mongodb://';
         
@@ -56,31 +57,6 @@ class MongoDb
     connected()
     {
         return this.__connectedEvent.once();
-        
-        /*const _this = this;
-        return new Promise(function(resolve, reject)
-        {
-            if(_this.client !== null)
-                return resolve();
-
-            var resolved = false;
-            function cbCaller()
-            {
-                resolved = true;
-                resolve();
-            }
-
-            _this.once('connected', cbCaller);
-
-            setTimeout(function()
-            {
-                if(!resolved)
-                {
-                    _this.removeListener('connected', cbCaller);
-                    reject('Timeout expired');
-                }
-            }, timeout || 5000);
-        });*/
     }
 
     collection(name)
