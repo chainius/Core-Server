@@ -147,18 +147,36 @@ class FormPoster
 
         return true;
     }
+    
+    urlEncode(obj) {
+        var str = [];
+        for (var p in obj)
+        if (obj.hasOwnProperty(p)) {
+          str.push(encodeURIComponent(p) + "=" + encodeURIComponent(obj[p]));
+        }
+        return str.join("&");
+    }
+
 
     handleFormSubmit(elm)
     {
-        const _this = this;
-        const api   = $(elm).attr('action');
-        var that = $(elm);
-        var data = null;
+        const _this    = this;
+        const api      = $(elm).attr('action');
+        const method   = ($(elm).attr('method') || 'POST').toUpperCase();
+        var that       = $(elm);
+        var data       = null;
 
         //that.trigger('api-before-submit', elm);
         _this.trigger(elm, 'api-before-submit', { api: api });
+        
+        $.event.global.ajaxError = false;
+        var path = '/api/'+api;
 
-        if(that.find('input[type="file"]:not([disabled])').length > 0)
+        if(method === 'GET') {
+            const data = this.$api.mergePost( that.serializeObject(), api );
+            path += '?' + this.urlEncode(data);
+        }
+        else if(that.find('input[type="file"]:not([disabled])').length > 0)
         {
             that.attr('enctype', 'multipart/form-data');
             data = new FormData(elm);
@@ -170,11 +188,9 @@ class FormPoster
             data = JSON.stringify( this.$api.mergePost(data, api) );
         }
 
-        $.event.global.ajaxError = false;
-
         $.ajax({
-            url: '/api/'+api,
-            type: 'POST',
+            url: path,
+            type: method,
             global: false,
             xhr: function()
             {
@@ -242,7 +258,7 @@ class FormPoster
                 _this.trigger(elm, 'api-error', { result: err, error: err, api: api });
                 _this.trigger(elm, 'api-done',  { result: err, error: err, api: api });
             },
-            data: data,
+            data: (method !== 'GET') ? data : null,
             cache: false,
             contentType: that.attr('enctype'),
             processData: false

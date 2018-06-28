@@ -6,7 +6,7 @@ const _require      = require('../wrappers/require.js');
 const resource_url  = require('../wrappers/resource_url.js');
 
 const funcStart = "func = async function(console, __filename, __dirname) { " +
-                    "var post = this.post; var session = this.session; var cookie = this.cookie; var _this = this; this.console = console;\n";
+                    "const require = $__require.bind(this, __dirname); var post = this.post; var session = this.session; var cookie = this.cookie; var _this = this; this.console = console;\n";
 
 class ApiCreator {
 
@@ -103,7 +103,7 @@ class ApiCreator {
 
         const context           = contextIn;
         context.func            = false;
-        context.require         = _require;
+        context.$__require      = _require;
         context.Crypter         = Crypter;
         context.setTimeout      = setTimeout;
         context.setInterval     = setInterval;

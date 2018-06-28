@@ -287,7 +287,7 @@ class ApiManager extends BaseManager
         setTimeout(() => {
             console.log('Socket closed, reconnecting')
             this.socketConnect();
-        }, 100);
+        }, 500);
     }
 
     emitSocketMessage(msg) {
@@ -296,7 +296,8 @@ class ApiManager extends BaseManager
                 var data = msg.data;
 
                 try {
-                    data = JSON.parse(data);
+                    if(typeof(data) !== 'object')
+                        data = JSON.parse(data);
 
                     if (data.api) {
                         this.emitApi(data.api, data.data, data.salt);
@@ -304,6 +305,8 @@ class ApiManager extends BaseManager
                         this.handleApiError(data.apiError, data.error, data.salt);
                     } else if (data.cookies) {
                         this.setCookies(data.cookies, data.expiration);
+                    } else if (data.error) {
+                        console.error(data)
                     }
                 } catch (e) {
                     console.error(e);
@@ -321,7 +324,7 @@ class ApiManager extends BaseManager
             console.error(e);
         }
     }
-    
+
     verifyCallbackSalt(inputSalt, inputApi, callback) {
         if(!inputSalt)
             return callback.api === inputApi;
@@ -449,7 +452,6 @@ class ApiManager extends BaseManager
             return;
 
         return new Promise(function (resolve, reject) {
-
             _this.onApiCallbacks.push({
                 id: res.id,
                 api: api,

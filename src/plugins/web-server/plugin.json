@@ -20,6 +20,11 @@
         "threads": {
             "fake": true,
             "description": "Specify the number of threads that will be started for the server"
+        },
+        
+        "secure": {
+            "fake": true,
+            "description": "Start server using ssl"
         }
     },
 

@@ -337,10 +337,11 @@ class SiteManager extends SuperClass
     */
     api(name, post, req, tokenChangeNotify)
     {
-        const oToken  = req.cookies.token;
-        const session = this.sessionsManager.getFromCookies(req.cookies);
+        const cookies = req.cookies
+        const oToken  = cookies.token;
+        const session = this.sessionsManager.getFromCookies(cookies);
 
-        session.updateCookies(req.cookies);
+        session.updateCookies(cookies);
 
         if (session.token !== oToken && tokenChangeNotify)
             tokenChangeNotify(session.token, session.expirationTime, oToken);
@@ -387,6 +388,9 @@ class SiteManager extends SuperClass
         }
 
         function handleCatch(err) {
+            if(!err)
+                err = { error: 'Empty error' };
+
             var httpCode = err.httpCode || 400;
 
             if(err.httpCode)

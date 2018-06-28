@@ -101,7 +101,7 @@ class HttpServer
             log: function(){}
         });
         
-        this.echo.installHandlers(this.server, {prefix: '/socketapi'});
+        this.echo.installHandlers(this.server, { prefix: '/socketapi' });
 
         this.echo.on('connection', (conn) =>
         {

@@ -130,12 +130,24 @@ class Session
         {
             try
             {
-                message = JSON.parse(message);
+                if(typeof(message) !== 'object') {
+                    message = JSON.parse(message);
+                }
+
                 _this.handleSocketMessage(socket, message);
             }
             catch(e) {
                 console.error(e);
-                _this.sendSocketMessage(socket, { error: 'HandleSocket error', message: e.message });
+                
+                if(typeof(e) == 'string') {
+                    _this.sendSocketMessage(socket, { error: e });
+                } else if(typeof(e) == 'object' && e.message) {
+                    _this.sendSocketMessage(socket, { error: e.message });
+                } else if(typeof(e) == 'object' && e.error) {
+                    _this.sendSocketMessage(socket, e);
+                } else {
+                    _this.sendSocketMessage(socket, { error: e });
+                }
             }
         });
 
