@@ -4,6 +4,8 @@ const console = Console.create('PluginSystem');
 const Path    = require('path');
 const CustomRequire = require('./require.js');
 const Module  = require('module');
+const fs      = require('fs');
+const cluster = require('cluster')
 
 //const Watcher         = plugins.require('web-server/Watcher');
 
@@ -19,32 +21,79 @@ class PluginSystem {
         return this.loadedPlugins;
     }
 
+    autoGetParent(clsName) {
+        for(var key in this.loadedPlugins) {
+            const plugin = this.loadedPlugins[key];
+            if(plugin.classes && plugin.classes[clsName])
+                return plugin.name + '/' + clsName;
+        }
+
+        return null;
+    }
+
     registerPath(path) {
         if(this.loadedPlugins[path])
             return this.loadedPlugins[path];
 
+        var config = {};
         try {
-            const config = require(Path.join(path, 'plugin.json'));
-            config.name  = config.name || Path.basename(path);
-
-            if(config.depencies) {
-                for(var key in config.depencies)
-                    this.register(config.depencies[key]);
-            }
-
-            this.loadedPlugins[path] = config;
-            return config;
+            config = require(Path.join(path, 'plugin.json'));
         }
         catch(e) {
-            if(e.code === 'MODULE_NOT_FOUND') {
-                const err = new Error('The requested plugin cloud not be found at: ' + path);
+            if(e.code !== 'MODULE_NOT_FOUND') {
+                /*const err = new Error('The requested plugin cloud not be found at: ' + path);
                 err.code = 'PLUGIN_NOT_FOUND';
                 throw(err);
             }
-            else {
+            else {*/
                 throw(e);
             }
         }
+
+        config.name  = config.name || Path.basename(path);
+
+        if(!config.classes) {
+            //Auto discover
+            try {
+                const classes = fs.readdirSync(Path.join(path, 'classes')).filter(f => f.substr(-3) === '.js' && !fs.statSync(Path.join(path, 'classes', f)).isDirectory());
+                if(classes.length > 0)
+                    config.classes = {};
+
+                for(var name of classes) {
+                    name = name.substr(0, name.length - 3);
+                    config.classes[name] = this.autoGetParent(name);
+                }
+            } catch(e) {
+                if(e.code !== "ENOENT")
+                    console.error(e);
+            }
+        }
+
+        if(!config.cli) {
+            //Auto discover
+
+            try {
+                const clis = fs.readdirSync(Path.join(path, 'cli')).filter(f => f.substr(-3) === '.js' && !fs.statSync(Path.join(path, 'cli', f)).isDirectory());
+                if(clis.length > 0)
+                    config.cli = {};
+
+                for(var name of clis) {
+                    config.cli[name.substr(0, name.length-3)] = 'No description provided';
+                }
+                
+            } catch(e) {
+                if(e.code !== "ENOENT")
+                    console.error(e);
+            }
+        }
+
+        if(config.depencies) {
+            for(var key in config.depencies)
+                this.register(config.depencies[key]);
+        }
+
+        this.loadedPlugins[path] = config;
+        return config;
     }
 
     register(name, path) {
@@ -263,7 +312,6 @@ class PluginSystem {
 
     loadFolderPlugins(path, config) {
         try {
-            const fs = require('fs');
             const pluginNames = fs.readdirSync(path).filter(f => fs.statSync(path+"/"+f).isDirectory());
 
             for(var key in pluginNames) {
