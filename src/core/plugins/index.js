@@ -24,7 +24,7 @@ class PluginSystem {
     autoGetParent(clsName) {
         for(var key in this.loadedPlugins) {
             const plugin = this.loadedPlugins[key];
-            if(plugin.classes && plugin.classes[clsName])
+            if(plugin.classes && plugin.classes[clsName] !== undefined)
                 return plugin.name + '/' + clsName;
         }
 
@@ -64,7 +64,7 @@ class PluginSystem {
                     config.classes[name] = this.autoGetParent(name);
                 }
             } catch(e) {
-                if(e.code !== "ENOENT")
+                if(e.code !== "ENOENT" && e.code !== "ENOTDIR")
                     console.error(e);
             }
         }
@@ -82,7 +82,7 @@ class PluginSystem {
                 }
                 
             } catch(e) {
-                if(e.code !== "ENOENT")
+                if(e.code !== "ENOENT" && e.code !== "ENOTDIR")
                     console.error(e);
             }
         }

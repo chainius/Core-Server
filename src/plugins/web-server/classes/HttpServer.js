@@ -317,7 +317,7 @@ class HttpServer
         }
         catch (e)
         {
-            logCatch(e);
+            console.error(e);
         }
     }
 

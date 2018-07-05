@@ -66,7 +66,7 @@ class ApiEnvironment
         else
             session.broadcastSocketMessage({cookies: data, expiration: session.expirationTime});
     }
-    
+
     get client_ip() {
         return this.$req.getClientIp();
     }

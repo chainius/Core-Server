@@ -84,7 +84,7 @@ class SiteManager extends SuperClass
             catch (e)
             {
                 if(e.code !== 'ENOENT')
-                    console.error(e);
+                    console.error('Error loading permissions config', e);
             }
             
             return _this.permissionsConfig;

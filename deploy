@@ -6,7 +6,7 @@ echo "Building version" $VERSION;
 
 npm publish
 
-eval "$(boot2docker shellinit)"
+#eval "$(boot2docker shellinit)"
 
 docker build . -t skyhark/core-server:v$VERSION
 

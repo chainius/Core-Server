@@ -29,14 +29,14 @@ class Session extends SuperClass
     * @param files {Object} optional
     */
     api(name, post, client_ip, file, get, socket) {
-
         var req = client_ip;
         if(typeof(client_ip) !== 'object')
         {
             req = {
                 getClientIp() { return client_ip },
                 file,
-                get
+                get,
+                headers: socket ? socket.headers : {}
             };
         }
 
