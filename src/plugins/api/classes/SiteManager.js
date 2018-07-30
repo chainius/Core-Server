@@ -434,7 +434,7 @@ class SiteManager extends SuperClass
             path = path.substr(0, path.indexOf('?') );
         }
         else {
-            req.get = {};
+            req.get = req.get || {};
         }
 
         //------------------------------------------

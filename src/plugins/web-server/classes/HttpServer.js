@@ -347,7 +347,9 @@ HttpServer.getClientIpFromHeaders = function(req, socket)
         return req.headers['cf-connecting-ip'];
     if (req.headers['x-real-ip'])
         return req.headers['x-real-ip'];
-    
+    if(req.headers['x-forwarded-for'])
+        return req.headers['x-forwarded-for'];
+
     if (socket)
         return socket.remoteAddress || '';
     if (req.connection)
