@@ -1,4 +1,4 @@
-FROM node:8.5.0
+FROM node:10.7.0
 
 RUN echo 'deb http://packages.dotdeb.org jessie all' >> /etc/apt/sources.list
 RUN wget https://www.dotdeb.org/dotdeb.gpg
