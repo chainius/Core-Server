@@ -1,4 +1,4 @@
-import BaseManager from '../common/apiManager.js';
+import BaseManager   from '../common/apiManager.js';
 import ApiMerger     from '../common/merger.js';
 
 const SockJS = require('sockjs-client');
@@ -421,9 +421,9 @@ class ApiManager extends BaseManager
         this.saltApiForcers[salt]();
     }
 
-    require(api, data, cb)
+    require(api, data, cb, onError)
     {
-        const res = super.require(api, data, cb);
+        const res = super.require(api, data, cb, onError);
 
         if(!res)
             return;
@@ -475,6 +475,9 @@ class ApiManager extends BaseManager
         });
     }
 }
+
+if(InitReq.ApiManager)
+    ApiManager = InitReq.ApiManager(ApiManager)
 
 if (ApiManager.shared === undefined)
     ApiManager.shared = new ApiManager();

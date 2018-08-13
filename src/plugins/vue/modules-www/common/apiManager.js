@@ -180,13 +180,13 @@ class ApiManager
             }
         }
 
+        var found = false;
         for (var i = this.fetchingApis.length - 1; i >= 0; i--) {
             if (this.fetchingApis[i].salt === salt) {
                 this.fetchingApis.splice(i, 1);
             }
         }
-        
-        var found = false;
+
         for (var key in this.onApiCallbacks) {
             try {
                 const post = this.mergePost(JSON.parse(JSON.stringify(this.onApiCallbacks[key].post)), api);
@@ -201,7 +201,7 @@ class ApiManager
                 console.error(e);
             }
         }
-        
+
         if(!found && this.isDev)
             console.error('Api Error', api, error);
     }
@@ -295,11 +295,15 @@ class ApiManager
         return mergePost(data || {}, api, this, force);
     }
 
-    on(api, data, cb, salt)
+    on(api, data, cb, salt, errorCb)
     {
         if (typeof (data) === 'function' || data === undefined || data === null) {
             cb = data;
             data = {};
+        }
+        if(typeof(salt) === 'function') {
+            errorCb = salt;
+            salt = null;
         }
 
         if (!salt)
@@ -312,11 +316,12 @@ class ApiManager
         var id = this.idIncrementer;
 
         this.onApiCallbacks.push({
-            id: id,
-            api: api,
-            post: data,
+            id:     id,
+            api:    api,
+            post:   data,
             //salt: salt,
-            callback: cb
+            callback: cb,
+            errorCallback: errorCb
         });
 
         if (this.idIncrementer > 1000000)
@@ -335,7 +340,7 @@ class ApiManager
         return id;
     }
 
-    require(api, data, cb) {
+    require(api, data, cb, errorCb) {
         if (typeof (data) === 'function' || data === undefined || data === null) {
             cb = data;
             data = {};
@@ -347,7 +352,7 @@ class ApiManager
         const salt = this.getSalt(api, data);
 
         if (cb)
-            id = this.on(api, data, cb, salt);
+            id = this.on(api, data, cb, salt, errorCb);
 
         if (this.isFetching(salt)) //ToDo call function to check if it is a fake (live) api
             return;
@@ -432,7 +437,16 @@ class ApiManager
             ApiMerger(object, nData);
         }
 
-        const listenerId = this.require(api, data, bindData);
+        function bindError(err, api) {
+            if(!object.$onApiError)
+                return console.error('Unhandled vue object error', object.$vnode ? object.$vnode.tag : '', api, err);
+            
+            object.$nextTick(function() {
+                object.$onApiError(err, api);
+            });
+        }
+
+        const listenerId = this.require(api, data, bindData, bindError);
 
         this.bindedVueElements.push({
             listenerId: listenerId,

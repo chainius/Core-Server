@@ -53,47 +53,48 @@ class Session extends SuperClass
         const environment = this.createApiEnvironment(name, post, req);
         environment.socket = socket;
 
-        return this.executeOnReady(function() {
+        return this.executeOnReady(() => this.__execApi(apiHandler, environment));
+    }
 
-            return apiHandler.handler.call(environment, apiHandler.console, apiHandler.path, apiHandler.dirname).then(function(result) {
-                if ((typeof (result) === 'object' || typeof (result) === 'array') && result !== null)
-                {
-                    if (result['error'])
-                        throw(result);
+    __execApi(apiHandler, environment) {
+        return apiHandler.handler.call(environment, apiHandler.console, apiHandler.path, apiHandler.dirname).then(function(result) {
+            if ((typeof (result) === 'object' || typeof (result) === 'array') && result !== null)
+            {
+                if (result['error'])
+                    throw(result);
 
-                    return result;
-                }
-                else {
-                    return { result: result };
-                }
-            }).catch(function(err) {
-                if (typeof (err) === 'object' || typeof (err) === 'array')
+                return result;
+            }
+            else {
+                return { result: result };
+            }
+        }).catch(function(err) {
+            if (typeof (err) === 'object' || typeof (err) === 'array')
+            {
+                if (err.error === undefined)
                 {
-                    if (err.error === undefined)
+                    if (err.message != undefined)
                     {
-                        if (err.message != undefined)
-                        {
-                            if(err.showIntercept !== false)
-                                console.error(err);
+                        if(err.showIntercept !== false)
+                            console.error(err);
 
-                            err = { error: err.message };
-                        }
-                        else
-                        {
-                            //console.error(err);
-                            //err = { error: 'an internal error occured' };
-                        }
+                        err = { error: err.message };
+                    }
+                    else
+                    {
+                        //console.error(err);
+                        //err = { error: 'an internal error occured' };
                     }
                 }
-                else if (typeof (err) === 'string') {
-                    err = { error: err };
-                }
+            }
+            else if (typeof (err) === 'string') {
+                err = { error: err };
+            }
 
-                throw(err);
-            });
+            throw(err);
         });
     }
-    
+
     createApiEnvironment(name, post, req) {
         return new ApiEnvironment({
             siteManager:    this.siteManager,
