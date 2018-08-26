@@ -13,7 +13,6 @@ class Session
         this.activeSockets  = [];
         this.cookies        = {};
         this.data           = {};
-        this.updateTime     = 0;
         this.ready          = true;
     }
 

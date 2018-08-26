@@ -51,7 +51,7 @@ class CacheStream extends Stream.Stream
                 if(this._buffers.length > 1) {
                     this._buffers = [ Buffer.concat(this._buffers) ];
                 }
-                
+
                 dest.write(this._buffers[0]);
             }
 

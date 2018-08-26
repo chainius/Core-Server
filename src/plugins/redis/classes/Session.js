@@ -13,6 +13,7 @@ class Session extends SuperClass
         this.redisLoaded    = (!this.siteManager.connections.redis || token === '__global__');
         this.onRedisLoaded  = [];
         this.ready          = this.ready && this.redisLoaded;
+        this.updateTime     = 0;
 
         this.loadFromRedis();
     }

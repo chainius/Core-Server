@@ -28,6 +28,9 @@ function parseMailLayout(baseDir, layout, data)
                 //html = html.replace('{@content}', html2.toString());
 
                 match = placeholdersRegex.exec(html);
+                if(!match)
+                    result = html;
+
                 while (match)
                 {
                     value = data[match[1]];
@@ -43,7 +46,6 @@ function parseMailLayout(baseDir, layout, data)
                 }
 
                 if (chunkIndex !== 0 && chunkIndex < html.length)
-
                     result += html.slice(chunkIndex);
 
                 var index = result.indexOf('\n');
@@ -86,7 +88,6 @@ function sendMail(options)
         //To
         var from = options['source'];
         if (options.name !== undefined)
-
             from = "'" + jsesc(options.name) + "' <" + from + '>';
 
         const text = htmlToText.fromString(options.html, {

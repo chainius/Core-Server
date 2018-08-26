@@ -19,7 +19,7 @@ process.on('uncaughtException', (err) =>
 function getTime()
 {
     const now = new Date();
-    return dateFormat(now, 'yyyy-mm-dd hh:MM:ss');
+    return dateFormat(now, 'yyyy-mm-dd HH:MM:ss');
 }
 
 
