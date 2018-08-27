@@ -93,7 +93,7 @@ class ApiEnvironment
         post = post || this.post;
         return this.sessionObject.api(name, post, this.$req);
     }
-    
+
     getConfig(name) {
         return this.siteManager.getConfig(name);
     }

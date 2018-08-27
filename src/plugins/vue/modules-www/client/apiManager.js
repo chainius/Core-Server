@@ -339,6 +339,7 @@ class ApiManager extends BaseManager
 
         if (salt === undefined) {
             //salt = this.getSalt(api, this.mergePost({}, api));
+            this.clearLiveStorage(api);
         }
 
         if(this.saltApiForcers[salt])
@@ -400,6 +401,27 @@ class ApiManager extends BaseManager
         }
 
         return this;
+    }
+
+    //---------------------------------------------------------
+
+    clearLiveStorage(api) {
+        try {
+            this.fetchingApis = this.fetchingApis.filter((o) => o.salt.split('_')[0] !== api);
+
+            if (typeof (localStorage) == "object") {
+                for (var i = localStorage.length - 1; i >= 0; i--) {
+                    var key = localStorage.key(i).split('_');
+
+                    if (key[0] === this.token && key[1] === api) {
+                        console.log(key.join('_'))
+                        localStorage.removeItem(key.join('_'));
+                    }
+                }
+            }
+        } catch (e) {
+            console.error(e);
+        }
     }
 
     //---------------------------------------------------------
