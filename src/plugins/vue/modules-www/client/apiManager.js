@@ -414,7 +414,6 @@ class ApiManager extends BaseManager
                     var key = localStorage.key(i).split('_');
 
                     if (key[0] === this.token && key[1] === api) {
-                        console.log(key.join('_'))
                         localStorage.removeItem(key.join('_'));
                     }
                 }

@@ -25,6 +25,7 @@ function getTime()
 
 function log(type, tag, ...messages)
 {
+    execHook(type, tag, ...messages)
     var premsg = chalk.blue(type + ':');
 
     switch (type)
@@ -48,6 +49,25 @@ function log(type, tag, ...messages)
 
     console.log.call(console, premsg, chalk.gray(getTime()), chalk.bold('[' + tag + ']'), ...messages);
 };
+
+var hooks = {}
+
+function execHook(type, tag, ...messages) {
+    try {
+        if(!hooks[type])
+            return;
+
+        for(var hook of hooks[type]) {
+            try {
+                hook(tag, ...messages);
+            } catch(e) {
+                console.error('Console hook error', type, tag, e);
+            }
+        }
+    } catch(e) {
+        console.error(e);
+    }
+}
 
 const Console = module.exports = {
 
@@ -130,6 +150,11 @@ const Console = module.exports = {
 
             timeEnd(name) {
                 console.timeEnd(name);
+            },
+
+            addHook(type, cb) {
+                hooks[type] = hooks[type] || [];
+                hooks[type].push(cb);
             }
         };
 
