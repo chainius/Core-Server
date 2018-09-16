@@ -170,7 +170,7 @@ class FormPoster
         _this.trigger(elm, 'api-before-submit', { api: api });
         
         $.event.global.ajaxError = false;
-        var path = '/api/'+api;
+        var path = api.indexOf('://') === -1 && api.substr(0, 1) !== '/' ? '/api/'+api : api;
 
         if(method === 'GET') {
             const data = this.$api.mergePost( that.serializeObject(), api );
@@ -210,16 +210,25 @@ class FormPoster
             },
             success: function(e)
             {
+                if(that.attr('response-type')) {
+                    if(that.attr('response-type') !== "application/json" && that.attr('response-type') !== "json") {
+                        const res = { api: api, result: e };
+                        _this.trigger(elm, 'api-success', res);
+                        return _this.trigger(elm, 'api-done', res);
+                    }
+                }
+                
                 if(typeof(e) != 'object')
                 {
                     try
                     {
                         e = JSON.parse(e);
                     }
-                    catch(e)
+                    catch(err)
                     {
-                        _this.trigger(elm, 'api-error', { api: api, result: { error: 'An internal conversion error occured' }, error: 'An internal conversion error occured' });
-                        return;
+                        const res = { api: api, result: { error: 'An internal conversion error occured' }, error: 'An internal conversion error occured', plain: e };
+                        _this.trigger(elm, 'api-error', res);
+                        return _this.trigger(elm, 'api-done', res);
                     }
                 }
 
@@ -241,7 +250,7 @@ class FormPoster
                     try
                     {
                         const json = JSON.parse(err.responseText);
-                        const res =  { result: json, api: api, error: json.error };
+                        const res =  { result: json, api: api, error: json.error, status: err.status };
 
                         _this.trigger(elm, 'api-error', res);
                         _this.trigger(elm, 'api-done',  res);
@@ -249,8 +258,15 @@ class FormPoster
                     }
                     catch(e)
                     {
-                        _this.trigger(elm, 'api-error', { result: err, error: err.responseText, api: api });
-                        _this.trigger(elm, 'api-done', { result: err, error: err.responseText, api: api });
+                        const resType = err.getResponseHeader ? err.getResponseHeader('Content-Type') : null;
+                        if(resType && resType.indexOf('text/html') !== -1) {
+                            _this.trigger(elm, 'api-error', { result: err, error: err.status + ' - ' + err.statusText, api: api, status: err.status });
+                            _this.trigger(elm, 'api-done', { result: err, error: err.status + ' - ' + err.statusText, api: api, status: err.status });
+                            return;
+                        }
+
+                        _this.trigger(elm, 'api-error', { result: err, error: err.responseText, api: api, status: err.status });
+                        _this.trigger(elm, 'api-done', { result: err, error: err.responseText, api: api, status: err.status });
                         return;
                     }
                 }

@@ -454,7 +454,7 @@ class SiteManager extends SuperClass
             handleCatch(e);
         }
     }
-    
+
     createTestCase(cb) {
         const start = process.hrtime();
         const event = new EventEmitter();

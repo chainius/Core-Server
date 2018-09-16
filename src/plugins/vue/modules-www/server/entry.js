@@ -49,7 +49,7 @@ export function transformPost(post, api, manager)
 
 export default (ctx) => {
     const app = initApp(options);
-    
+
     api.ctx = ctx;
     app.$router.push(ctx.url);
 

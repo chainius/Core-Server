@@ -98,12 +98,10 @@ class PagesManager
     }
 }
 
-function ensureExists(path, mask, cb)
-{
+function ensureExists(path, mask, cb) {
     const fs  = require('fs');
 
-    fs.mkdir(path, mask, function(err)
-    {
+    fs.mkdir(path, mask, function(err) {
         if (err)
         {
             if (err.code == 'EEXIST') cb(null); // ignore the error if the folder already exists

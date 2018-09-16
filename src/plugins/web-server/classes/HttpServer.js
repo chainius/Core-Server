@@ -100,7 +100,7 @@ class HttpServer
         this.echo = sockjs.createServer({ sockjs_url: 'https://cdn.jsdelivr.net/sockjs/1.1.4/sockjs.min.js',
             log: function(){}
         });
-        
+
         this.echo.installHandlers(this.server, { prefix: '/socketapi' });
 
         this.echo.on('connection', (conn) =>
@@ -135,7 +135,7 @@ class HttpServer
 
         var body = '';
         const uploadLimit = this.uploadLimit;
-        
+
         function onEnd() {
             try {
                 req.rawBody = body;

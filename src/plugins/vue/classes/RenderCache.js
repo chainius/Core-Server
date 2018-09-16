@@ -4,7 +4,7 @@ const PassThrough = require('stream').PassThrough;
 const Watcher     = plugins.require('web-server/Watcher');
 const fs          = require('fs');
 
-const renderer = require('vue-server-renderer') // require('../additionals/vue-server-renderer/custom/index.js');
+const renderer     = require('vue-server-renderer') // require('../additionals/vue-server-renderer/custom/index.js');
 const isProduction = (process.env.NODE_ENV === 'production');
 
 class RenderCache {
@@ -31,9 +31,9 @@ class RenderCache {
             });
         }
 
-        setTimeout(() => {
+        (setTimeout(() => {
             this.deleteCache();
-        }, this.cacheTTL);
+        }, this.cacheTTL)).unref();
     }
 
     createRenderer() {
@@ -193,10 +193,10 @@ class RenderCache {
         const _this = this;
         return new Promise(function(resolve, reject) {
             const ctx = _this.createContext(url);
-            
+
             if(!RenderCache.bundle.default)
                 return reject('The Bundle contains some errors and could not be loaded');
-            
+
             RenderCache.bundle.default(ctx).then((app) => {
                 _this.onRouterDone(app, ctx, resolve, reject);
             }).catch(reject);
