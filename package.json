@@ -1,6 +1,6 @@
 {
   "name": "core-server",
-  "version": "0.9.4",
+  "version": "0.9.5",
   "description": "CoreServer",
   "main": "src/index.js",
   "bin": "src/index.js",
@@ -73,7 +73,7 @@
     "serialize-javascript": "^1.5.0",
     "sift": "^6.0.0",
     "sockjs": "^0.3.19",
-    "sockjs-client": "^1.1.5",
+    "sockjs-client": "1.1.5",
     "source-map": "^0.7.3",
     "spdy": "^3.4.7",
     "static-module": "^3.0.0",

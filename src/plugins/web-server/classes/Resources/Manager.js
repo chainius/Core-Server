@@ -12,9 +12,9 @@ class ResourcesManger
         this.preload('/lib/bundle.js');
         this.preload('/css/bundle.css');
 
-        setInterval(() => {
+        (setInterval(() => {
             this.purgeCache();
-        }, 10 * 60 * 1000);
+        }, 10 * 60 * 1000)).unref();
     }
     
     purgeCache() {
