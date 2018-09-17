@@ -153,15 +153,11 @@ class ApiManager extends BaseManager
 
         begin += beginLength;
         const end = dc.indexOf(';', begin);
-
-        if (end == -1)
-            return dc.substr(begin);
-
-        var res = String(dc.substr(begin, end - begin));
+        var res = (end === -1) ? dc.substr(begin) : dc.substr(begin, end - begin);
         if (res.substr(0, 4) === 'enc:') {
-          res = res.substr(4, res.length);
-          const atob = (window.atob || function (str) { return str; });
-          res = this.hexDecode(atob(res));
+            res = res.substr(4, res.length);
+            const atob = (window.atob || function (str) { return str; });
+            res = this.hexDecode(atob(res));
         }
         res = unescape(res);
 
