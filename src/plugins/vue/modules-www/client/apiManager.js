@@ -111,6 +111,27 @@ class ApiManager extends BaseManager
 
     //---------------------------------------------------------
 
+    hexEncode(str) {
+        var hex, i;
+    
+        var result = "";
+        for (i=0; i<str.length; i++) {
+            hex = str.charCodeAt(i).toString(16);
+            result += ("000"+hex).slice(-4);
+        }
+        return result
+    }
+
+    hexDecode(str) {
+        var j;
+        var hexes = str.match(/.{1,4}/g) || [];
+        var back = "";
+        for(j = 0; j<hexes.length; j++) {
+            back += String.fromCharCode(parseInt(hexes[j], 16));
+        }
+        return back;
+    }
+
     getCookie(name) {
         var dc = document.cookie;
         var prefix = name + "=";
@@ -136,7 +157,15 @@ class ApiManager extends BaseManager
         if (end == -1)
             return dc.substr(begin);
 
-        return unescape(dc.substr(begin, end - begin));
+        var res = String(dc.substr(begin, end - begin));
+        if (res.substr(0, 4) === 'enc:') {
+          res = res.substr(4, res.length);
+          const atob = (window.atob || function (str) { return str; });
+          res = this.hexDecode(atob(res));
+        }
+        res = unescape(res);
+
+        return res;
     }
 
     setCookies(cookies, expiration) {
@@ -148,7 +177,11 @@ class ApiManager extends BaseManager
         }
 
         for (var key in cookies) {
-            document.cookie = key + "=" + cookies[key] + ";" + expires + "path=/";
+            if (typeof cookies[key] !== 'string') {
+              cookies[key] = JSON.stringify(cookies[key]);
+            }
+            const btoa = (window.btoa || function (str) { return str; });
+            document.cookie = key + "=" + `enc:${btoa(this.hexEncode(cookies[key]))}` + ";" + expires + "path=/";
 
             if (key === 'token') {
                 this.token = cookies[key];
