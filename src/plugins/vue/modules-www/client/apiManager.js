@@ -174,10 +174,12 @@ class ApiManager extends BaseManager
 
         for (var key in cookies) {
             if (typeof cookies[key] !== 'string') {
-              cookies[key] = JSON.stringify(cookies[key]);
+                cookies[key] = JSON.stringify(cookies[key]);
+                const btoa = (window.btoa || function (str) { return str; });
+                document.cookie = key + "=" + `enc:${btoa(this.hexEncode(cookies[key]))}` + ";" + expires + "path=/";
+            } else {
+                document.cookie = key + "=" + cookies[key] + ";" + expires + "path=/";
             }
-            const btoa = (window.btoa || function (str) { return str; });
-            document.cookie = key + "=" + `enc:${btoa(this.hexEncode(cookies[key]))}` + ";" + expires + "path=/";
 
             if (key === 'token') {
                 this.token = cookies[key];

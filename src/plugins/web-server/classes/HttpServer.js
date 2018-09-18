@@ -25,11 +25,31 @@ function cachedProperty(object, name, calculator) {
 }
 
 function parseRequestCookies() {
-    const cookies = this.headers.cookie;
+    var cookies = this.headers.cookie;
     if(!cookies)
         return {};
 
-    return cookie.parse(cookies)
+    if(this._cookies)
+        return this._cookies;
+    
+    var cookies = cookie.parse(cookies)
+    for(var key in cookies) {
+        var res = cookies[key];
+        if (res.substr(0, 4) === 'enc:') {
+            res = res.substr(4, res.length);
+            res = Buffer.from(res, 'base64').toString();
+            res = Buffer.from(res, 'hex').toString().split("\u0000").join("");
+
+            try {
+                cookies[key] = JSON.parse(res);
+            } catch(e) {
+                cookies[key] = res;
+            }
+        }
+    }
+
+    this._cookies = cookies;
+    return cookies
 }
 
 function parseRequestClientIp() {
