@@ -38,8 +38,15 @@ function parseRequestCookies() {
         if (res.substr(0, 4) === 'enc:') {
             res = res.substr(4, res.length);
             res = Buffer.from(res, 'base64').toString();
-            res = Buffer.from(res, 'hex').toString().split("\u0000").join("");
 
+            var j;
+            var hexes = res.match(/.{1,4}/g) || [];
+            res = "";
+            for(j = 0; j<hexes.length; j++) {
+                res += String.fromCharCode(parseInt(hexes[j], 16));
+            }
+
+            res = unescape(res);
             try {
                 cookies[key] = JSON.parse(res);
             } catch(e) {
