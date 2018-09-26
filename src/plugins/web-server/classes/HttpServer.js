@@ -231,7 +231,7 @@ class HttpServer
         this.openRequests = [];
         
         for(var key in connections) {
-            if(connections[key].res._headerSent)
+            if(connections[key].res._headerSent || connections[key].res.ended || connections[key].res.finished)
                 continue;
             
             if(connections[key].openTime < now - this.timeout) {
@@ -242,9 +242,9 @@ class HttpServer
             }
         }
     }
-    
+
     handleRequest(req, res)
-    {   
+    {
         try {
             req.getClientIp = parseRequestClientIp;
             req.__defineGetter__('cookies', parseRequestCookies);
@@ -274,7 +274,7 @@ class HttpServer
     handleSocket(socket, predata)
     {
         if (predata)
-            socket.unshift(new Buffer(predata, 'base64'));
+            socket.unshift(Buffer.from(predata, 'base64'));
 
         this.server.emit('connection', socket);
         socket.resume();

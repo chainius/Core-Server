@@ -1,6 +1,5 @@
 const Path  = require('path');
 const cluster = require('cluster');
-const sane  = require('sane');
 
 class Watcher
 {
@@ -27,6 +26,7 @@ class Watcher
                 useWatchman = true;
         } catch(e) { }
 
+        const sane  = require('sane');
         var sWatch  = sane(process.cwd(), { dot: false, watchman: useWatchman });
         sWatch.on('change', changeDetected);
         sWatch.on('add', changeDetected);

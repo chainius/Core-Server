@@ -64,37 +64,37 @@ class PagesManager
 
     //--------------------------------
 
-    handleError(code, req, res)
+    async handleError(code, req, res)
     {
+        if(req.ended || res.finished) {
+            console.error('Try to send error page with code', code, ' on closed request', req.url);
+            return false;
+        }
+
         try
         {
-            return this.renderToString('/error/' + code).then(function(r) {
-                res.writeHead(code, { 'Content-Type': 'text/html; charset=utf-8' });
-                res.end(r.html);
-            }).catch(function(err) {
-                res.writeHead(code, { 'Content-Type': 'text/html; charset=utf-8' });
-                res.end(`An unexpected error occured ${err.message || err}`);
-            });
+            const r = await this.renderToString('/error/' + code);
+            res.writeHead(code, { 'Content-Type': 'text/html; charset=utf-8' });
+            res.end(r.html);
+            return true;
         }
         catch (e)
         {
             console.error(e);
         }
 
-        return new Promise(function(resolve) {
-            res.writeHead(code, { 'Content-Type': 'text/html; charset=utf-8' });
-            res.end('An unexpected error occured');
-            resolve();
-        })
-        /*try
+        try
         {
             res.writeHead(code, { 'Content-Type': 'text/html; charset=utf-8' });
             res.end('An unexpected error occured');
+            return true;
         }
         catch (e)
         {
             console.error(e);
-        }*/
+        }
+
+        return false;
     }
 }
 
@@ -229,7 +229,7 @@ PagesManager.BrowserifySetup = {
         const envify            = require('envify/custom');
         const fs                = require('fs');
         
-        var babelrc = { presets: ['env'] };
+        var babelrc = { presets: ['@babel/preset-env'] };
         
         try {
             const babelContent = fs.readFileSync(process.cwd() + '/.babelrc')

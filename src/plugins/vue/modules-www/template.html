@@ -15,7 +15,6 @@
     </head>
     <body {{{meta.bodyAttrs}}}>
         <!--vue-ssr-outlet-->
-        <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=default,Object.values,Intl.~locale.{{lang}}"></script>
         <script>window.API_DATA = JSON.stringify({})</script>
         {{{ meta.script }}}
         <script src="/lib/bundle.js?{{jsHash}}"></script>

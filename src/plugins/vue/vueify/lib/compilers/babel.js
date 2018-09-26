@@ -38,7 +38,7 @@ module.exports = function (raw, cb, compiler, filePath) {
   }
 
   try {
-    var babel = require('babel-core')
+    var babel = require('@babel/core')
     var options = assign({
       comments: false,
       filename: filePath,
@@ -46,6 +46,7 @@ module.exports = function (raw, cb, compiler, filePath) {
     }, compiler.options.babel || babelOptions)
     var res = babel.transform(raw, options)
   } catch (err) {
+      console.error(err)
     return cb(err)
   }
   cb(null, res)

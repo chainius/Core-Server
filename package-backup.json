@@ -1,6 +1,6 @@
 {
   "name": "core-server",
-  "version": "0.10.0",
+  "version": "0.9.8",
   "description": "CoreServer",
   "main": "src/index.js",
   "bin": "src/index.js",
@@ -36,7 +36,6 @@
     "request-promise": "^4.2.2",
     "sift": "^6.0.0",
     "sockjs": "^0.3.19",
-    "spdy": "^3.4.7",
     "tls": "0.0.1",
     "uniqid": "^5.0.3",
     "vue-server-renderer": "2.5.13",

@@ -71,7 +71,7 @@ class CLI {
             }
         }
 
-        if(['help', 'docs', 'version', 'install'].indexOf(name) !== -1) {
+        if(['help', 'docs', 'version', 'install', 'prune'].indexOf(name) !== -1) {
             const result = require('./' + name + '.js')(value);
             if(result === false)
                 return false;
