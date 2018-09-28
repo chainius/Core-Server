@@ -1,10 +1,10 @@
 const crypto         = require('crypto');
 const base32         = require('hi-base32');
-const ReCAPTCHA      = require('recaptcha2');
+const request        = require('request');
 const GAuthenticator = require('google_authenticator').authenticator;
 
 var iv = '';
-var recaptcha = null;
+var RECAPTCHA_SECRET = null;
 
 /** Crypter */
 class Crypter
@@ -15,8 +15,10 @@ class Crypter
     }
 
     setRecaptchaConfig(config)
-    {
-        recaptcha = new ReCAPTCHA(config);
+    {     
+        if (config.secretKey || config.secret) {
+          RECAPTCHA_SECRET = (config.secretKey || config.secret);
+        }
     }
 
     /**
@@ -152,10 +154,30 @@ class Crypter
 
     /**
     * @param token {Number}
+    * @param client_ip {String}
     */
-    verifyCaptcha(token)
+    async verifyCaptcha(token, client_ip = null)
     {
-        return (recaptcha === null) ? false : recaptcha.validate(token);
+      const config = {
+          uri: 'https://www.google.com/recaptcha/api/siteverify',
+          method: 'POST',
+          formData: {
+              secret:  RECAPTCHA_SECRET,
+              response: token,
+          },
+      };
+
+      if (client_ip)
+          config.body.remoteip = client_ip;
+
+      return new Promise((resolve) => {
+        request(config, function (error, response, body) {
+          if (error)
+              console.log('Recaptcha error:', error);
+
+          return resolve(!body ? false : Boolean(body.success || false));
+        });
+      });
     }
 
     /**
