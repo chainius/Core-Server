@@ -32,8 +32,6 @@ class SessionsManager
 
         if (typeof (cookies.token) !== 'string' || cookies.token.length < 10 || cookies.token.length > 20 || cookies.token === '__global__') {
             cookies.token = uniqid();
-            this.sessions[cookies.token] = new Session(this.siteManager, cookies.token);
-            return this.sessions[cookies.token];
         }
 
         return this.getFromToken(cookies.token);

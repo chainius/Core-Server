@@ -252,6 +252,9 @@ class FormPoster
                         const json = JSON.parse(err.responseText);
                         const res =  { result: json, api: api, error: json.error, status: err.status };
 
+                        if(err.status === 401 && _this.handleAccessDenied)
+                            _this.handleAccessDenied(json, api);
+
                         _this.trigger(elm, 'api-error', res);
                         _this.trigger(elm, 'api-done',  res);
                         return;
@@ -259,17 +262,29 @@ class FormPoster
                     catch(e)
                     {
                         const resType = err.getResponseHeader ? err.getResponseHeader('Content-Type') : null;
+
                         if(resType && resType.indexOf('text/html') !== -1) {
-                            _this.trigger(elm, 'api-error', { result: err, error: err.status + ' - ' + err.statusText, api: api, status: err.status });
-                            _this.trigger(elm, 'api-done', { result: err, error: err.status + ' - ' + err.statusText, api: api, status: err.status });
+                            if(err.status === 401 && _this.handleAccessDenied)
+                                _this.handleAccessDenied({ error: err.status + ' - ' + err.statusText }, api);
+
+                            const errRes = { result: err, error: err.status + ' - ' + err.statusText, api: api, status: err.status };
+                            _this.trigger(elm, 'api-error', errRes);
+                            _this.trigger(elm, 'api-done', errRes);
                             return;
                         }
 
-                        _this.trigger(elm, 'api-error', { result: err, error: err.responseText, api: api, status: err.status });
-                        _this.trigger(elm, 'api-done', { result: err, error: err.responseText, api: api, status: err.status });
+                        if(err.status === 401 && _this.handleAccessDenied)
+                            _this.handleAccessDenied({ error: err.responseText }, api);
+
+                        const errRes2 = { result: err, error: err.responseText, api: api, status: err.status };
+                        _this.trigger(elm, 'api-error', errRes2);
+                        _this.trigger(elm, 'api-done', errRes2);
                         return;
                     }
                 }
+
+                if(err.status === 401 && _this.handleAccessDenied)
+                    _this.handleAccessDenied({ error: err }, api);
 
                 _this.trigger(elm, 'api-error', { result: err, error: err, api: api });
                 _this.trigger(elm, 'api-done',  { result: err, error: err, api: api });

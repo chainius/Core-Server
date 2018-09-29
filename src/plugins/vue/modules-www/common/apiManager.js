@@ -167,18 +167,55 @@ class ApiManager
 
     //---------------------------------------------------------
 
-    handleApiError(api, error, salt) {
-        if (error.httpCode === 401) {
-            this.deleteAllCache();
+    onAccessDenied(error, api) {
+        var event;
+        if (document.createEvent) {
+            event = document.createEvent("HTMLEvents");
+            event.initEvent('access-denied', true, true);
+        } else {
+            event = document.createEventObject();
+            event.eventType = 'access-denied';
+        }
 
-            if(this.permissionsManager)
-                this.permissionsManager.setPermissions([]);
+        event.eventName = 'access-denied';
+        event.error = error;
+        
+        event.logout = () => {
+            try {
+                this.deleteAllCache();
 
-            if (location.pathname !== '/' && location.pathname !== '/members') //ToDo if not offline page redirect to members page
-            {
-                location.href = '/members';
+                if(this.permissionsManager)
+                    this.permissionsManager.setPermissions([]);
+
+                this.logout();
+            } catch(e) {
+                console.error(e);
             }
         }
+
+        for (var cb of this.onApiCallbacks) {
+            try {
+                if(cb.api !== 'access-denied')
+                    continue;
+
+                cb.callback.call(this, event, api);
+            } catch (e)
+            {
+                console.error(e);
+            }
+        }
+
+        if(event.defaultPrevented || !error.reconnect)
+            return;
+
+        event.logout();
+        if (location.pathname !== '/' && location.pathname !== '/members')
+            location.href = '/members';
+    }
+
+    handleApiError(api, error, salt) {
+        if (error.httpCode === 401)
+            this.onAccessDenied(error, api);
 
         var found = false;
         for (var i = this.fetchingApis.length - 1; i >= 0; i--) {

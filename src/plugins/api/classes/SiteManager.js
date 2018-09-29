@@ -129,14 +129,15 @@ class SiteManager extends SuperClass
         if (!connected)
         {
             return {
-                error: 'You need to be connected in order to call this api (' + api + ')',
-                httpCode: 401
+                error:      'You need to be connected in order to call this api (' + api + ')',
+                reconnect:  true,
+                httpCode:   401
             };
         }
 
         return {
-            error: 'Access denied to the requested api (' + api + ')',
-            httpCode: 401
+            error:          'Access denied to the requested api (' + api + ')',
+            httpCode:       401
         };
     }
 
@@ -195,6 +196,7 @@ class SiteManager extends SuperClass
                 {
                 return {
                     error: 'You need to be connected in order to call this api (' + api + ')',
+                    reconnect: true,
                     httpCode: 401
                 };
             }
@@ -212,11 +214,6 @@ class SiteManager extends SuperClass
                 };
             }
         }
-
-        if(!connected)
-            return {
-                error: 'The requested api could not be found'
-            };
 
         for(var key in config)
         {
@@ -238,7 +235,8 @@ class SiteManager extends SuperClass
         }
 
         return {
-            error: 'The requested api could not be found'
+            error: 'The requested api could not be found',
+            api: api
         };
     }
 

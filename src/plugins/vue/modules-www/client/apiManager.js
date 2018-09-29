@@ -17,6 +17,7 @@ class ApiManager extends BaseManager
             this.formPoster = this.formPoster.default;
         
         this.formPoster.$api = this;
+        this.formPoster.handleAccessDenied = this.onAccessDenied.bind(this);
 
         if (!this.token)
             this.generateToken();
