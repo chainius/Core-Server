@@ -158,26 +158,31 @@ class Crypter
     */
     async verifyCaptcha(token, client_ip = null)
     {
-      const config = {
-          uri: 'https://www.google.com/recaptcha/api/siteverify',
-          method: 'POST',
-          formData: {
-              secret:  RECAPTCHA_SECRET,
-              response: token,
-          },
-      };
+        const config = {
+            uri: 'https://www.google.com/recaptcha/api/siteverify',
+            method: 'POST',
+            formData: {
+                secret: RECAPTCHA_SECRET,
+                response: token,
+            },
+        };
 
-      if (client_ip)
-          config.body.remoteip = client_ip;
+        if (client_ip)
+            config.body.remoteip = client_ip;
 
-      return new Promise((resolve) => {
-        request(config, function (error, response, body) {
-          if (error)
-              console.log('Recaptcha error:', error);
+        return new Promise((resolve) => {
+            request(config, function (error, response, body) {
+                try {
+                    if (error)
+                        console.log('Recaptcha error:', error);
 
-          return resolve(!body ? false : Boolean(body.success || false));
+                    body = JSON.parse(body);
+                    resolve(!body ? false : Boolean(body.success || false));
+                } catch(e) {
+                    reject(e);
+                }
+            });
         });
-      });
     }
 
     /**

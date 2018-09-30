@@ -25,13 +25,15 @@ function cachedProperty(object, name, calculator) {
 }
 
 function parseRequestCookies() {
-    var cookies = this.headers.cookie;
-    if(!cookies)
-        return {};
-
     if(this._cookies)
         return this._cookies;
-    
+
+    var cookies = this.headers.cookie;
+    if(!cookies) {
+        this._cookies = {};
+        return this._cookies;
+    }
+
     var cookies = cookie.parse(cookies)
     for(var key in cookies) {
         var res = cookies[key];
@@ -247,7 +249,7 @@ class HttpServer
     {
         try {
             req.getClientIp = parseRequestClientIp;
-            req.__defineGetter__('cookies', parseRequestCookies);
+            req.__defineGetter__('cookies', parseRequestCookies.bind(req));
 
             this.openRequests.push({
                 req: req,

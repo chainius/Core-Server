@@ -37,6 +37,9 @@ class FormPoster
             if(!$(this).attr('action'))
                 return;
 
+            if(e.isDefaultPrevented())
+                return;
+
             e.preventDefault();
             _this.handleFormSubmit(this);
         });
