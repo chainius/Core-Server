@@ -22,7 +22,6 @@ function getTime()
     return dateFormat(now, 'yyyy-mm-dd HH:MM:ss');
 }
 
-
 function log(type, tag, ...messages)
 {
     execHook(type, tag, ...messages)
@@ -168,8 +167,9 @@ const Console = module.exports = {
         const cons = {};
         module.exports.implement(cons, tag);
         return cons.console;
-    }
+    },
 
+    _log: log
 };
 
 console.create = Console.create;

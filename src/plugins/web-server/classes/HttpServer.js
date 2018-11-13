@@ -383,7 +383,7 @@ HttpServer.getClientIpFromHeaders = function(req, socket)
         return socket.remoteAddress || '';
     if (req.connection)
         return req.connection.remoteAddress || '';
-    
+
     return '';
 };
 

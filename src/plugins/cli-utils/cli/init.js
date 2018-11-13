@@ -63,7 +63,23 @@ async function init()
     await mkdir(Path.join(process.cwd(), 'api'));
     await mkdir(Path.join(process.cwd(), 'config'));
     fs.writeFileSync(Path.join(process.cwd(), 'config', 'public-api.json'), JSON.stringify({connected:[], notconnected: [], everyone: [ '*/*' ]}, null, '\t'));
-    fs.writeFileSync(Path.join(process.cwd(), '.babelrc'), '{ "presets": ["env"] }');
+    fs.writeFileSync(Path.join(process.cwd(), '.babelrc'), JSON.stringify({
+        "presets": [
+            [
+                "@babel/env",
+                {
+                    "targets": {
+                        "edge": "17",
+                        "firefox": "58",
+                        "chrome": "40",
+                        "safari": "10.0",
+                        "opera": "47"
+                    },
+                    "useBuiltIns": "entry"
+                }
+            ]
+        ]
+    }, null, 4));
     fs.writeFileSync(Path.join(process.cwd(), '.gitignore'), 'node_modules/\ndist/\n.vscode\ncore-docs/');
 
     if(config.ui.substr(0,1).toLowerCase() === 'y')

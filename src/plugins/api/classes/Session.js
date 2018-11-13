@@ -1,4 +1,5 @@
 const ApiEnvironment = plugins.require('api/ApiEnvironment');
+const HttpServer = plugins.require('web-server/HttpServer');
 
 function cachedProperty(object, name, calculator) {
     var value = null;
@@ -127,7 +128,7 @@ class Session extends SuperClass
                 });
             }
 
-            return this.api(api, post, socket.remoteAddress, {}, get, socket);
+            return this.api(api, post, HttpServer.getClientIpFromHeaders(socket, socket), {}, get, socket);
         }).then(function(result)
         {
             _this.sendSocketMessage(socket, {
