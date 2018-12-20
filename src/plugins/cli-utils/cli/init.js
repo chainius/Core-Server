@@ -116,7 +116,9 @@ async function init()
     };
 
     config.dependencies = {
-        "babel-preset-env": "^1.6.1",
+        "@babel/core": "7.1.0",
+		"@babel/polyfill": "7.0.0",
+		"@babel/preset-env": "7.1.0",
         'bootstrap-notify': "^3.1.3",
         'jquery': "^3.2.1",
         //'raven-js': "^3.15.0",
