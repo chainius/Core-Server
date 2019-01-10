@@ -1,6 +1,7 @@
 import Router from 'vue-router';
 import Meta from 'vue-meta';
 import serializeProperties from './pageProperties';
+import Storage from './storage.js';
 
 var options  = {};
 var errorComponent = null;
@@ -8,6 +9,7 @@ const routes = [];
 
 Vue.use(Router);
 Vue.use(Meta);
+Vue.use(Storage);
 
 //------------------------------------------------------------------
 

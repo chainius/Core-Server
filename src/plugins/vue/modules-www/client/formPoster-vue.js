@@ -142,13 +142,11 @@ class FormPoster
         //that.trigger('api-before-submit', elm);
         this.trigger(elm, 'api-before-submit', { api: api });
 
-        if(that.find('input[type="file"]:not([disabled])').length > 0)
-        {
-            that.attr('enctype', 'multipart/form-data');
+        if(elm.find('input[type="file"]:not([disabled])').length > 0) {
+            elm.attr('enctype', 'multipart/form-data');
             data = new FormData(elm);
         }
-        else
-        {
+        else {
             form.setAttribute('enctype', 'application/json');
             //data = that.serializeObject();
             //data = JSON.stringify( this.$api.mergePost(data, api) );

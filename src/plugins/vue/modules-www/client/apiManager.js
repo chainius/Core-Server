@@ -112,97 +112,18 @@ class ApiManager extends BaseManager
 
     //---------------------------------------------------------
 
-    hexEncode(str) {
-        var hex, i;
-    
-        var result = "";
-        for (i=0; i<str.length; i++) {
-            hex = str.charCodeAt(i).toString(16);
-            result += ("000"+hex).slice(-4);
-        }
-        return result
-    }
-
-    hexDecode(str) {
-        var j;
-        var hexes = str.match(/.{1,4}/g) || [];
-        var back = "";
-        for(j = 0; j<hexes.length; j++) {
-            back += String.fromCharCode(parseInt(hexes[j], 16));
-        }
-        return back;
-    }
-
-    getCookie(name) {
-        var dc = document.cookie;
-        var prefix = name + "=";
-
-        var begin = dc.indexOf("; " + prefix);
-        var beginLength = 2 + prefix.length;
-
-        if (begin == -1) {
-            begin = dc.indexOf(";" + prefix);
-            beginLength--;
-
-            if (begin == -1 && dc.indexOf(prefix) == 0) {
-                begin = 0;
-                beginLength--;
-            } else {
-                return '';
-            }
-        }
-
-        begin += beginLength;
-        const end = dc.indexOf(';', begin);
-        var res = (end === -1) ? dc.substr(begin) : dc.substr(begin, end - begin);
-        if (res.substr(0, 4) === 'enc:') {
-            res = res.substr(4, res.length);
-            const atob = (window.atob || function (str) { return str; });
-            res = this.hexDecode(atob(res));
-        }
-        res = unescape(res);
-
-        return res;
-    }
-
-    setCookies(cookies, expiration) {
-        var expires = '';
-        if (expiration) {
-            var d = new Date();
-            d.setTime(expiration);
-            expires = "expires=" + d.toUTCString() + ';';
-        }
-
-        for (var key in cookies) {
-            if (typeof cookies[key] !== 'string') {
-                cookies[key] = JSON.stringify(cookies[key]);
-                const btoa = (window.btoa || function (str) { return str; });
-                document.cookie = key + "=" + `enc:${btoa(this.hexEncode(cookies[key]))}` + ";" + expires + "path=/";
-            } else {
-                document.cookie = key + "=" + cookies[key] + ";" + expires + "path=/";
-            }
-
-            if (key === 'token') {
-                this.token = cookies[key];
-
-                if(this.socket)
-                    this.socket.close();
-            }
-        }
-    }
-
     deleteOldCache() {
         try {
             if(location.href.indexOf('file://') === 0)
                 return;
 
-            if (typeof (localStorage) == "object") {
-                for (var i = localStorage.length - 1; i >= 0; i--) {
-                    var key = localStorage.key(i);
+            if (typeof (sessionStorage) == "object") {
+                for (var i = sessionStorage.length - 1; i >= 0; i--) {
+                    var key = sessionStorage.key(i);
                     var index = key.indexOf('_');
 
                     if (key.substr(0, index) !== this.token) {
-                        localStorage.removeItem(key);
+                        sessionStorage.removeItem(key);
                     }
                 }
             }
@@ -212,19 +133,7 @@ class ApiManager extends BaseManager
     }
 
     deleteAllCache() {
-        try {
-            if(location.href.indexOf('file://') === 0)
-                return;
-
-            if (typeof (localStorage) == "object") {
-                for (var i = localStorage.length - 1; i >= 0; i--) {
-                    var key = localStorage.key(i);
-                    localStorage.removeItem(key);
-                }
-            }
-        } catch (e) {
-            console.error(e);
-        }
+        return this.$storage.deleteAllCache()
     }
 
     deleteLocalCache(api_salt, data) {
@@ -232,8 +141,8 @@ class ApiManager extends BaseManager
             if(location.href.indexOf('file://') === 0)
                 return;
 
-            if (typeof (localStorage) == "object" && localStorage !== undefined && localStorage !== null) {
-                localStorage.removeItem(this.token + '_' + api_salt);
+            if (typeof (sessionStorage) == "object" && sessionStorage !== undefined && sessionStorage !== null) {
+                sessionStorage.removeItem(this.token + '_' + api_salt);
             }
         } catch (e) {
             console.error(e);
@@ -241,46 +150,14 @@ class ApiManager extends BaseManager
     }
 
     saveLocalCache(api_salt, data) {
-        try {
-            if(location.href.indexOf('file://') === 0)
-                return;
-
-            if (typeof (localStorage) == "object" && localStorage !== undefined && localStorage !== null) {
-                localStorage.setItem(this.token + '_' + api_salt, JSON.stringify(data));
-            }
-        } catch (e) {
-            if(e.code === 22) {
-                console.warn('Cache quota exceeded, purging cache.');
-                this.deleteAllCache();
-                return;
-            }
-
-            console.error(e);
-        }
+        return this.$storage.putCache(this.token + '_' + api_salt, data);
     }
 
     getLocalCache(api_salt) {
-        try {
-            if(location.href.indexOf('file://') === 0)
-                return;
+        const cache = this.$storage.getCache(this.token + '_' + api_salt);
+        if(cache !== null)
+            return cache;
 
-            if (typeof (localStorage) == "object") {
-                var localObject = localStorage.getItem(this.token + '_' + api_salt);
-                try {
-                    localObject = JSON.parse(localObject);
-
-                    if(localObject === null && window.API_DATA && window.API_DATA[api_salt])
-                    {
-                        localObject = window.API_DATA[api_salt];
-                    }
-
-                    return localObject;
-                } catch (e) {}
-            }
-        } catch (e) {
-            console.error(e);
-        }
-        
         if(!window.API_DATA)
             return null;
 

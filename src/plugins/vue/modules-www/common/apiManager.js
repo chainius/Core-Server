@@ -1,5 +1,6 @@
 const sha1 = require('./sha1.js');
 
+import Storage            from './storage.js';
 import PermissionsManager from './permissions.js';
 import ApiMerger          from './merger.js';
 import { mergePost }      from './init.js';
@@ -130,6 +131,10 @@ Vue.mixin({
 class ApiManager
 {
     constructor() {
+        this.$storage           = Storage;
+        this.getCookie          = Storage.getCookie;
+        this.setCookies         = Storage.setCookies;
+
         this.isDev              = (process.env.NODE_ENV === 'development');
         this.idIncrementer      = 0;
         this.fetchingApis       = [];
@@ -137,7 +142,7 @@ class ApiManager
         this.onApiCallbacks     = [];
         this.bindedVueElements  = [];
         this.socketIsOpen       = false;
-        this.token              = this.getCookie('token');
+        this.token              = Storage.getCookie('token');
         this.userConnection     = null;
         this.socketHooks        = [];
         this.permissionsManager = new PermissionsManager(this);
@@ -417,7 +422,6 @@ class ApiManager
     }
 
     post(api, data) {
-
         this.idIncrementer++;
         const _this = this;
         const id    = this.idIncrementer;

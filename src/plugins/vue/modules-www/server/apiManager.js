@@ -25,16 +25,6 @@ class ApiManager extends BaseManager
 
     //---------------------------------------------------------
 
-    getCookie(name)
-    {
-        return '';
-    }
-
-    setCookies(cookies, expiration)
-    {
-
-    }
-
     deleteOldCache()
     {
 
