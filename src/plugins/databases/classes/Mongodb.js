@@ -124,6 +124,14 @@ class Collection
         }));
     }
 
+    distinct(field, query, options)
+    {
+        return this.nativeCall(function(collection, cb)
+        {
+            collection.distinct(field, query, options, cb);
+        });
+    }
+  
     insert(data)
     {
         return this.nativeCall(function(collection, cb)

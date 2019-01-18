@@ -112,7 +112,7 @@ class PermissionsManager
 
     loadCache()
     {
-        const cache = this.api.getLocalCache('user_permissions');
+        const cache = this.api.$storage.get(this.api.token + '_user_permissions');
 
         if(cache !== null && ['array', 'object'].indexOf(typeof(cache)) !== -1)
         {
@@ -157,7 +157,7 @@ class PermissionsManager
             permissions = [permissions];
 
         this.permissions = permissions;
-        this.api.saveLocalCache('user_permissions', permissions);
+        this.api.$storage.put(this.api.token + '_user_permissions', permissions);
 
         for(var key in this.bindedElements)
         {
