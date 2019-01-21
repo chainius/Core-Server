@@ -132,8 +132,8 @@ class ApiManager
 {
     constructor() {
         this.$storage           = Storage;
-        this.getCookie          = Storage.getCookie;
-        this.setCookies         = Storage.setCookies;
+        this.getCookie          = Storage.getCookie.bind(Storage);
+        this.setCookies         = Storage.setCookies.bind(Storage);
 
         this.isDev              = (process.env.NODE_ENV === 'development');
         this.idIncrementer      = 0;
