@@ -35,12 +35,12 @@ class MongoDb
     connect()
     {
         const _this = this;
-        const connStr = this.connectionString;
+        const connStr = this.connectionString + "/" + this.config.project;
 
         MongoClient.connect(connStr, function(err, client) {
             if(err !== null)
             {
-                console.error('Could not connect to the mongodb server');
+                console.error('Could not connect to mongodb server', connStr);
 
                 return setTimeout(function()
                 {

@@ -85,30 +85,36 @@ class ResourcesManger
                 return this.siteManager.sendErrorPage(404, req, res);
 
             const _this = this;
-            const acceptEncoding = req.headers['accept-encoding'] || '';
+            var acceptEncoding = (req.headers['accept-encoding'] || '').split(' ').join('').split(',');
+            while(acceptEncoding.length > 0) {
+                if(['deflate', 'gzip'].indexOf(acceptEncoding[0]) === -1)
+                    acceptEncoding.shift();
+                else
+                    break;
+            }
 
+            acceptEncoding = acceptEncoding[0] || '';
             res.once('readable', function()
             {
-                if (acceptEncoding.match(/\bdeflate\b/))
+                if (acceptEncoding == 'deflate')
                     res.setHeader('Content-Encoding', 'deflate');
-                else if (acceptEncoding.match(/\bgzip\b/))
+                else if (acceptEncoding == 'gzip')
                     res.setHeader('Content-Encoding', 'gzip');
-                
-                res.writeHead(200, { 'Content-Type': cacheObject.mime });
+
+                res.setHeader('Content-Type', cacheObject.mime );
             });
 
             //-------------------------------------------------------
 
-            res.once('error', function()
-            {
+            res.once('error', function() {
                 _this.siteManager.sendErrorPage(404, req, res);
             });
 
             var pipe = null;
 
-            if (acceptEncoding.match(/\bdeflate\b/))
+            if (acceptEncoding == 'deflate')
                 pipe = cacheObject.pipeDeflate(res);
-            else if (acceptEncoding.match(/\bgzip\b/))
+            else if (acceptEncoding == 'gzip')
                 pipe = cacheObject.pipeGZip(res);
             else
                 pipe = cacheObject.pipe(res);

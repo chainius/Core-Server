@@ -7,33 +7,35 @@ class CacheStream extends Stream.Stream
         super({});
 
         this.writable = true;
-        this.readable = true;
+        this.readable = false;
 
         this._buffers = [];
         this._dests   = [];
         this._ended   = false;
 
-        const _this = this;
         inputStream.pipe(this);
 
-        inputStream.once('readable', function()
-        {
-            _this.emit('readable', _this);
+        inputStream.once('readable', () => {
+            this.readable = true;
+            this.emit('readable', this);
         });
 
-        inputStream.on('error', function(err)
-        {
-            _this.emit('error', err);
+        inputStream.on('error', (err) => {
+            this.emit('error', err);
         });
     }
 
     write(buffer)
     {
         this._buffers.push(buffer);
-        this.emit('readable', this);
+        //this.emit('readable', this);
 
         this._dests.forEach(function(dest) {
-            dest.emit('readable', dest);
+            if(!dest.$_readable) {
+                dest.$_readable = true;
+                dest.emit('readable', dest);
+            }
+
             dest.write(buffer);
         });
     }
@@ -46,12 +48,16 @@ class CacheStream extends Stream.Stream
         try
         {
             if(this._buffers.length > 0) {
+                dest.$_readable = true;
                 dest.emit('readable', this);
 
                 if(this._buffers.length > 1) {
                     this._buffers = [ Buffer.concat(this._buffers) ];
                 }
 
+                if (this._ended)
+                    return dest.end(this._buffers[0]);
+                
                 dest.write(this._buffers[0]);
             }
 

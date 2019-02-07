@@ -57,8 +57,7 @@ class CacheObject
         this.stream = new CStream(raw);
 
         const _this = this;
-        raw.on('error', function(e)
-        {
+        raw.on('error', function(e) {
             _this.error = e;
             _this.stream.emit('error', e);
         });
