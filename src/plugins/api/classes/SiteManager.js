@@ -390,7 +390,6 @@ class SiteManager extends SuperClass
                 err = { error: 'Empty error' };
 
             var httpCode = err.httpCode || 400;
-
             if(err.httpCode)
                 delete err.httpCode;
 
@@ -411,7 +410,7 @@ class SiteManager extends SuperClass
                 return handleResult({ error: err }, httpCode);
             }
 
-            _this.sendErrorPage(400, req, res);
+            _this.sendErrorPage(httpCode, req, res);
         }
         
         /*return handleResult({

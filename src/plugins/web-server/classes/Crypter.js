@@ -208,6 +208,11 @@ class Crypter
     {
         return crypto.createHash('sha256').update(content, 'utf8').digest().toString('base64');
     }
+    
+    sha2Hex(content)
+    {
+        return crypto.createHash('sha256').update(content, 'utf8').digest().toString('hex');
+    }
 
     /**
     * @param content {String}
