@@ -120,20 +120,28 @@ class SessionsManager
                 if (index != -1)
                     token = token.substr(0, index);
 
-                if (token.length < 10 || token.length > 20 || token === '__global__')
-                {
-                    token = uniqid();
-                    socket.write(JSON.stringify({cookies: {token: token}}));
+                this.siteManager.apiWsJoin({
+                    token
+                }).then((res) => {
+                    this.getFromToken(res.token).handleSocket(socket);
+                }).catch((e) => {
+                    socket.write(JSON.stringify({ error: e.error || e.message || e, resetSession: true }));
                     socket.close();
-                    return;
-                }
-
-                this.getFromToken(token).handleSocket(socket);
+                }).catch((err) => {
+                    console.error(err);
+                });
             }
         }
         catch (e)
         {
             console.error(e);
+
+            try {
+                socket.write(JSON.stringify({ error: e.error || e.message || e, resetSession: true }));
+                socket.close();
+            } catch(e) {
+                console.error(e);
+            }
         }
     }
 

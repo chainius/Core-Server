@@ -12,21 +12,14 @@ class ApiManager extends BaseManager
         this.formPoster = __FormPosterReqPath;
         this.socketConnected = false;
         this.saltApiForcers  = {};
-        
+
         if(this.formPoster.default)
             this.formPoster = this.formPoster.default;
-        
+
         this.formPoster.$api = this;
         this.formPoster.handleAccessDenied = this.onAccessDenied.bind(this);
 
-        if (!this.token)
-            this.generateToken();
-        else if (this.token.length < 10 || this.token.length > 20)
-            this.generateToken();
-
         this.socketConnect();
-        this.deleteOldCache();
-
         const _this = this;
 
         Vue.mixin({
@@ -61,9 +54,6 @@ class ApiManager extends BaseManager
 
     socketConnect()
     {
-        if (!this.isClient)
-            return null;
-
         if (this.socket) {
             try {
                 console.warn('Closing old socket');
@@ -73,8 +63,20 @@ class ApiManager extends BaseManager
             }
         }
 
+        if(!this.token || !this._wsJoinToken) {
+            return this.formPoster.$post('ws_join').then((res) => {
+                this.token = res.session;
+                this._wsJoinToken = res.token;
+                this.socketConnect();
+                this.deleteOldCache();
+            }).catch((err) => {
+                console.error(err);
+                setTimeout(() => this.socketConnect(), 1000);
+            });
+        }
+
         var _this = this;
-        const socket = new SockJS(this.base() + 'socketapi?token=' + this.token);
+        const socket = new SockJS(this.base() + 'socketapi?token=' + this._wsJoinToken);
         this.socket = socket
         this.socket.onopen = function () {
             _this.socket = socket
@@ -192,7 +194,7 @@ class ApiManager extends BaseManager
         this.socketConnected = false;
         this.socket = false;
         this.fetchingApis = [];
-        
+
         setTimeout(() => {
             console.log('Socket closed, reconnecting')
             this.socketConnect();
@@ -215,6 +217,11 @@ class ApiManager extends BaseManager
                     } else if (data.cookies) {
                         this.setCookies(data.cookies, data.expiration);
                     } else if (data.error) {
+                        if(data.resetSession) {
+                            this.token = undefined;
+                            this._wsJoinToken = undefined;
+                        }
+
                         console.error(data)
                     }
                 } catch (e) {

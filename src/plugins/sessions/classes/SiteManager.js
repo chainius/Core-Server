@@ -27,7 +27,7 @@ class SiteManager extends SuperClass {
     broadcast(api, data, selector) {
         return this.broadcastInternal(api, data, selector);
     }
-    
+
     onBroadcast(channel, cb) {
         this.broadcastListeners[channel] = this.broadcastListeners[channel] || [];
         this.broadcastListeners[channel].push(cb);

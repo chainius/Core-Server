@@ -1,5 +1,3 @@
-const sha1 = require('./sha1.js');
-
 import Storage            from './storage.js';
 import PermissionsManager from './permissions.js';
 import ApiMerger          from './merger.js';
@@ -142,19 +140,27 @@ class ApiManager
         this.onApiCallbacks     = [];
         this.bindedVueElements  = [];
         this.socketIsOpen       = false;
-        this.token              = Storage.getCookie('token');
         this.userConnection     = null;
         this.socketHooks        = [];
         this.permissionsManager = new PermissionsManager(this);
     }
 
-    generateToken() {
-        const hash = sha1(Date.now() + '-' + Math.random() + '-' + Math.random() + 'CoreApi').substr(4, 28);
-        this.token = hash.substr(Math.round(Math.random() * 10), 16);
-        this.setCookies({
-            "token": this.token
-        }, Date.now() + (24 * 60 * 60 * 1000));
-        return this.token;
+    get token() {
+        return this.__token;
+    }
+
+    set token(val) {
+        this.__token = val;
+        if(this._onToken) {
+            for(var cb of this._onToken) {
+                cb(val);
+            }
+        }
+    }
+
+    onToken(cb) {
+        this._onToken = this._onToken || [];
+        this._onToken.push(cb);
     }
 
     install(app, options)

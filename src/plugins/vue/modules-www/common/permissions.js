@@ -12,6 +12,7 @@ class PermissionsManager
         this.api = apiManager;
 
         this.loadCache();
+        apiManager.onToken(() => this.loadCache());
 
         //---------------------------
         //Setup directive
@@ -112,6 +113,9 @@ class PermissionsManager
 
     loadCache()
     {
+        if(!this.api.token)
+            return;
+
         const cache = this.api.$storage.get(this.api.token + '_user_permissions');
 
         if(cache !== null && ['array', 'object'].indexOf(typeof(cache)) !== -1)

@@ -5,5 +5,12 @@
         "SiteManager": "web-server/SiteManager",
         "Session":     null,
         "SessionsManager": null
+    },
+
+    "cli": {
+        "disable-secure-cookie": {
+            "fake": true,
+            "description": "Disable secure token cookie for sessions"
+        }
     }
 }

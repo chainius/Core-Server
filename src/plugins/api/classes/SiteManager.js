@@ -4,8 +4,10 @@ const Path          = require('path');
 const minimatch     = require("minimatch")
 const ApiCreator    = plugins.require('api/ApiCreator');
 const Watcher       = plugins.require('web-server/Watcher');
+const Crypter       = plugins.require('web-server/Crypter');
 
 const EventEmitter = require('events');//tmp
+const iv           = Crypter.sha1(JSON.stringify(require(Path.join(process.cwd(), 'package.json')))).substr(0, 16);
 
 class SiteManager extends SuperClass
 {
@@ -320,8 +322,31 @@ class SiteManager extends SuperClass
         {
             console.error('{autoCreateApi}', e);
         }
-        
+
         return null;
+    }
+
+    async apiWsJoin(post, req, tokenChangeNotify) {
+        if(post.token && !req) {
+            const token = JSON.parse(Crypter.decrypt(post.token, iv, iv));
+            if(token.exp < Date.now())
+                throw('Token expired');
+
+            delete token.rand;
+            return token;
+        }
+
+        const signature = Crypter.encrypt(JSON.stringify({
+            rand:  Math.random(),
+            ip:    req.getClientIp(),
+            token: req.cookies.token,
+            exp:   Date.now() + (30 * 1000) //30 seconds lifetime
+        }), iv, iv);
+
+        return {
+            token:   signature,
+            session: Crypter.sha1Hex(req.cookies.token).substr(0, 16)
+        }
     }
 
     /**
@@ -345,6 +370,9 @@ class SiteManager extends SuperClass
             tokenChangeNotify(session.token, session.expirationTime, oToken);
 
         return session.executeOnReady(() => {
+            if(name === 'ws_join')
+                return this.apiWsJoin(post, req, tokenChangeNotify);
+
             const permission = this.checkPermission(session, name, post);
             if (permission !== true)
                 throw(permission);
@@ -367,7 +395,7 @@ class SiteManager extends SuperClass
 
         if (offset === undefined)
             offset = 0;
-        
+
         function handleResult(result, code)
         {
             if(req.timedout)
@@ -412,15 +440,14 @@ class SiteManager extends SuperClass
 
             _this.sendErrorPage(httpCode, req, res);
         }
-        
+
         /*return handleResult({
             test: 'abc'
         })*/
 
         //------------------------------------------
-        
-        var path = req.url.substr(1 + offset);
 
+        var path = req.url.substr(1 + offset);
         if(path.indexOf('?') !== -1)
         {
             this.server.createCachedProperty(req, 'get', function() {
@@ -438,13 +465,16 @@ class SiteManager extends SuperClass
         
         try {
 
-            return this.api(path, req.body, req, function(token, expiration, otoken)
-            {
+            return this.api(path, req.body, req, function(token, expiration, otoken) {
                 const d = new Date();
                 d.setTime(expiration);
                 const expires = 'expires=' + d.toUTCString() + ';';
 
-                res.setHeader('Set-Cookie', 'token=' + token + ';' + expires + 'path=/');
+                var cookie = 'token=' + token + ';' + expires + 'path=/api;HttpOnly;SameSite=Strict';
+                if(process.options.production !== undefined && process.options['disable-secure-cookie'] === undefined)
+                    cookie += ';Secure'
+
+                res.setHeader('Set-Cookie', cookie);
             }).then(handleResult).catch(handleCatch);
 
         } catch(e) {
@@ -542,14 +572,14 @@ class SiteManager extends SuperClass
     {
         if(prePath !== 'api')
             return super.preHandle(req, res, prePath);
-        
+
         /*process.nextTick(() => {
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify({
                 test: 'abc'
             }));
         });
-        
+
         return true;*/
 
         this.server.parseBody(req, res, () => {

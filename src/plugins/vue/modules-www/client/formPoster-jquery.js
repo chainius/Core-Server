@@ -150,7 +150,7 @@ class FormPoster
 
         return true;
     }
-    
+
     urlEncode(obj) {
         var str = [];
         for (var p in obj)
@@ -159,7 +159,6 @@ class FormPoster
         }
         return str.join("&");
     }
-
 
     handleFormSubmit(elm)
     {
@@ -296,6 +295,28 @@ class FormPoster
             cache: false,
             contentType: that.attr('enctype'),
             processData: false
+        });
+    }
+
+    $post(api, post) {
+        return new Promise((resolve, reject) => {
+            $.event.global.ajaxError = false;
+
+            $.ajax({
+                url: '/api/' + api,
+                type: 'POST',
+                global: false,
+                success: function(e) {
+                    resolve(e);
+
+                },
+                error: function(err) {
+                    reject(err);
+                },
+                data: JSON.stringify(post || {}),
+                cache: false,
+                contentType: 'application/json',
+            });        
         });
     }
 }
