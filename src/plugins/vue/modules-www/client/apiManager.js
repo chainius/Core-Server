@@ -12,7 +12,13 @@ class ApiManager extends BaseManager
         this.formPoster = __FormPosterReqPath;
         this.socketConnected = false;
         this.saltApiForcers  = {};
+        this.token      = this.$storage.get('$lst');
 
+        if(typeof(this.token) === 'object' && this.token.exp < Date.now())
+            delete this.token;
+        else if(typeof(this.token) === 'object')
+            this.token = this.token.token;
+        
         if(this.formPoster.default)
             this.formPoster = this.formPoster.default;
 
@@ -69,6 +75,10 @@ class ApiManager extends BaseManager
                 this._wsJoinToken = res.token;
                 this.socketConnect();
                 this.deleteOldCache();
+                this.$storage.put('$lst', { token: res.session, exp: res.exp });
+
+                if(this.permissionsManager)
+                    this.permissionsManager.deleteOldCache();
             }).catch((err) => {
                 console.error(err);
                 setTimeout(() => this.socketConnect(), 1000);

@@ -123,6 +123,11 @@ class SessionsManager
                 this.siteManager.apiWsJoin({
                     token
                 }).then((res) => {
+                    if(!res.token) {
+                        console.error('No token found in res', res);
+                        throw('No token found in res');
+                    }
+
                     this.getFromToken(res.token).handleSocket(socket);
                 }).catch((e) => {
                     socket.write(JSON.stringify({ error: e.error || e.message || e, resetSession: true }));

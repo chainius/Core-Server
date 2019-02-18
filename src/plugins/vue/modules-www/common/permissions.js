@@ -39,6 +39,25 @@ class PermissionsManager
         Vue.directive('permissions', directive);
     }
 
+    deleteOldCache() {
+        try {
+            if(location.href.indexOf('file://') === 0)
+                return;
+
+            if (typeof (localStorage) == "object") {
+                for (var i = localStorage.length - 1; i >= 0; i--) {
+                    var key = localStorage.key(i);
+                    if(key.length > 20 && key.substr(key.length-17) === '_user_permissions') {
+                        if(key.substr(0, key.length-17) !== this.api.token)
+                            localStorage.removeItem(key);
+                    }
+                }
+            }
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
     normalizePermissions(permissions)
     {
         if(typeof(permissions) === 'string')

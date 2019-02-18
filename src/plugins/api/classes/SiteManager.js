@@ -331,6 +331,8 @@ class SiteManager extends SuperClass
             const token = JSON.parse(Crypter.decrypt(post.token, iv, iv));
             if(token.exp < Date.now())
                 throw('Token expired');
+            if(!token)
+                throw('Wrong token provided')
 
             delete token.rand;
             return token;
@@ -345,7 +347,8 @@ class SiteManager extends SuperClass
 
         return {
             token:   signature,
-            session: Crypter.sha1Hex(req.cookies.token).substr(0, 16)
+            session: Crypter.sha1Hex(req.cookies.token).substr(0, 16),
+            exp:     this.getSession(req.cookies.token).expirationTime,
         }
     }
 
