@@ -14,9 +14,9 @@ class ApiManager extends BaseManager
         this.saltApiForcers  = {};
         this.token      = this.$storage.get('$lst');
 
-        if(typeof(this.token) === 'object' && this.token.exp < Date.now())
+        if(this.token && typeof(this.token) === 'object' && this.token.exp < Date.now())
             delete this.token;
-        else if(typeof(this.token) === 'object')
+        else if(this.token && typeof(this.token) === 'object')
             this.token = this.token.token;
         
         if(this.formPoster.default)
