@@ -570,7 +570,7 @@ class SiteManager extends SuperClass
 
         next();
     }
-    
+
     preHandle(req, res, prePath)
     {
         if(prePath !== 'api')

@@ -1,4 +1,4 @@
-FROM node:10.11.0
+FROM node:11.10.0
 
 RUN mkdir -p /var/core-server
 RUN mkdir -p /var/www

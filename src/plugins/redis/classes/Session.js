@@ -5,14 +5,14 @@ class Session extends SuperClass
     * @param siteManager {Class}
     * @param token {String}
     */
-    constructor(siteManager, token)
+    constructor(siteManager, token, options)
     {
-        super(siteManager, token);
+        super(siteManager, token, options);
 
         this.siteManager.connections = this.siteManager.connections || {};
-        this.redisLoaded    = (!this.siteManager.connections.redis || token === '__global__');
-        this.onRedisLoaded  = [];
+        this.redisLoaded    = (!this.siteManager.connections.redis || token === '__global__' || this.localeOnly);
         this.ready          = this.ready && this.redisLoaded;
+        this.onRedisLoaded  = [];
         this.updateTime     = 0;
 
         this.loadFromRedis();
@@ -64,12 +64,18 @@ class Session extends SuperClass
         this.saveToRedis();
     }
 
+    //Session will not been shared between multiple nodes
+    setLocalOnly() {
+        this.localeOnly = true;
+        this.redisLoaded = true;
+    }
+
     //------------------------------------------
 
     loadRedisTTL()
     {
         const redis = this.siteManager.connections.redis;
-        if (!redis || this.token === '__global__')
+        if (!redis || this.token === '__global__' || this.localeOnly)
             return;
 
         var _this = this;
@@ -109,10 +115,9 @@ class Session extends SuperClass
             }
         }
 
-        if (redis && this.token !== '__global__')
-        {
-            redis.load('session_' + this.token).then(function(data)
-            {
+        if (redis && this.token !== '__global__' && !this.localeOnly) {
+            console.log('loading session from redis server')
+            redis.load('session_' + this.token).then(function(data) {
                 if (typeof (data) !== 'object')
                 {
                     console.error('Wrong data loaded for session ' + this.token + ' from redis (' + typeof (data) + ')');
@@ -129,6 +134,8 @@ class Session extends SuperClass
             {
                 dispatchLoaded();
             });
+        } else {
+            dispatchLoaded();
         }
     }
 
@@ -140,7 +147,7 @@ class Session extends SuperClass
         this.updateTime = Date.now();
         const redis = this.siteManager.connections.redis;
 
-        if (redis && this.token !== '__global__')
+        if (redis && this.token !== '__global__' && !this.localeOnly)
             redis.save('session_' + this.token, this.data, this.expirationTime);
 
         this.emitRedis();
@@ -153,7 +160,7 @@ class Session extends SuperClass
     {
         const redis = this.siteManager.connections.redis;
 
-        if (redis && this.token !== '__global__')
+        if (redis && this.token !== '__global__' && !this.localeOnly)
         {
             this.siteManager.broadcastToRedis('SESSION_UPDATE', {
                 token: this.token,

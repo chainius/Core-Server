@@ -23,7 +23,13 @@ class PagesManager
         if(ToString) {
             return this.renderToString(req.url).then(function(r) {
                 res.writeHead(r.httpCode || 200, { 'Content-Type': 'text/html; charset=utf-8' });
-                res.end(r.html);
+
+                if(req.apiData) {
+                    res.end(r.html.replace('window.API_DATA = {}', 'window.API_DATA = ' + JSON.stringify(req.apiData)));
+                } else {
+                    res.end(r.html);
+                }
+
                 return r;
             })
         } else {

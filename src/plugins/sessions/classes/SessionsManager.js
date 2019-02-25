@@ -43,7 +43,7 @@ class SessionsManager
         {
             if (this.sessions[token] === undefined) {
                 this.sessions[token] = new Session(this.siteManager, token);
-                
+
                 if(!isNewToken) {
                     this.sessions[token].ready = false;
                 }
@@ -67,7 +67,9 @@ class SessionsManager
         {
             for (var token in this.sessions)
             {
-                if (this.sessions[token].expirationTime <= Date.now())
+                if(this.sessions[token].expiresOnNoWs && this.sessions[token].activeSockets.length === 0)
+                    delete this.sessions[token];
+                else if (!this.sessions[token].expiresOnNoWs && this.sessions[token].expirationTime <= Date.now())
                     delete this.sessions[token];
             }
         }
@@ -112,8 +114,7 @@ class SessionsManager
         try
         {
             var index = socket.url.lastIndexOf('?token=');
-            if (index > 0)
-            {
+            if (index > 0) {
                 var token = socket.url.substr(index + 7);
                 index = token.indexOf('&');
 
@@ -135,6 +136,20 @@ class SessionsManager
                 }).catch((err) => {
                     console.error(err);
                 });
+            } else {
+                const session = new Session(this.siteManager, uniqid(), {
+                    expiresOnNoWs:      true,
+                    disableBroadcast:   true,
+                    localeOnly:         true,
+                });
+
+                socket.once('close', () => {
+                    if(this.sessions[session.token])
+                        delete this.sessions[session.token]
+                })
+
+                this.sessions[session.token] = session;
+                session.handleSocket(socket);
             }
         }
         catch (e)

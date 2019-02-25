@@ -5,7 +5,7 @@ class Session
     * @param siteManager {Class}
     * @param token {String}
     */
-    constructor(siteManager, token)
+    constructor(siteManager, token, options)
     {
         this.expirationTime = Date.now() + (24 * 60 * 60 * 1000);
         this.siteManager    = siteManager;
@@ -14,6 +14,9 @@ class Session
         this.cookies        = {};
         this.data           = {};
         this.ready          = true;
+
+        if(typeof(options) === 'object')
+            Object.assign(this, options)
     }
 
     onReady()

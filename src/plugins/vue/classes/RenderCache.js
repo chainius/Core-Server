@@ -181,7 +181,7 @@ class RenderCache {
 
             if(app.$route.meta && app.$route.meta.httpCode && html)
                 code = app.$route.meta.httpCode;
-            
+
             if(err) 
                 reject(err);
             else 
