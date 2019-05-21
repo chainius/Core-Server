@@ -116,7 +116,6 @@ class Session extends SuperClass
         }
 
         if (redis && this.token !== '__global__' && !this.localeOnly) {
-            console.log('loading session from redis server')
             redis.load('session_' + this.token).then(function(data) {
                 if (typeof (data) !== 'object')
                 {

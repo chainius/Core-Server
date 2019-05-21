@@ -1,7 +1,4 @@
-FROM node:11.10.0
-
-RUN mkdir -p /var/core-server
-RUN mkdir -p /var/www
+FROM node:11.10.1
 
 #--------------------------------------------------------------------------------------
 
@@ -13,6 +10,7 @@ EXPOSE 443
 #--------------------------------------------------------------------------------------
 
 COPY ./ /var/core-server
-RUN rm -rf /var/core-server/node_modules /var/core-server/src/plugins/*/node_modules
-RUN ln -s /var/core-server/core-server /usr/bin/core-server
-RUN cd /var/core-server && npm install
+RUN mkdir -p /var/www && \
+    rm -rf /var/core-server/node_modules /var/core-server/src/plugins/*/node_modules && \
+    ln -s /var/core-server/core-server /usr/bin/core-server && \
+    cd /var/core-server && npm install

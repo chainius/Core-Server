@@ -77,7 +77,7 @@ class Session extends SuperClass
                     if (err.message != undefined)
                     {
                         if(err.showIntercept !== false)
-                            console.error(err);
+                            (apiHandler.console || console).error(err);
 
                         err = { error: err.message };
                     }

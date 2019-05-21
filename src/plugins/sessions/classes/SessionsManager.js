@@ -67,10 +67,13 @@ class SessionsManager
         {
             for (var token in this.sessions)
             {
-                if(this.sessions[token].expiresOnNoWs && this.sessions[token].activeSockets.length === 0)
+                if(this.sessions[token].expiresOnNoWs && this.sessions[token].activeSockets.length === 0) {
                     delete this.sessions[token];
-                else if (!this.sessions[token].expiresOnNoWs && this.sessions[token].expirationTime <= Date.now())
+                }
+                else if (!this.sessions[token].expiresOnNoWs && this.sessions[token].expirationTime <= Date.now()) {
+                    this.sessions[token].notifyExpired()
                     delete this.sessions[token];
+                }
             }
         }
         catch (e)

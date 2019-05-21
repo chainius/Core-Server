@@ -179,8 +179,7 @@ class ApiManager extends BaseManager
     //---------------------------------------------------------
 
     emitSocketOpen() {
-        const callbacks      = this.onOpenCallbacks;
-        this.onOpenCallbacks = [];
+        const callbacks = this.onOpenCallbacks;
 
         for (var key in callbacks) {
             try {
@@ -305,17 +304,16 @@ class ApiManager extends BaseManager
         }
 
         if (this.socketConnected === false) {
-            return this.onSocketOpen(function () {
+            return this.onceSocketOpen(() => {
                 this.socket.send(msg);
             });
         }
-
 
         this.socket.send(msg);
         return this;
     }
 
-    onSocketOpen(cb) {
+    onceSocketOpen(cb) {
         if (this.socketConnected) {
             try {
                 cb.call(this);
@@ -323,7 +321,26 @@ class ApiManager extends BaseManager
                 console.error(e);
             }
         } else {
-            this.onOpenCallbacks.push(cb);
+            const c = (socket) => {
+                this.onOpenCallbacks = this.onOpenCallbacks.filter((o) => o !== c);
+                cb();
+            };
+
+            this.onOpenCallbacks.push(c);
+        }
+
+        return this;
+    }
+
+    onSocketOpen(cb) {
+        this.onOpenCallbacks.push(cb);
+
+        if (this.socketConnected) {
+            try {
+                cb.call(this);
+            } catch (e) {
+                console.error(e);
+            }
         }
 
         return this;

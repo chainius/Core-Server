@@ -1,7 +1,6 @@
 class FormPoster
 {
-    constructor()
-    {
+    constructor() {
         const _this = this;
         this.events = {
             'api-progress': this.handleApiProgress,

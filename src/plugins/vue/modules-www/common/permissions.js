@@ -56,6 +56,8 @@ class PermissionsManager
         } catch (e) {
             console.error(e);
         }
+
+        this.api.$storage.put(this.api.token + '_user_permissions', this.permissions);
     }
 
     normalizePermissions(permissions)
@@ -183,9 +185,7 @@ class PermissionsManager
         this.api.$storage.put(this.api.token + '_user_permissions', permissions);
 
         for(var key in this.bindedElements)
-        {
             this.directiveUpdate( this.bindedElements[key].el, this.bindedElements[key].permissions );
-        }
     }
 
     //----------------------------

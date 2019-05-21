@@ -47,6 +47,13 @@ class Session
         })
     }
 
+    notifyExpired() {
+        this._expired = true
+        this.broadcastSocketMessage({
+            sessionExpired: true,
+        })
+    }
+
     updateCookies(cookies)
     {
         if (typeof (cookies) === 'object')
@@ -101,8 +108,12 @@ class Session
 
     handleSocketMessage(socket, message)
     {
-        if (message.event)
-        {
+        if (this._expired) {
+            this.sendSocketMessage(socket, { sessionExpired: true })
+            return socket.close()
+        }
+
+        if (message.event) {
             if (message.event === 'logout')
                 this.data = {};
         }
