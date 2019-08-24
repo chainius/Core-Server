@@ -429,7 +429,6 @@ class ApiManager
 
     post(api, data) {
         this.idIncrementer++;
-        const _this = this;
         const id    = this.idIncrementer;
         data        = this.mergePost(data, api);
 
