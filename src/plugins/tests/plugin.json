@@ -1,6 +1,0 @@
-{
-    "classes": {
-        "SiteManager": "web-server/SiteManager",
-        "Environment": null
-    }
-}

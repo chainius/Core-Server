@@ -1,0 +1,17 @@
+{
+  "name": "@core-server/mail",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Vandamme Sacha <sacha@skyhark.be> (https://www.skyhark.be)",
+  "license": "ISC",
+  "devDependencies": {},
+  "dependencies": {
+    "html-to-text": "^5.1.1",
+    "jsesc": "^2.5.2",
+    "nodemailer": "^6.3.0"
+  }
+}

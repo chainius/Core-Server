@@ -1,0 +1,9 @@
+{
+    "classes": {
+        "SiteManager":    "http/SiteManager",
+        "SessionsManager": null,
+        "Session":        null,
+        "ApiEnvironment": null,
+        "ApiCreator":     null
+    }
+}

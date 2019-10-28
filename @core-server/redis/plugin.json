@@ -1,0 +1,8 @@
+{
+    "classes": {
+        "Session":          "api/Session",
+        "SessionsManager":  "api/SessionsManager",
+        "SiteManager":      "api/SiteManager",
+        "Redis":            null
+    }
+}

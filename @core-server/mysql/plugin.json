@@ -1,0 +1,18 @@
+{
+    "depencies": [ ],
+
+    "classes": {
+        "ApiEnvironment": "api/ApiEnvironment",
+        "SiteManager":    "http/SiteManager",
+        "Mysql":          null,
+        "Mongodb":        null
+    },
+
+    "cli": {
+        "cloudflare": "options: purge, Execute a full purge on your web site",
+        "disable-mysql-errors": {
+            "fake": true,
+            "description": "Disable auto logging of mysql errors"
+        }
+    }
+}

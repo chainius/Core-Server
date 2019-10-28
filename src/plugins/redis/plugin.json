@@ -1,8 +1,0 @@
-{
-    "classes": {
-        "Session":          "sessions/Session",
-        "SessionsManager":  "sessions/SessionsManager",
-        "SiteManager":      "sessions/SiteManager",
-        "Redis":            null
-    }
-}

@@ -1,0 +1,10 @@
+{
+    "classes": {
+        "ApiCreator": "api/ApiCreator",
+        "MasterServer": "http/MasterServer"
+    },
+
+    "cli": {
+        "phpbundle": "Generate a bundled script of the php core"
+    }
+}

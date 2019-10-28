@@ -1,0 +1,17 @@
+{
+  "name": "@core-server/api",
+  "version": "1.0.1",
+  "private": false,
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Vandamme Sacha <sacha@skyhark.be> (https://www.skyhark.be)",
+  "license": "ISC",
+  "dependencies": {
+    "minimatch": "^3.0.4",
+    "request-promise-native": "^1.0.7",
+    "uniqid": "^5.0.3"
+  }
+}

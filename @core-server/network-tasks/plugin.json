@@ -1,0 +1,25 @@
+{
+    "depencies": [ ],
+
+    "classes": {
+        "MasterServer":  "http/MasterServer",
+        "SiteManager":   "http/SiteManager",
+        "ApiEnvironment": "api/ApiEnvironment",
+        "Discovery":      null,
+        "AirswarmTls":    null,
+        "NetworkDiscovery": null,
+        "TasksManager":   null,
+        "NetWorker":      null
+    },
+
+    "cli": {
+        "discovery": {
+            "fake": true,
+            "description": "Enable the discovery service with a specified identifier"
+        },
+        "discoveryPort": {
+            "fake": true,
+            "description": "Port that will be used for the network tasks"
+        }
+    }
+}

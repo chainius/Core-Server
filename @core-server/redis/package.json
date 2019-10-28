@@ -1,0 +1,14 @@
+{
+  "name": "@core-server/redis",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Sacha Vandamme <sacha@skyhark.be> (https://www.core-server.io)",
+  "license": "ISC",
+  "dependencies": {
+    "redis": "^2.8.0"
+  }
+}

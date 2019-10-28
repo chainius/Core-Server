@@ -1,0 +1,22 @@
+{
+  "name": "@core-server/cli",
+  "version": "1.0.0",
+  "private": false,
+  "description": "",
+  "main": "lib/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node bin/core-server.js",
+    "core-server": "node bin/core-server.js"
+  },
+  "bin": {
+    "core-server": "bin/core-server.js"
+  },
+  "author": "Vandamme Sacha <sacha@skyhark.be> (https://www.skyhark.be)",
+  "license": "MIT",
+  "dependencies": {
+    "chalk": "^2.4.2",
+    "dateformat": "^3.0.3",
+    "process-argv": "^1.0.0"
+  }
+}
