@@ -49,7 +49,7 @@ function parseRequestCookies() {
             }
 
             res = unescape(res);
-            try {
+            try {
                 cookies[key] = JSON.parse(res);
             } catch(e) {
                 cookies[key] = res;
@@ -94,11 +94,6 @@ class HttpServer
             this.server = http.createServer({
                 key: fs.readFileSync(Path.join(cwd, 'ssl', 'key.pem')),
                 cert: fs.readFileSync(Path.join(cwd, 'ssl', 'cert.pem')),
-
-                spdy: {
-                    protocols: [ 'h2', 'spdy/3.1', 'http/1.1' ],
-                    plain: false
-                }
             }, this.handleRequest.bind(this));
         }
         else
@@ -113,7 +108,7 @@ class HttpServer
             this.server.listen(port);
         //}
 
-        process.nextTick(function() { _this.setup(); })
+        process.nextTick(function() { _this.setup(); })
         
         setInterval(() => {
             this.verifyTimeouts()
@@ -126,11 +121,12 @@ class HttpServer
         this.siteManager.server = this; //if someone did inherit the siteManager without sending the server instance to his super class, set the server manually
         const sockjs       = require('sockjs');
 
-        this.echo = sockjs.createServer({ sockjs_url: 'https://cdn.jsdelivr.net/sockjs/1.1.4/sockjs.min.js',
+        this.echo = sockjs.createServer({
             log: function(){}
         });
 
-        this.echo.installHandlers(this.server, { prefix: '/socketapi' });
+        const pkg = require(process.cwd() + '/package.json')
+        this.echo.installHandlers(this.server, this.sockjsConfig ? this.sockjsConfig() : { prefix: pkg['sockjs-prefix'] || '/socketapi', disable_cors: true });
 
         this.echo.on('connection', (conn) =>
         {
@@ -165,11 +161,11 @@ class HttpServer
         var body = '';
         const uploadLimit = this.uploadLimit;
 
-        function onEnd() {
+        function onEnd() {
             try {
                 req.rawBody = body;
 
-                if(body.length === 0) {
+                if(body.length === 0) {
                     req.body = {};
                     return next();
                 }

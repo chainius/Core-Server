@@ -139,8 +139,7 @@ class Session
             }
         });
 
-        socket.on('close', function()
-        {
+        socket.on('close', function() {
             _this.handleSocketClose(socket);
         });
     }
@@ -157,7 +156,7 @@ class Session
         if(typeof(client_ip) !== 'object')
         {
             req = {
-                getClientIp() { return client_ip },
+                getClientIp() { return client_ip },
                 file,
                 get,
                 headers: socket ? socket.headers : {}
@@ -207,12 +206,12 @@ class Session
                     else
                     {
                         //console.error(err);
-                        //err = { error: 'an internal error occured' };
+                        //err = { error: 'an internal error occured' };
                     }
                 }
             }
             else if (typeof (err) === 'string') {
-                err = { error: err };
+                err = { error: err };
             }
 
             throw(err);
@@ -242,10 +241,10 @@ class Session
         }
         
         this.executeOnReady(() => {
-            const permission = this.siteManager.checkPermission(this, api, post);
+            const permission = this.siteManager.checkPermission(this, api, post, socket);
             if (permission !== true)
             {
-                return new Promise(function(resolve, reject) {
+                return new Promise(function(resolve, reject) {
                     reject(permission);
                 });
             }
@@ -267,7 +266,7 @@ class Session
         })
     }
 
-    handleSocketMessage(socket, message) {
+    handleSocketMessage(socket, message) {
         if (message.event) {
             if (message.event === 'logout')
                 this.data = {};

@@ -189,6 +189,7 @@ class GraphDB {
             displayErrors:  true
         });
 
+        contextLib.file = path
         script.runInContext( context );
         const schema = context.func(console.create('graphql'));
         context.func = null;

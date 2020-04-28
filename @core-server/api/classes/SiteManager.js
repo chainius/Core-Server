@@ -52,7 +52,7 @@ class SiteManager extends SuperClass
     /**
     * Return the configuration for the requested api path
     * @param api_name {String}
-    * @returns {Object} { config: { PULBLIC-API CONFIG }, api: api name }
+    * @returns {Object} { config: { PULBLIC-API CONFIG }, api: api name }
     */
     getPermissionsConfig(api)
     {
@@ -130,7 +130,7 @@ class SiteManager extends SuperClass
     * @param api {String}
     * @param connected {Boolean}
     */
-    roleDeniedMessage(session, role, api, connected)
+    roleDeniedMessage(session, role, api, connected, req)
     {
         if (!connected)
         {
@@ -155,7 +155,7 @@ class SiteManager extends SuperClass
     * @returns {Boolean} true if the credentials are accepted
     * @returns {Object} { error: message, httpCode: 500 }
     */
-    checkPermission(session, api, post)
+    checkPermission(session, api, post, req)
     {
         var config = this.getPermissionsConfig(api);
 
@@ -196,13 +196,9 @@ class SiteManager extends SuperClass
         if (checkConfig('connected'))
         {
             if (connected)
-                return true;
+                return true
             else
-                return {
-                    error: 'You need to be connected in order to call this api (' + api + ')',
-                    reconnect: true,
-                    httpCode: 401
-                };
+                return this.roleDeniedMessage(session, '*', api, false, req)
         }
 
         if (checkConfig('notconnected'))
@@ -210,7 +206,7 @@ class SiteManager extends SuperClass
             if (!connected)
                 return true;
             else
-                {
+            {
                 return {
                     error: "You're already connected, please logout before continue.",
                     httpCode: 401
@@ -224,7 +220,7 @@ class SiteManager extends SuperClass
             {
                 if(!this.sessionHasRole(session, key))
                 {
-                    const msg = this.roleDeniedMessage(session, key, api, connected);
+                    const msg = this.roleDeniedMessage(session, key, api, connected, req);
                     if(msg !== false)
                     {
                         return msg;
@@ -253,7 +249,7 @@ class SiteManager extends SuperClass
     */
     apiQueryVars(session, api, post, client_ip)
     {
-        return {};
+        return {};
     }
 
     /**
@@ -373,11 +369,10 @@ class SiteManager extends SuperClass
             tokenChangeNotify(session.token, session.expirationTime, oToken);
 
         return session.executeOnReady(() => {
-
             if(name === 'ws_join')
                 return this.apiWsJoin(post, req, tokenChangeNotify);
 
-            const permission = this.checkPermission(session, name, post);
+            const permission = this.checkPermission(session, name, post, req);
             if (permission === false)
                 throw({
                     error: 'The requested api could not been found',
@@ -542,7 +537,7 @@ class SiteManager extends SuperClass
                 this._headerSent = true;
             },
             
-            end() {
+            end() {
                 event.emit('close');
                 const diff = process.hrtime(start);
                 cb(diff[0] * 1e9 + diff[1]);
@@ -561,7 +556,7 @@ class SiteManager extends SuperClass
         console.log('Start test');
         console.time("test-api");
         
-        function next() {
+        function next() {
             _this.createTestCase((duration) => {
                 durations.push(duration);
                 rpm++;
@@ -570,7 +565,7 @@ class SiteManager extends SuperClass
                     return process.nextTick(next);
                 }
 
-                const avg = durations.reduce(function(a, b) { return a + b }) / durations.length;
+                const avg = durations.reduce(function(a, b) { return a + b }) / durations.length;
                 console.success("Total time:", Date.now() - start);
                 console.success('RPM:', rpm)
                 console.success("AVG Time:", avg, "\n");
@@ -648,7 +643,7 @@ class SiteManager extends SuperClass
         
         if(this.broadcastListeners[api]) {
             this.broadcastListeners[api].forEach((cb) => {
-                try {
+                try {
                     cb(data, selector);
                 } catch(e) {
                     console.error(e);

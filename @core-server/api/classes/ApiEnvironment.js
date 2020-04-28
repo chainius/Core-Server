@@ -1,4 +1,4 @@
-const request    = require('request-promise-native');
+const request = require('request-promise-native');
 
 function isNumeric(val) {
     return !isNaN(Number(val));
@@ -71,7 +71,7 @@ class ApiEnvironment
         return this.$req.getClientIp();
     }
     
-    get $get() {
+    get $get() {
         return this.$req.get;
     }
     
@@ -94,7 +94,7 @@ class ApiEnvironment
         return this.sessionObject.api(name, post, this.$req);
     }
 
-    getConfig(name) {
+    getConfig(name) {
         return this.siteManager.getConfig(name);
     }
 
@@ -244,8 +244,7 @@ class ApiEnvironment
     * @param name {String} the name of the post variable
     * @param destination {String} the destination filename
     */
-    uploadImage(name, destination)
-    {
+    uploadImage(name, destination) {
         var data = this.post[name];
         /**
             Ref:
@@ -274,7 +273,6 @@ class ApiEnvironment
             }
 
             var dimensions = imageSize(data);
-
             jimp.read(data, function(err, img) {
                 if (err) {
                     reject(err);
@@ -297,6 +295,14 @@ class ApiEnvironment
                 }
             });
         });
+    }
+
+    uploadPDF(name, destination) {
+        // ToDo add security constraints
+        var data = this.post[name];
+        data = data.replace(/^data:application\/\w+;base64,/, '');
+        data = Buffer.from(data, 'base64');
+        require('fs').writeFileSync(destination, data)
     }
 
     /**

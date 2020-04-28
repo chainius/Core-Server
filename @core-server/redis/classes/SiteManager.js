@@ -55,7 +55,6 @@ class SiteManager extends SuperClass
         return super.broadcast(api, data, selector);
     }
 
-
     /**
     * Broadcast a message over a channel using the redis service
     * @param channel {String}

@@ -15,9 +15,6 @@ var utils = require('retire/lib/utils'),
     resolve = require('retire/lib/resolve'),
     scanner = require('retire/lib/scanner'),
     forward = require('retire/lib/utils').forwardEvent,
-    os = require('os'),
-    path = require('path'),
-    fs = require('fs'),
     emitter = new require('events').EventEmitter;
 
 var table = new Table({

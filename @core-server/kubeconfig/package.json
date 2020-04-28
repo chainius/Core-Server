@@ -1,0 +1,24 @@
+{
+  "name": "@core-server/kubeconfig",
+  "version": "1.0.2",
+  "private": false,
+  "author": "Vandamme Sacha <sacha@skyhark.be> (https://www.skyhark.be)",
+  "license": "MIT",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SachaSkyhark/Core-Server.git"
+  },
+  "keywords": [
+    "Core-Server",
+    "kubernetes",
+    "config"
+  ],
+  "scripts": {
+    
+  },
+  "bugs": {
+    "url": "https://github.com/SachaSkyhark/Core-Server/issues"
+  },
+  "homepage": "https://www.core-server.io"
+}

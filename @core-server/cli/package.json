@@ -18,5 +18,22 @@
     "chalk": "^2.4.2",
     "dateformat": "^3.0.3",
     "process-argv": "^1.0.0"
-  }
+  },
+  "engines": {
+    "node": ">=7.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SachaSkyhark/Core-Server.git"
+  },
+  "keywords": [
+    "Core-Server",
+    "Vue",
+    "Server",
+    "api"
+  ],
+  "bugs": {
+    "url": "https://github.com/SachaSkyhark/Core-Server/issues"
+  },
+  "homepage": "https://www.core-server.io"
 }

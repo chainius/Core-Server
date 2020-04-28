@@ -1,0 +1,25 @@
+{
+    "classes": {
+        "MasterServer":      "http/MasterServer",
+        "SiteManager":       "http/SiteManager",
+        "Session":           "api/Session",
+        "Resources/Manager": "http/Resources/Manager",
+        "PagesManager":      null,
+        "RenderCache":       null,
+        "hmr/socket-server": null,
+        "hmr/index":         null
+    },
+
+    "cli": {
+        "build":  "build the full bundle for production",
+        "bundle": "[client|server] bundle the sources for a server or client environment",
+        "hot": {
+            "fake": true,
+            "description": "Enable bundle hot compile mode"
+        },
+        "disable-ui": {
+            "fake": true,
+            "description": "Disable the ui while running the core-server"
+        }
+    }
+}

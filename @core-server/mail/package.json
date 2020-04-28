@@ -7,11 +7,28 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Vandamme Sacha <sacha@skyhark.be> (https://www.skyhark.be)",
-  "license": "ISC",
+  "license": "MIT",
   "devDependencies": {},
   "dependencies": {
     "html-to-text": "^5.1.1",
     "jsesc": "^2.5.2",
     "nodemailer": "^6.3.0"
-  }
+  },
+  "engines": {
+    "node": ">=7.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SachaSkyhark/Core-Server.git"
+  },
+  "keywords": [
+    "Core-Server",
+    "Vue",
+    "Server",
+    "api"
+  ],
+  "bugs": {
+    "url": "https://github.com/SachaSkyhark/Core-Server/issues"
+  },
+  "homepage": "https://www.core-server.io"
 }

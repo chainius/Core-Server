@@ -279,11 +279,12 @@ class Worker extends EventEmitter
 
         this.worker = cluster.fork(this.env);
 
-        this.worker.on('exit', function()
+        this.worker.on('exit', function(e)
         {
             if (!that.isLastPid(this))
                 return;
 
+            console.warn('Worker exited, restarting', e)
             that.emit('restart', that);
             that.unbindWorker(that.worker);
             that.initWorker();
@@ -313,12 +314,12 @@ class Worker extends EventEmitter
         this.worker.on('disconnect', function()
         {
             that.debug("Worker disconnected");
-        });
+        });*/
 
         this.worker.on('error', function(e)
         {
-            that.debug("Worker error", e);
-        });*/
+            console.error("Worker error", e);
+        });
     }
 
     onConnected()
@@ -368,7 +369,7 @@ class Worker extends EventEmitter
     }
 };
 
-if(cluster.isWorker)
+if(cluster.isWorker || process.options.noworkers !== undefined)
 {
     process.coreExit = function(code) {
         process.send({

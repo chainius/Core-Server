@@ -116,7 +116,6 @@ class Session extends SuperClass
         }
 
         if (redis && this.token !== '__global__' && !this.localeOnly) {
-            console.log('loading session from redis server')
             redis.load(this.token).then(function(data) {
                 if (typeof (data) !== 'object')
                 {
@@ -170,8 +169,7 @@ class Session extends SuperClass
         }
     }
 
-    handleSocketMessage(socket, message)
-    {
+    handleSocketMessage(socket, message) {
         super.handleSocketMessage(socket, message);
 
         if (message.event)

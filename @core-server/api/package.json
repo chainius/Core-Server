@@ -1,6 +1,6 @@
 {
   "name": "@core-server/api",
-  "version": "1.0.1",
+  "version": "1.0.3",
   "private": false,
   "description": "",
   "main": "index.js",
@@ -8,10 +8,27 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Vandamme Sacha <sacha@skyhark.be> (https://www.skyhark.be)",
-  "license": "ISC",
+  "license": "MIT",
   "dependencies": {
     "minimatch": "^3.0.4",
     "request-promise-native": "^1.0.7",
     "uniqid": "^5.0.3"
-  }
+  },
+  "engines": {
+    "node": ">=7.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SachaSkyhark/Core-Server.git"
+  },
+  "keywords": [
+    "Core-Server",
+    "Vue",
+    "Server",
+    "api"
+  ],
+  "bugs": {
+    "url": "https://github.com/SachaSkyhark/Core-Server/issues"
+  },
+  "homepage": "https://www.core-server.io"
 }

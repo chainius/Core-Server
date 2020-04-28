@@ -1,0 +1,14 @@
+{
+    "classes": {
+        "SiteManager": "http/SiteManager"
+    },
+    "cli": {
+        "decode-secrets": {
+            "description": "Decode secrets from kubernetes config"
+        },
+
+        "publish-secrets": {
+            "description": "Publish secrets to kubernetes"
+        }
+    }
+}

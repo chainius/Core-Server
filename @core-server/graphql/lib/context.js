@@ -1,10 +1,17 @@
 const Sequelize = require('sequelize')
-const Model = Sequelize.Model
+const Path      = require('path')
+const Model     = Sequelize.Model
 const { schemaDeffinition, graphConfig, camelize } = require('./typedeff.js')
 const { createResolver, Session, Params, TransformOptions } = require('./resolver.js')
 
 module.exports = {
     Schema(table, fields) {
+        if(fields === undefined) {
+            fields = table
+            table = Path.basename(module.exports.file)
+            table = table.substr(0, table.length - 3)
+        }
+
         var hasGraphql = false
         var multiSelector = null
         var oneSelector = null
