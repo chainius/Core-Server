@@ -1,6 +1,9 @@
-class FormPoster {
+const axios = require('axios')
 
+class FormPoster
+{
     constructor() {
+        const _this = this;
         this.events = {
             'api-progress': this.handleApiProgress,
             'api-prepare':  this.handleApiPrepare,
@@ -9,19 +12,21 @@ class FormPoster {
             'api-done':     this.handleApiDone
         };
 
-        /*$(document).off('submit', 'form');
-        $(document).on('submit', 'form', function(e)
-        {
-            if(!$(this).attr('action'))
+        if(typeof(document) === 'undefined')
+            return;
+        
+        document.addEventListener('submit', (e) => {
+            const elm = e.target;
+            if(!elm || (elm.tagName && String(elm.tagName).toLowerCase() !== 'form') || !elm.getAttribute('action') || e.defaultPrevented)
                 return;
 
-            e.preventDefault();
-            _this.handleFormSubmit(this);
-        });*/
+            e.preventDefault()
+            this.handleFormSubmit(elm);
+        })
     }
     
     notify(type, message) {
-        console.log('todo notify', type, message);
+        // console.log('todo notify', type, message);
     }
 
     handleApiError(form, data)
@@ -133,26 +138,24 @@ class FormPoster {
 
     handleFormSubmit(elm)
     {
-        const _this = this;
-        const api   = elm.getAttribute('action');
-        var data = null;
+        const api = elm.getAttribute('action');
+        var data  = null;
 
         //that.trigger('api-before-submit', elm);
         this.trigger(elm, 'api-before-submit', { api: api });
 
-        if(elm.find('input[type="file"]:not([disabled])').length > 0) {
+        if(elm.querySelectorAll('input[type="file"]:not([disabled])').length > 0) {
             elm.attr('enctype', 'multipart/form-data');
             data = new FormData(elm);
         }
         else {
-            form.setAttribute('enctype', 'application/json');
-            //data = that.serializeObject();
-            //data = JSON.stringify( this.$api.mergePost(data, api) );
+            elm.setAttribute('enctype', 'application/json');
+            data = this.$api.mergePost(serializeObject(elm), api);
         }
 
         this.trigger(elm, 'api-prepare', { api: api });
         
-        return this.$api.post('/api/'+api, data).then((res) => {
+        return this.$post(api, data).then((res) => {
             this.trigger(elm, 'api-success', { api: api, result: res });
             return res;
         }).catch((err) => {
@@ -164,29 +167,30 @@ class FormPoster {
     }
 
     $post(api, post) {
-        return require('axios').post('/api/' + api, post).then((res) => res.data).catch((err) => {
-            if(err.status === 401 && (err.response && err.response.status === 401))
-                throw({ error: 'Access denied', status: 401 })
-
+        return axios.post(api.substr(0, 1) === '/' ? api : '/api/' + api, post).then((res) => {
+            return res.data
+        }).catch((err) => {
+            const isStatus = (status) => (err.status === status || (err.response && err.response.status === status))
+            if(isStatus(401) || isStatus(403)) {
+                var data = (err && err.response && err.response.data) || err
+                if(isStatus(401) && data.location)
+                    location.href = data.location
+            }
+    
             if(err && err.response && err.response.data) {
                 var data = err.response.data;
                 try {
                     data = typeof(err.response.data) !== "object" ? JSON.parse(err.response.data) : err.response.data;
                 } catch(e) {
-                    if(err.response.status === 524)
-                        data = "Gateway timeout"
-                    else if(err.response.status === 500)
-                        data = "Server did respond with an unknown internal error code"
-                    else
-                        data = err.response.data
+                    console.error('error with data', err.response.data, '=>', e);
                 }
-
+    
                 throw({
                     error: data ? (data.error || data.message || data) : data,
                     status: err.response.status || err.status,
                 })
             }
-
+    
             throw({
                 error: err.error || err.message || err,
                 status: (err.response && err.response.status) || err.status,
@@ -199,3 +203,28 @@ if(!FormPoster.shared)
     FormPoster.shared = new FormPoster();
 
 export default FormPoster.shared;
+
+// ------------
+
+
+function serializeObject(form) {
+    var o = {};
+    var elements = form.querySelectorAll(("input,textarea"));
+    for(var key in elements) {
+        const elm = elements[key]
+        if(elm.disabled || !elm.name || typeof(elm) === 'function')
+            continue
+
+        if (o[elm.name] !== undefined) {
+            if (!o[elm.name].push) {
+                o[elm.name] = [o[elm.name]];
+            }
+
+            o[elm.name].push(elm.value || '');
+        } else {
+            o[elm.name] = elm.value || '';
+        }
+    }
+
+    return o;
+};

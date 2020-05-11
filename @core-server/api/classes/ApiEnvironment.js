@@ -264,11 +264,15 @@ class ApiEnvironment
         const imageSize  = require("image-size");
         const fileType   = require("file-type");
 
-        return new Promise(function(resolve, reject) {
+        return new Promise((resolve, reject) => {
             data = data.replace(/^data:image\/\w+;base64,/, '');
             data = Buffer.from(data, 'base64');
+            var type = fileType(data)
 
-            if(!fileType(data).mime.toString().toLowerCase().includes("image")) {
+            if(type === null) {
+                reject("Unknwon file type")
+                console.error("Unknown file type of data", this.post[name])
+            } else if(!type.mime.toString().toLowerCase().includes("image")) {
                 reject("Magic MIME number fault");
             }
 
