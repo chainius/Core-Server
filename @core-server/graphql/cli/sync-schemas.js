@@ -3,7 +3,7 @@ const checkIndexes = require('./check-indexes')
 
 module.exports = async function() {
     var config = plugins.getProjectConfig('servers').mysql
-    GraphDB.construct(config.host, config.user, config.pass, config.db)
+    GraphDB.construct(config.host, config.user, config.password || config.pass,  config.database || config.db)
     const { sequelize } = GraphDB
 
     // if(triggers !== 't' && triggers !== 'triggers') {

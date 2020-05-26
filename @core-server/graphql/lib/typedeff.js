@@ -60,10 +60,10 @@ module.exports = {
     },
 
     graphConfig(config, deff = {}) {
-        if(config.graphql === false)
+        if(!config || config.graphql === false)
             return null
 
-        return Object.assign(config.graphql || {}, deff)
+        return Object.assign(config.graphql || {}, deff)
     }
 
 }

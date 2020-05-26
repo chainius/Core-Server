@@ -122,53 +122,78 @@ class GraphDB {
         }
 
         // Register db fiiles
-        var dir = path.join(process.cwd(), 'graphql', 'db')
-        var files = fs.readdirSync(dir);
-        var foreign = {}
+        var foreign = []
+        var exploreDirectory;
 
-        for(var file of files) {
-            const schema = this.parseFile(path.join(dir, file), context)
-            const name = file.substr(0, file.length-3)
-            {
-                //Sql schema
-                const build = schema.BuildSequelize(sequelize)
-                res.schemas[name] = build.schema
-                foreign[name] = build.foreign
-            }
-            {
-                //Graphql schema
-                const build = schema.BuildGraphql(name)
-                if(build !== null) {
-                    // Add schema definition in graphql
-                    for(var deff of build.definitions)
-                        res.typeDefs.definitions.push(deff)
+        exploreDirectory = (dir, dirName = null) => {
+            var files = fs.readdirSync(dir);
+            var schemas = {}
 
-                    // Add resolvers
-                    for(var resolver of build.resolvers) {
-                        const name = resolver.query.name.value
-                        res.resolvers.Query[name] = resolver.resolve
-                        queryDeff.fields.push(resolver.query)
+            for(var file of files) {
+                var p = path.join(dir, file)
+                var name = file == 'index.js' && dirName != null ? dirName : file.substr(0, file.length-3)
+    
+                if(fs.lstatSync(p).isDirectory()) {
+                    schemas[file] = exploreDirectory(path.join(dir, file), file)
+                    continue
+                }
+    
+                const schema = this.parseFile(p, context)
+                {
+                    //Sql schema
+                    const build = schema.BuildSequelize(sequelize)
+                    if(file == 'index.js' && dirName != null) {
+                        schemas = Object.assign(build.schema, schemas)
+                    } else {
+                        schemas[name] = build.schema
+                    }
+
+                    if(build.foreign && Object.keys(build.foreign) > 0) {
+                        foreign.push({
+                            schema:  build.schema,
+                            fields:  build.foreign
+                        })
+                    }
+                }
+                {
+                    //Graphql schema
+                    const build = schema.BuildGraphql(name)
+                    if(build !== null) {
+                        // Add schema definition in graphql
+                        for(var deff of build.definitions)
+                            res.typeDefs.definitions.push(deff)
+    
+                        // Add resolvers
+                        for(var resolver of build.resolvers) {
+                            const name = resolver.query.name.value
+                            res.resolvers.Query[name] = resolver.resolve
+                            queryDeff.fields.push(resolver.query)
+                        }
                     }
                 }
             }
+
+            return schemas
         }
     
-        for(var name in foreign) {
-            const field = foreign[name]
-            for(var key in field) {
+        res.schemas = exploreDirectory(path.join(process.cwd(), 'graphql', 'db'), res.schemas)
+
+        // Parse foreign keys
+        for(var item of foreign) {
+            for(var key in item.fields) {
                 //res.schemas[field[key]].belongsTo(res.schemas[name])
                 var n = key
                 if(n.substr(-3) === '_id')
                     n = n.substr(0, n.length-3)
 
-                res.schemas[name].belongsTo(res.schemas[field[key]], { as: n, foreignKey: key })
-                //res.schemas[field[key]].hasMany(res.schemas[name], { foreignKey: field[key] })
+                item.schema.belongsTo(res.schemas[item.fields[key]], { as: n, foreignKey: key })
+                //res.schemas[field[key]].hasMany(res.schemas[name], { foreignKey: field[key] })
             }
         }
 
         // Register static types
-        dir = path.join(process.cwd(), 'graphql', 'types')
-        files = fs.readdirSync(dir);
+        var dir = path.join(process.cwd(), 'graphql', 'types')
+        var files = fs.readdirSync(dir);
         for(var file of files) {
             var deff = this.readGql(path.join(dir, file))
             for(var d of deff.definitions)

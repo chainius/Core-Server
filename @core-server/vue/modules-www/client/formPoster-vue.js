@@ -159,7 +159,10 @@ class FormPoster
             this.trigger(elm, 'api-success', { api: api, result: res });
             return res;
         }).catch((err) => {
-            this.trigger(elm, 'api-error', { api: api, result: err, error: err.error || err.message || err });
+            if(err.status == 524)
+                this.trigger(elm, 'api-error', { api: api, result: err, error: "timeout", status: err.status });
+            else
+                this.trigger(elm, 'api-error', { api: api, result: err, error: err.error || err.message || err, status: err.status });
             return err;
         }).then((res) => {
             this.trigger(elm, 'api-done', { api: api, result: res });

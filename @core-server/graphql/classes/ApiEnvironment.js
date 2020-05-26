@@ -77,7 +77,6 @@ function queryFormat(sql, values) {
     var chunkIndex        = 0;
     var placeholdersRegex = /{@(.*?)}/g;
     var result            = '';
-    var valuesIndex       = 0;
     var match, value;
 
     while (match = placeholdersRegex.exec(sql))

@@ -1,10 +1,13 @@
 const Sequelize = require('sequelize')
 const Path      = require('path')
+const fs        = require('fs')
 const Model     = Sequelize.Model
 const { schemaDeffinition, graphConfig, camelize } = require('./typedeff.js')
 const { createResolver, Session, Params, TransformOptions } = require('./resolver.js')
 
-module.exports = {
+const context = {
+    plugins,
+    require,
     Schema(table, fields) {
         if(fields === undefined) {
             fields = table
@@ -17,8 +20,17 @@ module.exports = {
         var oneSelector = null
         var computedFields = {}
         var schema;
+        var schemaOptions = {};
 
         const obj = {
+            Configure(options) {
+                schemaOptions = options
+                return this
+            },
+            Hooks() {
+                // ToDo
+                return this
+            },
             Query(options) {
                 multiSelector = TransformOptions({
                     multi: options
@@ -43,8 +55,10 @@ module.exports = {
                 for(var name in fields) {
                     if(fields[name].sequelize) {
                         if(fields[name].foreign) {
-                            fields[name].sequelize.references = fields[name].foreign
-                            fields[name].sequelize.referencesKey = 'id'
+                            fields[name].sequelize.references = {
+                                model: fields[name].foreign,
+                                key: 'id'
+                            }
                         }
 
                         config[name] = fields[name].sequelize
@@ -53,12 +67,12 @@ module.exports = {
                     }
                 }
 
-                schema = Table.init(config, {
+                schema = Table.init(config, Object.assign({
                     sequelize,
                     modelName: table,
                     freezeTableName: true,
                     timestamps: (config.updatedAt !== undefined && config.createdAt !== undefined),
-                })
+                }, schemaOptions))
 
                 return {
                     foreign: foreignKeys,
@@ -150,8 +164,9 @@ module.exports = {
             sequelize: {
                 field:        config.sql,
                 type:         Sequelize.STRING(count),
-                allowNull:    def === null,
-                defaultValue: def === undefined ? '' : def,
+                allowNull:    def === null || config.nullable,
+                defaultValue: def === undefined ? (config.nullable ? null : '') : def,
+                unique:       config.unique,
             }
         }
     },
@@ -175,7 +190,12 @@ module.exports = {
             }
         }
     },
-    Int(def, config = {}) {
+    Int(def, config = {}) {
+        if(typeof(def) === 'object' && def !== null) {
+            config = def
+            def = undefined
+        }
+
         return {
             graphql: graphConfig(config, {
                 typeName: 'Int'
@@ -210,7 +230,7 @@ module.exports = {
             foreign: config.foreign,
         }
     },
-    SmallInt(count, def, config) {
+    SmallInt(count, def, config) {
         if(typeof(def) === 'object' && def !== null) {
             config = def
             def = undefined
@@ -347,6 +367,47 @@ module.exports = {
             }
         }
     },
+    Enum() {
+        var values = []
+        var config = {}
+        for(var val of arguments) {
+            if(typeof(val) === 'string') {
+                values.push(val)
+            } else {
+                config = val
+                break
+            }
+        }
+
+        return {
+            graphql: graphConfig(config, {
+                typeName: 'String'
+            }),
+            sequelize: {
+                type:         Sequelize.ENUM.apply(Sequelize, values),
+                allowNull:    config.nullable || false,
+                defaultValue: config.nullable ? null : values[0]
+            }
+        }
+    },
+    JSON(config = {}) {
+        return {
+            // graphql: graphConfig(config, {
+            //     typeName: 'Boolean'
+            // }),
+            graphql: null,
+            sequelize: Object.assign({
+                field:        config.sql,
+                type:         Sequelize.JSON,
+            }, config)
+        }
+    },
     Session: Session,
     Params:  Params,
 }
+
+const srcContext = Path.join(process.cwd(), 'graphql', 'src', 'context.js')
+if(fs.existsSync(srcContext))
+    module.exports = Object.assign(context, require(srcContext)(context))
+else
+    module.exports = context

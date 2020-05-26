@@ -59,7 +59,7 @@ module.exports = async function(seq) {
             Sequelize = seq;
         } else {
             var config = plugins.getProjectConfig('servers')
-            GraphDB.construct(config.host, config.user, config.pass, config.db)
+            GraphDB.construct(config.host, config.user, config.password || config.pass,  config.database || config.db)
             Sequelize = GraphDB.sequelize
         }
 

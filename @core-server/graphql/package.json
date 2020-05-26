@@ -1,6 +1,6 @@
 {
   "name": "@core-server/graphql",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -9,6 +9,7 @@
   "author": "Vandamme Sacha <sacha@skyhark.be> (https://www.skyhark.be)",
   "license": "MIT",
   "dependencies": {
+    "apollo-server-express": "^2.13.1",
     "mysql2": "^1.7.0",
     "sequelize": "^5.18.4"
   },

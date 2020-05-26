@@ -1,6 +1,7 @@
-const { ApolloServer, gql } = require('apollo-server-express');
-const GraphDB = plugins.require('graphql/GraphDb')
-const Session   = plugins.require('api/Session');
+const { ApolloServer } = require('apollo-server-express');
+const GraphDB          = plugins.require('graphql/GraphDb')
+const Session          = plugins.require('api/Session');
+const context          = require('../lib/context')
 
 /*const typeDefs = gql(`
   # Comments in GraphQL strings (such as this one) start with the hash (#) symbol.
@@ -25,54 +26,60 @@ class SiteManager extends SuperClass {
     constructor(server) {
         super(server)
 
-        var config = this.getConfig('servers')
-        if(config.mysql) {
-          config = config.mysql;
-          const { schemas, resolvers, typeDefs } = GraphDB.construct(config.host, config.user, config.pass, config.db)
-          this.schemas = schemas
+      console.log('setup graphql server')
 
-          this.apollo = new ApolloServer({
-              typeDefs,
-              resolvers,
-              context: ({ req }) => {
-                var sess = null;
+      var config = this.getConfig('servers')
+      if(config.mysql) {
+        config = config.mysql;
+        const { schemas, resolvers, typeDefs } = GraphDB.construct(config.host, config.user, config.password || config.pass, config.database || config.db)
+        this.schemas    = schemas
+        context.Schemas = schemas
 
-                // Try loading session from headers (parsed from LB)
-                if(req.headers.session) {
-                  try {
-                    const data = JSON.parse(req.headers.session)
-                    sess = new Session(this, '', {
-                      localeOnly: true,
-                      data,
-                    })
-                  } catch(e) {
-                    console.error('Could not load session', e.message)
-                  }
-                }
+        if(typeDefs.definitions[0].fields.length == 0)
+          return
 
-                // Create empty session if no session available
-                if(sess == null) {
+        this.apollo = new ApolloServer({
+            typeDefs,
+            resolvers,
+            context: ({ req }) => {
+              var sess = null;
+
+              // Try loading session from headers (parsed from LB)
+              if(req.headers.session) {
+                try {
+                  const data = JSON.parse(req.headers.session)
                   sess = new Session(this, '', {
                     localeOnly: true,
-                    data: {},
+                    data,
                   })
+                } catch(e) {
+                  console.error('Could not load session', e.message)
                 }
-
-                // Create context object
-                var res = Object.assign({}, sess.data)
-                res.api = (name, post) => {
-                  return sess.api(name, post)
-                }
-
-                return res
               }
-          });
 
-          this.apollo.applyMiddleware({
-              app: this,
-              path: '/graphql'
-          });
-        }
+              // Create empty session if no session available
+              if(sess == null) {
+                sess = new Session(this, '', {
+                  localeOnly: true,
+                  data: {},
+                })
+              }
+
+              // Create context object
+              var res = Object.assign({}, sess.data)
+              res.api = (name, post) => {
+                return sess.api(name, post)
+              }
+
+              return res
+            }
+        });
+
+        this.apollo.applyMiddleware({
+            app: this,
+            path: '/graphql'
+        });
+      }
     }
 }
 

@@ -1,3 +1,11 @@
 {
-    
+    "classes": {
+        "SiteManager": "http/SiteManager",
+        "GraphDb": null,
+        "ApiEnvironment": "api/ApiEnvironment"
+    },
+    "cli": {
+        "check-indexes": "Verify mysql indexes",
+        "sync-schemas": "Sync mysql schemas"
+    }
 }
