@@ -286,7 +286,7 @@ const context = {
             sequelize: {
                 field:        config.sql,
                 type:         Sequelize.DECIMAL(count, decimals),
-                allowNull:    def === null,
+                allowNull:    def === null || config.nullable,
                 defaultValue: def,
             }
         }
@@ -346,6 +346,9 @@ const context = {
                 defaultValue: def === 'now' ? Sequelize.NOW : def,
             }
         }
+    },
+    Now() {
+        return new Date()
     },
     Bool(def, config) {
         if(typeof(def) === 'object' && def !== null) {

@@ -84,6 +84,9 @@ class GraphDB {
             dialect: 'mysql',
             logging: false,
             operatorsAliases,
+            dialectOptions: {
+                decimalNumbers: true,
+            }
         });
 
         return this.buildSchemas()

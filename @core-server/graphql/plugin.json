@@ -1,8 +1,9 @@
 {
     "classes": {
         "SiteManager": "http/SiteManager",
-        "GraphDb": null,
-        "ApiEnvironment": "api/ApiEnvironment"
+        "ApiEnvironment": "api/ApiEnvironment",
+        "Session": "api/Session",
+        "GraphDb": null
     },
     "cli": {
         "check-indexes": "Verify mysql indexes",

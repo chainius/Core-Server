@@ -1,3 +1,5 @@
+const { AuthenticationError } = require('apollo-server-errors')
+
 module.exports = {
 
     createResolver(model, options) {
@@ -9,10 +11,32 @@ module.exports = {
             options = options.one
         }
 
-        return function(parent, args, context, info) {
+        const fn = function(parent, args, context, info) {
             const findOp = {
                 // raw: true, // => does not work with inner joins
                 attributes: [],
+            }
+
+            // Scopes handle
+            if(options.scoped) {
+                const err = (e) => new Promise((_, reject) => reject(e))
+                if(!Array.isArray(context.permissions))
+                    return err(new AuthenticationError('Unauthorized scope'))
+
+                if(Array.isArray(options.scoped)) {
+                    var found = false
+                    for(var key of options.scoped) {
+                        if(context.permissions.indexOf(key) !== -1) {
+                            found = true
+                            break
+                        }
+                    }
+
+                    if(!found)
+                        return err(new AuthenticationError('Unauthorized scope'))
+                } else if(context.permissions.indexOf(options.scoped) == -1) {
+                    return err(new AuthenticationError('Unauthorized scope'))
+                }
             }
 
             // Setup where filter in sql query
@@ -68,9 +92,13 @@ module.exports = {
 
             return model.findOne(findOp)
         }
+    
+        fn.model = model
+        fn.options = options
+        return fn
     },
 
-    Session: ProxySession({}),
+    Session: ProxySession({}),
 
     Params:  ProxyParams(),
 
@@ -89,14 +117,16 @@ function ProxySession(base) {
                     context = base(context)
                 if(!context)
                     return null
+                if(name === 'auth_id' && context[name] === undefined)
+                    throw(new AuthenticationError('You need to be connected in order to get the required resource'))
 
                 return context[name] === undefined ? null : context[name]
             })
         },
         set: function(target, name, value, receiver) {
-            if (!(name in target)) {
-                console.log("Setting non-existant property '" + name + "', initial value: " + value);
-            }
+            if (!(name in target))
+                console.log("Setting non-existing property '" + name + "', initial value: " + value);
+
             return Reflect.set(target, name, value, receiver);
         }
     })
@@ -143,9 +173,9 @@ function TransformOptions(dest, options) {
         function handleWhereParams(where) {
             for(var key in where) {
                 var obj = where[key]
-                if(typeof(obj) === 'object' && obj.IsParam === true) {
+                if(obj !== null && typeof(obj) === 'object' && obj.IsParam === true) {
                     // Transform where close parameter
-    
+
                     // Add param to query definition
                     dest.params = dest.params || []
                     dest.params.push({
@@ -169,7 +199,7 @@ function TransformOptions(dest, options) {
     
                     // Transform where close to function resolver
                     where[key] = encapsulateWhereClause(obj.Name)
-                } else if(typeof(obj) === 'object' && !obj.__isProxy) {
+                } else if(typeof(obj) === 'object' && obj !== null && !obj.__isProxy) {
                     where[key] = handleWhereParams(where[key])
                 }
             }
