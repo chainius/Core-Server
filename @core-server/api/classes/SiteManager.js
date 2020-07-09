@@ -54,8 +54,7 @@ class SiteManager extends SuperClass
     * @param api_name {String}
     * @returns {Object} { config: { PULBLIC-API CONFIG }, api: api name }
     */
-    getPermissionsConfig(api)
-    {
+    getPermissionsConfig(api) {
         if(this.permissionsConfig !== null)
             return this.permissionsConfig;
         
@@ -105,8 +104,7 @@ class SiteManager extends SuperClass
                 return load()
         }
         else {
-            Watcher.onFileChange(configPath, function()
-            {
+            Watcher.onFileChange(configPath, function() {
                 console.warn('Permissions configuration changed');
                 load();
             });
@@ -119,8 +117,7 @@ class SiteManager extends SuperClass
     * @param session {Class}
     * @param role {String}
     */
-    sessionHasRole(session, role)
-    {
+    sessionHasRole(session, role) {
         return false;
     }
 
@@ -155,8 +152,7 @@ class SiteManager extends SuperClass
     * @returns {Boolean} true if the credentials are accepted
     * @returns {Object} { error: message, httpCode: 500 }
     */
-    checkPermission(session, api, post, req)
-    {
+    checkPermission(session, api, post, req) {
         var config = this.getPermissionsConfig(api);
 
         if (config.api)
@@ -193,20 +189,17 @@ class SiteManager extends SuperClass
 
         const connected = !isNaN(parseInt(session.data['auth_id']));
 
-        if (checkConfig('connected'))
-        {
+        if (checkConfig('connected')) {
             if (connected)
                 return true
             else
                 return this.roleDeniedMessage(session, '*', api, false, req)
         }
 
-        if (checkConfig('notconnected'))
-        {
+        if (checkConfig('notconnected')) {
             if (!connected)
                 return true;
-            else
-            {
+            else {
                 return {
                     error: "You're already connected, please logout before continue.",
                     httpCode: 401
@@ -214,20 +207,15 @@ class SiteManager extends SuperClass
             }
         }
 
-        for(var key in config)
-        {
-            if(checkConfig(key))
-            {
-                if(!this.sessionHasRole(session, key))
-                {
+        for(var key in config) {
+            if(checkConfig(key)) {
+                if(!this.sessionHasRole(session, key)) {
                     const msg = this.roleDeniedMessage(session, key, api, connected, req);
-                    if(msg !== false)
-                    {
+                    if(msg !== false) {
                         return msg;
                     }
                 }
-                else
-                {
+                else {
                     return true;
                 }
             }
@@ -473,14 +461,16 @@ class SiteManager extends SuperClass
         try {
             const config = this.getConfig('servers')
 
-            return this.api(path, req.body, req, function(token, expiration, otoken) {
+            return this.api(path, req.body, req, (token, expiration, otoken) => {
                 const d = new Date();
                 d.setTime(expiration);
                 const expires = 'expires=' + d.toUTCString() + ';';
 
                 var cookie = 'token=' + token + ';' + expires + 'path='+(config.apiPath || '/api')+';HttpOnly;SameSite=Strict';
-                if(process.options.production !== undefined && process.options['disable-secure-cookie'] === undefined)
-                    cookie += ';Secure'
+                if(process.options.production !== undefined && process.options['disable-secure-cookie'] === undefined) {
+                    if(typeof(this.setCookieSecure) !== 'function' || this.setCookieSecure(req, path))
+                        cookie += ';Secure'
+                }
 
                 res.setHeader('Set-Cookie', cookie);
             }).then(handleResult).catch(handleCatch);

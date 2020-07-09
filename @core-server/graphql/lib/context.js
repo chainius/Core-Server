@@ -2,7 +2,7 @@ const Sequelize = require('sequelize')
 const Path      = require('path')
 const fs        = require('fs')
 const Model     = Sequelize.Model
-const { schemaDeffinition, graphConfig, camelize } = require('./typedeff.js')
+const { schemaDeffinition, graphConfig, camelize, getComputedFields } = require('./typedeff.js')
 const { createResolver, Session, Params, TransformOptions } = require('./resolver.js')
 
 const context = {
@@ -18,7 +18,7 @@ const context = {
         var hasGraphql = false
         var multiSelector = null
         var oneSelector = null
-        var computedFields = {}
+        // var computedFields = {}
         var schema;
         var schemaOptions = {};
 
@@ -85,7 +85,7 @@ const context = {
 
                 return {
                     definitions: [
-                        schemaDeffinition(name, fields, computedFields)
+                        schemaDeffinition(name, fields)
                     ],
                     resolvers: [
                         multiSelector ? {
@@ -108,7 +108,7 @@ const context = {
                                 },
                                 directives: [],
                             },
-                            resolve: createResolver(schema, multiSelector)
+                            resolve: multiSelector.multi.resolve || createResolver(schema, multiSelector)
                         } : null,
 
                         oneSelector ? {
@@ -128,13 +128,20 @@ const context = {
                                 },
                                 directives: [],
                             },
-                            resolve: createResolver(schema, oneSelector)
+                            resolve: oneSelector.one.resolve || createResolver(schema, oneSelector)
                         } : null,
+
+                        getComputedFields(name, fields),
                     ].filter((o) => o !== null)
                 }
             },
-            Field(name, schema) {
-                computedFields[name] = schema
+            Field(name, type, fn) {
+                if(!fn) {
+                    fn = type
+                    type = 'String'
+                }
+
+                fields[name] = context.Computed(type, fn)
                 return this
             }
         }
@@ -329,7 +336,16 @@ const context = {
             }
         }
     },
-    Date(def, config) {
+    Date: function(def, config) {
+        if(this instanceof context.Date) {
+            if(def && config)
+                return new Date(def, config)
+            else if(def)
+                return new Date(def)
+            else
+                return new Date()
+        }
+
         if(typeof(def) === 'object' && def !== null) {
             config = def
             def = undefined
@@ -405,8 +421,17 @@ const context = {
             }, config)
         }
     },
+    Computed(type, fn) {
+        return {
+            graphql: {
+                typeName: type,
+                resolve: fn,
+            },
+        }
+    },
     Session: Session,
     Params:  Params,
+    plugins,
 }
 
 const srcContext = Path.join(process.cwd(), 'graphql', 'src', 'context.js')

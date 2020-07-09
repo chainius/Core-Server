@@ -168,9 +168,26 @@ class GraphDB {
     
                         // Add resolvers
                         for(var resolver of build.resolvers) {
-                            const name = resolver.query.name.value
-                            res.resolvers.Query[name] = resolver.resolve
-                            queryDeff.fields.push(resolver.query)
+                            if(resolver.query) {
+                                const name = resolver.query.name.value
+                                res.resolvers.Query[name] = resolver.resolve
+                                queryDeff.fields.push(resolver.query)
+                            }
+
+                            if(resolver.type) {
+                                const append = (types, dest) => {
+                                    for(var type in types) {
+                                        if(typeof(types[type]) === 'function') {
+                                            dest[type] = types[type]
+                                        } else {
+                                            dest[type] = dest[type] || {}
+                                            append(types[type], dest[type])
+                                        }
+                                    }
+                                }
+
+                                append(resolver.type, res.resolvers)
+                            }
                         }
                     }
                 }

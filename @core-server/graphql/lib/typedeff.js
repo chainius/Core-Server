@@ -64,6 +64,28 @@ module.exports = {
             return null
 
         return Object.assign(config.graphql || {}, deff)
+    },
+
+    getComputedFields(table, fields) {
+      var res = null
+
+      for(var key in fields) {
+        const field = fields[key]
+        if(!field.graphql || !field.graphql.resolve)
+          continue
+
+        res = res || {}
+        res[key] = field.graphql.resolve
+      }
+
+      if(!res)
+        return null
+
+      return {
+        type: {
+          [camelize(table)]: res
+        }
+      }
     }
 
 }
