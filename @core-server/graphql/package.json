@@ -9,7 +9,7 @@
   "author": "Vandamme Sacha <sacha@skyhark.be> (https://www.skyhark.be)",
   "license": "MIT",
   "dependencies": {
-    "apollo-server-express": "2.13.1",
+    "apollo-server-express": "2.15.1",
     "mysql2": "2.1.0",
     "sequelize": "5.21.10"
   },
