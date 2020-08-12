@@ -20,19 +20,20 @@ module.exports = {
                 continue
 
             const config = fields[name].graphql
+
             if(fields[name].foreign) {
               const foreign = fields[name].foreign
               if(name.substr(-3) == '_id')
                 name = name.substr(0, name.length-3)
 
-              config.typeName = camelize(foreign)
+              config.typeName = config.typeName || camelize(foreign)
             }
 
             gFields.push({
                 kind: "FieldDefinition",
                 name: {
                   kind: "Name",
-                  value: name
+                  value: config.name || name
                 },
                 arguments: config.arguments || [],
                 type: config.type || {
@@ -63,7 +64,10 @@ module.exports = {
         if(!config || config.graphql === false)
             return null
 
-        return Object.assign(config.graphql || {}, deff)
+        if(typeof(config.graphql) == 'string')
+          config.graphql = { name: config.graphql }
+
+        return Object.assign(deff, config.graphql || {})
     },
 
     getComputedFields(table, fields) {

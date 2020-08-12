@@ -143,7 +143,7 @@ class GraphDB {
     
                 const schema = this.parseFile(p, context)
                 {
-                    //Sql schema
+                    // Sql schema
                     const build = schema.BuildSequelize(sequelize)
                     if(file == 'index.js' && dirName != null) {
                         schemas = Object.assign(build.schema, schemas)
@@ -151,7 +151,7 @@ class GraphDB {
                         schemas[name] = build.schema
                     }
 
-                    if(build.foreign && Object.keys(build.foreign) > 0) {
+                    if(build.foreign && Object.keys(build.foreign).length > 0) {
                         foreign.push({
                             schema:  build.schema,
                             fields:  build.foreign
@@ -206,7 +206,8 @@ class GraphDB {
                 if(n.substr(-3) === '_id')
                     n = n.substr(0, n.length-3)
 
-                item.schema.belongsTo(res.schemas[item.fields[key]], { as: n, foreignKey: key })
+                const relatedModel = contextLib.SchemasByTableName[ item.fields[key] ]
+                item.schema.belongsTo(relatedModel, { as: n, foreignKey: key })
                 //res.schemas[field[key]].hasMany(res.schemas[name], { foreignKey: field[key] })
             }
         }

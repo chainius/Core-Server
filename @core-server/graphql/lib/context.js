@@ -3,9 +3,10 @@ const Path      = require('path')
 const fs        = require('fs')
 const Model     = Sequelize.Model
 const { schemaDeffinition, graphConfig, camelize, getComputedFields } = require('./typedeff.js')
-const { createResolver, Session, Params, TransformOptions } = require('./resolver.js')
+const { createResolver, Session, Params, TransformOptions, setResolverContext } = require('./resolver.js')
 
 const context = {
+    SchemasByTableName: {},
     plugins,
     require,
     Schema(table, fields) {
@@ -21,6 +22,7 @@ const context = {
         // var computedFields = {}
         var schema;
         var schemaOptions = {};
+        var graphqlDepencies = {}
 
         const obj = {
             Configure(options) {
@@ -33,9 +35,10 @@ const context = {
             },
             Query(options) {
                 multiSelector = TransformOptions({
-                    multi: options
+                    multi: options,
                 }, options)
 
+                multiSelector.multi.dependencies = multiSelector.multi.dependencies || graphqlDepencies
                 hasGraphql = true
                 return this
             },
@@ -44,6 +47,7 @@ const context = {
                     one: options
                 }, options)
 
+                oneSelector.one.dependencies = oneSelector.one.dependencies || graphqlDepencies
                 hasGraphql = true
                 return this
             },
@@ -74,6 +78,8 @@ const context = {
                     timestamps: (config.updatedAt !== undefined && config.createdAt !== undefined),
                 }, schemaOptions))
 
+                context.SchemasByTableName[table] = schema
+                
                 return {
                     foreign: foreignKeys,
                     schema
@@ -108,7 +114,7 @@ const context = {
                                 },
                                 directives: [],
                             },
-                            resolve: multiSelector.multi.resolve || createResolver(schema, multiSelector)
+                            resolve: multiSelector.multi.resolve || createResolver(schema, Object.assign(multiSelector))
                         } : null,
 
                         oneSelector ? {
@@ -128,21 +134,32 @@ const context = {
                                 },
                                 directives: [],
                             },
-                            resolve: oneSelector.one.resolve || createResolver(schema, oneSelector)
+                            resolve: oneSelector.one.resolve || createResolver(schema, Object.assign(oneSelector))
                         } : null,
 
                         getComputedFields(name, fields),
                     ].filter((o) => o !== null)
                 }
             },
-            Field(name, type, fn) {
+            Field(name, type, dependencies, fn) {
+                if(!fn) {
+                    fn = dependencies
+                    dependencies = []
+                }
+
                 if(!fn) {
                     fn = type
                     type = 'String'
                 }
 
+                if(dependencies && dependencies.length > 0)
+                    graphqlDepencies[name] = dependencies
+
                 fields[name] = context.Computed(type, fn)
                 return this
+            },
+            Dependency(field, dependencies) {
+                graphqlDepencies[field] = dependencies
             }
         }
 
@@ -439,3 +456,5 @@ if(fs.existsSync(srcContext))
     module.exports = Object.assign(context, require(srcContext)(context))
 else
     module.exports = context
+
+setResolverContext(module.exports)

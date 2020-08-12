@@ -20,8 +20,8 @@ class ApiEnvironment extends SuperClass {
     * @param sql {String}
     * @param vars {Object}
     */
-   async query(sql, vars){
-       return GraphDB.sequelize.query( this.query_prepare(sql, vars), { type: sequelize.QueryTypes.SELECT} )
+   async query(sql, vars, config = {}) {
+       return GraphDB.sequelize.query( this.query_prepare(sql, vars), Object.assign({ type: sequelize.QueryTypes.SELECT }, config) )
    }
 
    /**

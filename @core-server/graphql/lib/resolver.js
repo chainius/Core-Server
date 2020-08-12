@@ -1,4 +1,5 @@
 const { AuthenticationError } = require('apollo-server-errors')
+var ContextLib = null
 
 module.exports = {
 
@@ -11,7 +12,14 @@ module.exports = {
             options = options.one
         }
 
-        const fn = function(parent, args, context, info) {
+        // Execute sequelize query
+        const fn = async function(parent, args, context, info) {
+            if(options.before) {
+                const replace = await options.before(parent, args, context, info)
+                if(replace !== undefined)
+                    return replace
+            }
+
             const findOp = {
                 // raw: true, // => does not work with inner joins
                 attributes: [],
@@ -63,22 +71,39 @@ module.exports = {
             // Add attributes to sql query & handle foregin keys
             function handleSelectionSet(findOp, model, selectionSet) {
                 for(var selection of selectionSet.selections) {
-                    if(model.tableAttributes[selection.name.value]) {
-                        findOp.attributes.push(selection.name.value)
-                    } else if(model.tableAttributes[selection.name.value + '_id'] && model.tableAttributes[selection.name.value + '_id'].references) {
-                        const f = model.tableAttributes[selection.name.value + '_id']
-                        const m = plugins.getEntry('http/MasterServer').siteManager.schemas[f.references]
+                    var name = selection.name.value
+                    var alias = name
+                    if(options.aliases && options.aliases[name]) {
+                        alias = name
+                        name = options.aliases[name]
+                    }
 
+                    if(model.tableAttributes[name]) {
+                        if(alias != name)
+                            findOp.attributes.push([name, alias])
+                        else
+                            findOp.attributes.push(name)
+                    } else if(model.tableAttributes[name + '_id'] && model.tableAttributes[name + '_id'].references) {
+                        const f = model.tableAttributes[name + '_id']
+
+                        const m = (options.getModel ? options.getModel(f.references.model || f.references, ContextLib.Schemas) : null) || ContextLib.Schemas[f.references.model || f.references]
                         findOp.include = findOp.include || []
                         const r = {
                             model: m,
                             required: false,
                             attributes: [],
-                            as: selection.name.value,
+                            as: alias,
                         }
 
                         findOp.include.push(r)
                         handleSelectionSet(r, m, selection.selectionSet)
+                    }
+
+                    if(options.dependencies && options.dependencies[name]) {
+                        for(var field of options.dependencies[name]) {
+                            if(findOp.attributes.indexOf(field) == -1)
+                                findOp.attributes.push(field)
+                        }
                     }
                 }
             }
@@ -87,10 +112,21 @@ module.exports = {
                 handleSelectionSet(findOp, model, node.selectionSet)
             }
 
-            if(isMulti)
-                return model.findAll(findOp)
+            // Call after hook
+            const after = async function(res) {
+                if(options.after) {
+                    const replace = await options.after(res, parent, args, context, info)
+                    if(replace !== undefined)
+                        return replace
+                }
 
-            return model.findOne(findOp)
+                return res
+            }
+
+            if(isMulti)
+                return model.findAll(findOp).then(after)
+
+            return model.findOne(findOp).then(after)
         }
     
         fn.model = model
@@ -103,6 +139,10 @@ module.exports = {
     Params:  ProxyParams(),
 
     TransformOptions,
+
+    setResolverContext(ctx) {
+        ContextLib = ctx
+    }
 
 }
 

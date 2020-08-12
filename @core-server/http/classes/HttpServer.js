@@ -128,8 +128,7 @@ class HttpServer
         const pkg = require(process.cwd() + '/package.json')
         this.echo.installHandlers(this.server, this.sockjsConfig ? this.sockjsConfig() : { prefix: pkg['sockjs-prefix'] || '/socketapi', disable_cors: true });
 
-        this.echo.on('connection', (conn) =>
-        {
+        this.echo.on('connection', (conn) => {
             this.onSockJsConnect(conn);
         });
     }

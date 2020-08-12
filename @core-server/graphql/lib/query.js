@@ -177,14 +177,17 @@ module.exports = function WebSocket(session, socket, message) {
         message.live.removeSubQueries()
         message.live.handle(socket, session, true)
 
-        if(socket.$liveGraphqlInterval)
-            clearInterval(socket.$liveGraphqlInterval)
-        else
-            socket.on('close', () => clearInterval(socket.$liveGraphqlInterval))
+        if(!socket.$liveGraphqlInterval) {
+            socket.$liveGraphqlInterval = setInterval(() => {
+                message.live.handle(socket, session, false)
+            }, session.siteManager.graphqlLiveInterval || 200)
 
-        socket.$liveGraphqlInterval = setInterval(() => {
-            message.live.handle(socket, session, false)
-        }, 200)
+            socket.once('close', () => {
+                clearInterval(socket.$liveGraphqlInterval)
+                delete socket.$liveGraphqlInterval
+            })
+        }
+
     } else if(message.live === null) {
         clearInterval(socket.$liveGraphqlInterval)
     }
