@@ -163,8 +163,7 @@ class SiteManager
         if(this._routerHandlers.length === 0)
             return final()
 
-        const minimatch = require("minimatch")
-        const handlers = this._routerHandlers.filter((o) => (!o.method || o.method === req.method) && (o.path === '*' || minimatch(req.url, o.path))).map((r) => r.fn)
+        const handlers = this._routerHandlers.filter((o) => (!o.method || o.method === req.method) && (!o.path || req.url.match(o.path))).map((r) => r.fn)
         if(handlers.length === 0)
             return final()
 
@@ -172,7 +171,7 @@ class SiteManager
             if(i >= handlers.length)
                 return final()
 
-            return handlers[i](req, res, function() {
+            return handlers[i](req, res, function() {
                 return next(i+1)
             })
         }
@@ -180,22 +179,31 @@ class SiteManager
         return next(0);
     }
 
-    use(path, fn) {
+    use(method, path, fn) {
+        if(!fn) {
+            fn = path
+            path = method
+            method = undefined
+        }
+
         if(!fn) {
             fn = path
             path = '*'
         }
 
-        this._routerHandlers.push({ path, fn })
+        if(path === '*') {
+            path = undefined
+        } else if(typeof(path) === 'string') {
+            const minimatch = require("minimatch")
+            path = minimatch.makeRe(path)
+        }
+
+        this._routerHandlers.push({ method, path, fn })
+        return this
     }
 
     post(path, fn) {
-        if(!fn) {
-            fn = path
-            path = '*'
-        }
-
-        this._routerHandlers.push({ method: 'POST', path, fn })
+        return this.use('POST', path, fn)
     }
 }
 

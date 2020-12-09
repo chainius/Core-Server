@@ -366,6 +366,7 @@ class SiteManager extends SuperClass
                     error: 'The requested api could not been found',
                     httpCode: 404
                 });
+
             if (permission !== true)
                 throw(permission);
 

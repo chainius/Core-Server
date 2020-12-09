@@ -164,7 +164,7 @@ class WSRequest {
 // --------------------------
 
 module.exports = function WebSocket(session, socket, message) {
-	// Verify if query present
+    // Verify if query present
 	if(!message.query && !message.live && !message.bulk)
         return
 
@@ -173,13 +173,22 @@ module.exports = function WebSocket(session, socket, message) {
 
     // Handle subscriptions
     if(message.live) {
+
         message.live = new WSRequest(message.live)
         message.live.removeSubQueries()
         message.live.handle(socket, session, true)
 
+        // console.warn("handle", socket.id, typeof(socket.$liveGraphql), JSON.stringify(message, null, 4))
+        socket.$liveGraphql = message.live
+
         if(!socket.$liveGraphqlInterval) {
             socket.$liveGraphqlInterval = setInterval(() => {
-                message.live.handle(socket, session, false)
+                if(socket.$liveGraphql) {
+                    socket.$liveGraphql.handle(socket, session, false)
+                } else {
+                    clearInterval(socket.$liveGraphqlInterval)
+                    delete socket.$liveGraphqlInterval
+                }
             }, session.siteManager.graphqlLiveInterval || 200)
 
             socket.once('close', () => {

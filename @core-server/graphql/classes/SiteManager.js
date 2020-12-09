@@ -26,7 +26,7 @@ console.log(JSON.stringify(typeDefs.definitions, null, 2))*/
 
 class SiteManager extends SuperClass {
 
-  getGraphqlContext({ req }) {
+  async getGraphqlContext({ req }) {
     var sess = null;
 
     // Try loading session from headers (parsed from LB)
@@ -46,9 +46,11 @@ class SiteManager extends SuperClass {
       }
     } else if(!this.getConfig('graphql').sessionHeaders) {
       sess = this.sessionsManager.getFromCookies(req.cookies);
+      await sess.onReady()
     }
 
     // Create empty session if no session available
+
     if(sess == null) {
       sess = new Session(this, '', {
         localeOnly: true,

@@ -88,6 +88,8 @@ const context = {
             BuildGraphql(name = table) {
                 if(!hasGraphql)
                     return null
+                if(schemaOptions.graphqlName)
+                    name = schemaOptions.graphqlName
 
                 return {
                     definitions: [
