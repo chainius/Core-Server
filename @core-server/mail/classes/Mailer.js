@@ -73,7 +73,7 @@ function sendMail(options) {
             const server = plugins.getEntry('http/MasterServer');
             config = server.siteManager.getConfig('servers').mail;
 
-            if(!config) {
+            if(!config) {
                 const keys = server.siteManager.getConfig('keys')
                 if(keys.mailgun) {
                     config = Object.assign(keys.mailgun, { service: 'mailgun' })
@@ -95,7 +95,7 @@ function sendMail(options) {
 
         let transporter = nodemailer.createTransport(transporterConfig);
 
-        //To
+        // To
         var from = options['source'];
         if (options.name !== undefined)
             from = "'" + jsesc(options.name) + "' <" + from + '>';
@@ -105,7 +105,9 @@ function sendMail(options) {
         });
 
         let mailOptions = {
-            from: from,
+            from,
+            replyTo: options['source'],
+            sender: options['source'],
             to: options.destination,
             subject: options.subject,
             text: text,

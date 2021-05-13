@@ -65,7 +65,7 @@ class Session extends SuperClass
     }
 
     //Session will not been shared between multiple nodes
-    setLocalOnly() {
+    setLocalOnly() {
         this.localeOnly = true;
         this.redisLoaded = true;
     }
@@ -172,12 +172,9 @@ class Session extends SuperClass
     handleSocketMessage(socket, message) {
         super.handleSocketMessage(socket, message);
 
-        if (message.event)
-        {
+        if (message.event) {
             if (message.event === 'logout')
-            {
                 this.saveToRedis();
-            }
         }
     }
 }

@@ -190,6 +190,7 @@ const context = {
             sequelize: {
                 field:        config.sql,
                 type:         Sequelize.STRING(count),
+                primaryKey:   config.primaryKey,
                 allowNull:    def === null || config.nullable,
                 defaultValue: def === undefined ? (config.nullable ? null : '') : def,
                 unique:       config.unique,
@@ -229,6 +230,7 @@ const context = {
             sequelize: {
                 field:        config.sql,
                 type:         Sequelize.INTEGER,
+                primaryKey:   config.primaryKey,
                 allowNull:    def === null,
                 defaultValue: def === undefined ? '0' : def,
             },

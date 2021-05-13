@@ -65,8 +65,9 @@ class WSRequest {
                 for(var key in res.errors) {
                     if(res.errors[key].extensions)
                         delete res.errors[key].extensions.exception
-                    if(res.errors[key].extensions.code == 'UNAUTHENTICATED')
+                    if(res.errors[key].extensions.code == 'UNAUTHENTICATED') {
                         res.code = 401
+                    }
                 }
 
                 etag = Crypter.sha1(JSON.stringify(res))
@@ -75,6 +76,9 @@ class WSRequest {
             res.etag = etag
             if(this.id)
                 res.id = this.id
+
+            if(res.code == 401 && this.siteManager.addLog)
+                this.siteManager.addLog('graphql', socket, session, this.apolloQuery, res)
 
             res = JSON.stringify(res)
         }).catch((err) => {

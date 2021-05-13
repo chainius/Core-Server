@@ -153,8 +153,7 @@ class Session
     */
     api(name, post, client_ip, file, get, socket) {
         var req = client_ip;
-        if(typeof(client_ip) !== 'object')
-        {
+        if(typeof(client_ip) !== 'object') {
             req = {
                 getClientIp() { return client_ip },
                 file,
