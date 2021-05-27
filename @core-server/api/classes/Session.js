@@ -200,7 +200,10 @@ class Session
                         if(err.showIntercept !== false)
                             console.error(err);
 
-                        err = { error: err.message };
+                        if(err.stack && err.stack.indexOf('sequelize') != -1)
+                            err = { error: "internal error" };
+                        else
+                            err = { error: err.message };
                     }
                     else
                     {
