@@ -1,0 +1,5 @@
+{
+    "classes": {
+        "Session": "api/Session"
+    }
+}

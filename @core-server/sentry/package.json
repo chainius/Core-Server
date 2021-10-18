@@ -1,18 +1,13 @@
 {
-  "name": "@core-server/api",
-  "version": "1.0.8",
-  "private": false,
+  "name": "@core-server/sentry",
+  "version": "1.0.1",
   "description": "",
+  "private": false,
   "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
   "author": "Vandamme Sacha <sacha@skyhark.be> (https://www.skyhark.be)",
   "license": "MIT",
-  "dependencies": {
-    "minimatch": "^3.0.4",
-    "request-promise-native": "^1.0.7",
-    "uniqid": "^5.0.3"
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "engines": {
     "node": ">=7.0.0"
@@ -25,10 +20,14 @@
     "Core-Server",
     "Vue",
     "Server",
-    "api"
+    "sentry"
   ],
   "bugs": {
     "url": "https://github.com/SachaSkyhark/Core-Server/issues"
   },
-  "homepage": "https://www.core-server.io"
+  "homepage": "https://www.core-server.io",
+  "dependencies": {
+		"@sentry/node": "^6.13.3",
+		"@sentry/tracing": "^6.13.3"
+  }
 }

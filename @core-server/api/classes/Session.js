@@ -190,7 +190,7 @@ class Session
             else {
                 return { result: result };
             }
-        }).catch(function(err) {
+        }).catch((err) => {
             if (typeof (err) === 'object' || typeof (err) === 'array')
             {
                 if (err.error === undefined)
@@ -199,6 +199,9 @@ class Session
                     {
                         if(err.showIntercept !== false)
                             console.error(err);
+
+                        if(err.stack && this.onException)
+                            this.onException(err, apiHandler, environment)
 
                         if(err.stack && err.stack.indexOf('sequelize') != -1)
                             err = { error: "internal error" };
