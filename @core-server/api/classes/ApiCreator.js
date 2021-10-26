@@ -5,15 +5,15 @@ const Crypter       = plugins.require('http/Crypter');
 const _require      = require('../wrappers/require.js');
 const resource_url  = require('../wrappers/resource_url.js');
 
-const funcStart = "func = async function(console, __filename, __dirname) { " +
-                    "const require = $__require.bind(this, __dirname); var post = this.post; var session = this.session; var cookie = this.cookie; var _this = this; this.console = console;\n";
+const funcStart = "func = async function {@name}(console, __filename, __dirname) { " +
+                    "const require = $__require.bind(this, __dirname); var post = this.post; var session = this.session; var cookie = this.cookie; var _this = this; this.console = console;\n";
 
 class ApiCreator {
 
     constructor(siteManager) {
         this.siteManager  = siteManager;
         this.nonExisting  = [];
-        this.apis         = {};
+        this.apis         = {};
         this.context      = null;
     }
 
@@ -38,7 +38,7 @@ class ApiCreator {
         return false;
     }
 
-    createSqlHandler(path) {
+    createSqlHandler(path) {
         const sql = ApiCreator.fileContent(path);
         if(sql == false)
             return false;
@@ -62,7 +62,7 @@ class ApiCreator {
 
         try
         {
-            const script = new vm.Script(funcStart + source + "\n }", {
+            const script = new vm.Script(funcStart.replace("{@name}", camelize(name)) + source + "\n }", {
                 filename:       path,
                 lineOffset:     -1,
                 displayErrors:  true
@@ -165,3 +165,9 @@ ApiCreator.fileContent = function(path)
 }
 
 module.exports = ApiCreator;
+
+function camelize(str) {
+    return str.replace(/[^a-zA-Z\d\s:]/g, ' ').replace(/(?:^\w|[A-Z]|\b\w)/g, function(word, index) {
+        return word.toUpperCase();
+    }).replace(/\s+/g, '');
+}

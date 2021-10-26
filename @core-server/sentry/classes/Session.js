@@ -1,7 +1,7 @@
 const Sentry = require("@sentry/node");
 const pkg = require(process.cwd() + "/package.json")
 
-if(!pkg.sentry) {
+if(!pkg.sentry || (pkg.sentry.onlyProd && process.env.NODE_ENV != "production")) {
     module.exports = SuperClass
     return
 }
@@ -12,8 +12,9 @@ if(!pkg.sentry.release)
     pkg.sentry.release = pkg.version
 
 if(!pkg.sentry.environment)
-    pkg.sentry.environment = process.env.NODE_ENV || 'development'
+    pkg.sentry.environment = process.env.SENTRY_ENV || process.env.NODE_ENV || 'development'
 
+delete pkg.sentry.onlyProd
 Sentry.init(pkg.sentry);
 
 /** session */

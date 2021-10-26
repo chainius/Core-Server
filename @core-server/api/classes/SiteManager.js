@@ -280,7 +280,8 @@ class SiteManager extends SuperClass
             const base = this.apiBasePath(name);
             const path = this.apiPath(base, name);
             const code = this.apiCreator.create(path, name);
-            code.name = name
+            if(code)
+                code.name = name
 
             if (code != false)
             {
@@ -291,7 +292,8 @@ class SiteManager extends SuperClass
 
                     try {
                         const nCode = _this.apiCreator.create(path, name);
-                        nCode.name = name
+                        if(nCode.name)
+                            nCode.name = name
 
                         if (nCode !== false)
                             _this.apiCreator.apis[name] = nCode;

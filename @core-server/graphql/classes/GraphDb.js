@@ -79,7 +79,7 @@ class GraphDB {
             $col: Op.col
         }
 
-        this.sequelize = new Sequelize(db, user, pass, {
+        var config = {
             host:    host,
             dialect: 'mysql',
             logging: false,
@@ -87,7 +87,13 @@ class GraphDB {
             // dialectOptions: {
             //     decimalNumbers: true,
             // }
-        });
+        }
+
+        const srcContext = require('path').join(process.cwd(), 'graphql', 'src', 'config.js')
+        if(fs.existsSync(srcContext))
+            config = Object.assign(config, require(srcContext).sequelize || {})
+
+        this.sequelize = new Sequelize(db, user, pass, config);
 
         return this.buildSchemas()
     }
