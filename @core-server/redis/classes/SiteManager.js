@@ -1,17 +1,15 @@
-'use strict';
+'use strict'
 
-class SiteManager extends SuperClass
-{
-    autoSetupFromConfig()
-    {
-        super.autoSetupFromConfig();
-        const config = this.getConfig('servers');
+class SiteManager extends SuperClass {
+    autoSetupFromConfig() {
+        super.autoSetupFromConfig()
+        const config = this.getConfig('servers')
 
         if (config.redis) {
-            const _this = this;
+            const _this = this
             process.nextTick(function() {
-                _this.setupRedis(config.redis);
-            });
+                _this.setupRedis(config.redis)
+            })
         }
     }
 
@@ -19,27 +17,23 @@ class SiteManager extends SuperClass
     * Setup a redis connection that will be used by the api's
     * @param config {Object}
     */
-    setupRedis(config)
-    {
-        this.connections = this.connections || {};
+    setupRedis(config) {
+        this.connections = this.connections || {}
 
-        try
-        {
+        try {
             if (config === undefined)
-                config = this.getConfig('servers').redis;
+                config = this.getConfig('servers').redis
 
-            const Redis = plugins.require('redis/Redis');
+            const Redis = plugins.require('redis/Redis')
 
-            this.connections.redis = new Redis(config);
-            this.sessionsManager.setupRedis();
+            this.connections.redis = new Redis(config)
+            this.sessionsManager.setupRedis()
 
             this.onRedisBroadcast('SMBroadcast', ({ api, data, selector }) => {
-                super.broadcast(api, data, selector);
-            });
-        }
-        catch (e)
-        {
-            console.error('{setupRedis}', e);
+                super.broadcast(api, data, selector)
+            })
+        } catch (e) {
+            console.error('{setupRedis}', e)
         }
     }
     
@@ -52,7 +46,7 @@ class SiteManager extends SuperClass
             })
         }
 
-        return super.broadcast(api, data, selector);
+        return super.broadcast(api, data, selector)
     }
 
     /**
@@ -60,23 +54,18 @@ class SiteManager extends SuperClass
     * @param channel {String}
     * @param msg {String|Object}
     */
-    broadcastToRedis(channel, msg)
-    {
-        this.connections = this.connections || {};
+    broadcastToRedis(channel, msg) {
+        this.connections = this.connections || {}
 
-        try
-        {
-            if(!this.connections.redis)
-            {
-                console.warn('Cannot broadcast redis event, redis server not instantiated');
-                return;
+        try {
+            if(!this.connections.redis) {
+                console.warn('Cannot broadcast redis event, redis server not instantiated')
+                return
             }
 
-            this.connections.redis.emit(channel, msg);
-        }
-        catch(e)
-        {
-            console.error('{broadcastToRedis}', e);
+            this.connections.redis.emit(channel, msg)
+        } catch(e) {
+            console.error('{broadcastToRedis}', e)
         }
     }
 
@@ -85,16 +74,15 @@ class SiteManager extends SuperClass
     * @param channel {String}
     * @param callback {Function}
     */
-    onRedisBroadcast(channel, cb)
-    {
-        this.connections = this.connections || {};
+    onRedisBroadcast(channel, cb) {
+        this.connections = this.connections || {}
 
         if (!this.connections.redis)
-            return console.error('Please instantiate a redis server before listening some broadcast events');
+            return console.error('Please instantiate a redis server before listening some broadcast events')
 
-        this.connections.redis.onChannel(channel, cb);
+        this.connections.redis.onChannel(channel, cb)
     }
 
 }
 
-module.exports = SiteManager;
+module.exports = SiteManager

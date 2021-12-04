@@ -1,182 +1,160 @@
 /** session */
-class Session extends SuperClass
-{
+class Session extends SuperClass {
     /**
     * @param siteManager {Class}
     * @param token {String}
     */
-    constructor(siteManager, token, options)
-    {
-        super(siteManager, token, options);
+    constructor(siteManager, token, options) {
+        super(siteManager, token, options)
 
-        this.siteManager.connections = this.siteManager.connections || {};
-        this.redisLoaded    = (!this.siteManager.connections.redis || token === '__global__' || this.localeOnly);
-        this.ready          = this.ready && this.redisLoaded;
-        this.onRedisLoaded  = [];
-        this.updateTime     = 0;
+        this.siteManager.connections = this.siteManager.connections || {}
+        this.redisLoaded = (!this.siteManager.connections.redis || token === '__global__' || this.localeOnly)
+        this.ready = this.ready && this.redisLoaded
+        this.onRedisLoaded = []
+        this.updateTime = 0
 
-        this.loadFromRedis();
+        this.loadFromRedis()
     }
 
-    onReady()
-    {
+    onReady() {
         if (this.redisLoaded)
-            return super.onReady();
+            return super.onReady()
 
-        const superOnReady = super.onReady.bind(this);
+        const superOnReady = super.onReady.bind(this)
 
-        const _this = this;
-        return new Promise(function(resolve, reject)
-        {
-            var didTimeout = false;
+        const _this = this
+        return new Promise(function(resolve, reject) {
+            var didTimeout = false
             const timeout = setTimeout(function() {
-                didTimeout = true;
-                reject('The session could not be loaded');
-            }, 1500);
+                didTimeout = true
+                reject('The session could not be loaded')
+            }, 1500)
 
-            _this.onRedisLoaded.push(function()
-            {
-                const sresult = superOnReady();
+            _this.onRedisLoaded.push(function() {
+                const sresult = superOnReady()
 
                 if(sresult.then) {
                     sresult.then(function(data) {
                         if(!didTimeout)
-                            resolve();
+                            resolve(data)
                     }).catch(function(err) {
                         if(!didTimeout)
-                            reject(err);
+                            reject(err)
                     }).then(function() {
-                        clearTimeout(timeout);
-                    });
-                }
-                else {
+                        clearTimeout(timeout)
+                    })
+                } else {
                     if(!didTimeout)
-                        resolve();
+                        resolve()
                     
-                    clearTimeout(timeout);
+                    clearTimeout(timeout)
                 }
-            });
-        });
+            })
+        })
     }
 
     setData(data) {
-        super.setData(data);
-        this.saveToRedis();
+        super.setData(data)
+        this.saveToRedis()
     }
 
-    //Session will not been shared between multiple nodes
+    // Session will not been shared between multiple nodes
     setLocalOnly() {
-        this.localeOnly = true;
-        this.redisLoaded = true;
+        this.localeOnly = true
+        this.redisLoaded = true
     }
 
     //------------------------------------------
 
-    loadRedisTTL()
-    {
-        const redis = this.siteManager.connections.redis;
+    loadRedisTTL() {
+        const redis = this.siteManager.connections.redis
         if (!redis || this.token === '__global__' || this.localeOnly)
-            return;
+            return
 
-        var _this = this;
-        redis.getExpirationTime(this.token, -2).then(function(data)
-        {
+        var _this = this
+        redis.getExpirationTime(this.token, -2).then(function(data) {
             if (data > Date.now())
-                _this.expirationTime = data;
+                _this.expirationTime = data
         })
-        .catch(function(err)
-        {
-            console.error(err);
-        });
+            .catch(function(err) {
+                console.error(err)
+            })
     }
 
     /**
     * Load the session from the global redis service
     */
-    loadFromRedis()
-    {
-        const redis = this.siteManager.connections.redis;
+    loadFromRedis() {
+        const redis = this.siteManager.connections.redis
 
-        const _this = this;
-        function dispatchLoaded()
-        {
-            _this.redisLoaded = true;
+        const _this = this
+        function dispatchLoaded() {
+            _this.redisLoaded = true
 
-            for (var key in _this.onRedisLoaded)
-            {
-                try
-                {
-                    _this.onRedisLoaded[key].call(_this, redis);
-                }
-                catch (e)
-                {
-                    console.error(e);
+            for (var key in _this.onRedisLoaded) {
+                try {
+                    _this.onRedisLoaded[key].call(_this, redis)
+                } catch (e) {
+                    console.error(e)
                 }
             }
         }
 
         if (redis && this.token !== '__global__' && !this.localeOnly) {
             redis.load(this.token).then(function(data) {
-                if (typeof (data) !== 'object')
-                {
-                    console.error('Wrong data loaded for session ' + this.token + ' from redis (' + typeof (data) + ')');
-                }
-                else
-                {
-                    _this.data = data;
-                    _this.loadRedisTTL();
+                if (typeof (data) !== 'object') {
+                    console.error('Wrong data loaded for session ' + this.token + ' from redis (' + typeof (data) + ')')
+                } else {
+                    _this.data = data
+                    _this.loadRedisTTL()
                 }
 
-                dispatchLoaded();
+                dispatchLoaded()
             })
-            .catch(function(e)
-            {
-                dispatchLoaded();
-            });
+                .catch(function(e) {
+                    dispatchLoaded()
+                })
         } else {
-            dispatchLoaded();
+            dispatchLoaded()
         }
     }
 
     /**
     * Save the session from the global redis service
     */
-    saveToRedis()
-    {
-        this.updateTime = Date.now();
-        const redis = this.siteManager.connections.redis;
+    saveToRedis() {
+        this.updateTime = Date.now()
+        const redis = this.siteManager.connections.redis
 
         if (redis && this.token !== '__global__' && !this.localeOnly)
-            redis.save(this.token, this.data, this.expirationTime);
+            redis.save(this.token, this.data, this.expirationTime)
 
-        this.emitRedis();
+        this.emitRedis()
     }
 
     /**
     * Emit the session to the other servers in the cluster using redis
     */
-    emitRedis()
-    {
-        const redis = this.siteManager.connections.redis;
+    emitRedis() {
+        const redis = this.siteManager.connections.redis
 
-        if (redis && this.token !== '__global__' && !this.localeOnly)
-        {
+        if (redis && this.token !== '__global__' && !this.localeOnly) {
             this.siteManager.broadcastToRedis('SESSION_UPDATE', {
                 token: this.token,
-                time: this.updateTime,
-                data: this.data
-            });
+                time:  this.updateTime,
+                data:  this.data
+            })
         }
     }
 
     handleSocketMessage(socket, message) {
-        super.handleSocketMessage(socket, message);
+        super.handleSocketMessage(socket, message)
 
         if (message.event) {
             if (message.event === 'logout')
-                this.saveToRedis();
+                this.saveToRedis()
         }
     }
 }
 
-module.exports = Session;
+module.exports = Session

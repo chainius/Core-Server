@@ -2,214 +2,186 @@
 * Directive: v-permissions "abc,test,test"
 * layout: { permissions: 'abc,test', permissionsRedirect: optional path, data: .., methods: .. }
 */
-class PermissionsManager
-{
-    constructor(apiManager)
-    {
-        this.permissions = [];
-        this.defaultRedirect = '/';
-        this.bindedElements = [];
-        this.api = apiManager;
+class PermissionsManager {
+    constructor(apiManager) {
+        this.permissions = []
+        this.defaultRedirect = '/'
+        this.bindedElements = []
+        this.api = apiManager
 
-        this.loadCache();
-        apiManager.onToken(() => this.loadCache());
+        this.loadCache()
+        apiManager.onToken(() => this.loadCache())
 
         //---------------------------
-        //Setup directive
+        // Setup directive
 
-        const directive = {};
-        const _this = this;
-        function bindHook(name, dest)
-        {
-            const methodName = 'directive' + name.charAt(0).toUpperCase() + name.slice(1);
-            directive[name] = function()
-            {
+        const directive = {}
+        const _this = this
+        function bindHook(name, dest) {
+            const methodName = 'directive' + name.charAt(0).toUpperCase() + name.slice(1)
+            directive[name] = function() {
                 if(_this[methodName])
-                    _this[methodName].apply(_this, arguments);
-            };
+                    _this[methodName].apply(_this, arguments)
+            }
         }
 
-        bindHook('bind');
-        bindHook('inserted');
-        bindHook('update');
-        bindHook('componentUpdated');
-        bindHook('unbind');
+        bindHook('bind')
+        bindHook('inserted')
+        bindHook('update')
+        bindHook('componentUpdated')
+        bindHook('unbind')
 
-        Vue.directive('permission', directive);
-        Vue.directive('permissions', directive);
+        Vue.directive('permission', directive)
+        Vue.directive('permissions', directive)
     }
 
     deleteOldCache() {
         try {
             if(location.href.indexOf('file://') === 0)
-                return;
+                return
 
             if (typeof (localStorage) == "object") {
                 for (var i = localStorage.length - 1; i >= 0; i--) {
-                    var key = localStorage.key(i);
+                    var key = localStorage.key(i)
                     if(key.length > 20 && key.substr(key.length-17) === '_user_permissions') {
                         if(key.substr(0, key.length-17) !== this.api.token)
-                            localStorage.removeItem(key);
+                            localStorage.removeItem(key)
                     }
                 }
             }
         } catch (e) {
-            console.error(e);
+            console.error(e)
         }
 
-        this.api.$storage.put(this.api.token + '_user_permissions', this.permissions);
+        this.api.$storage.put(this.api.token + '_user_permissions', this.permissions)
     }
 
-    normalizePermissions(permissions)
-    {
+    normalizePermissions(permissions) {
         if(typeof(permissions) === 'string')
-            permissions = permissions.split(',');
+            permissions = permissions.split(',')
 
         for(var key in permissions)
-            permissions[key] = permissions[key].split(' ').join('');
+            permissions[key] = permissions[key].split(' ').join('')
 
-        return permissions;
+        return permissions
     }
 
-    directiveInserted( el, permissions )
-    {
-        this.directiveUpdate( el, permissions );
+    directiveInserted( el, permissions ) {
+        this.directiveUpdate( el, permissions )
     }
 
-    directiveBind( el, permissions )
-    {
+    directiveBind( el, permissions ) {
         this.bindedElements.push({
-            el: el,
+            el:          el,
             permissions: permissions
-        });
+        })
     }
 
-    directiveUnbind( el )
-    {
-        for(var key in this.bindedElements)
-        {
-            if(this.bindedElements[key].el === el)
-            {
-                this.bindedElements.splice(key, 1);
-                this.directiveUnbind(el);
-                break;
+    directiveUnbind( el ) {
+        for(var key in this.bindedElements) {
+            if(this.bindedElements[key].el === el) {
+                this.bindedElements.splice(key, 1)
+                this.directiveUnbind(el)
+                break
             }
         }
     }
 
-    directiveUpdate( el, permissions )
-    {
-        try
-        {
+    directiveUpdate( el, permissions ) {
+        try {
             if(!el.style)
-                return;
+                return
 
-            for(var key in this.bindedElements)
-            {
-                if(this.bindedElements[key].el === el)
-                {
-                    this.bindedElements[key].permissions = permissions;
+            for(var key in this.bindedElements) {
+                if(this.bindedElements[key].el === el) {
+                    this.bindedElements[key].permissions = permissions
                 }
             }
 
-            permissions = permissions.value;
+            permissions = permissions.value
 
             if(this.hasPermission(permissions))
-                el.style.display = '';
+                el.style.display = ''
             else
-                el.style.display = 'none';
-        }
-        catch(e)
-        {
-            console.error(e);
+                el.style.display = 'none'
+        } catch(e) {
+            console.error(e)
         }
     }
 
-    directiveComponentUpdated()
-    {
-        //console.log('component udpated', arugments);
+    directiveComponentUpdated() {
+        // console.log('component udpated', arugments);
     }
 
     //----------------------------
 
-    loadCache()
-    {
+    loadCache() {
         if(!this.api.token)
-            return;
+            return
 
-        const cache = this.api.$storage.get(this.api.token + '_user_permissions');
+        const cache = this.api.$storage.get(this.api.token + '_user_permissions')
 
-        if(cache !== null && ['array', 'object'].indexOf(typeof(cache)) !== -1)
-        {
-            this.permissions = cache;
+        if(cache !== null && ['array', 'object'].indexOf(typeof(cache)) !== -1) {
+            this.permissions = cache
         }
     }
 
-    hasPermission(permissions)
-    {
-        const nPermissions = this.normalizePermissions(permissions);
+    hasPermission(permissions) {
+        const nPermissions = this.normalizePermissions(permissions)
 
-        for(var key in nPermissions)
-        {
-            var not = false;
-            var perm = nPermissions[key];
+        for(var key in nPermissions) {
+            var not = false
+            var perm = nPermissions[key]
 
-            if(perm.substr(0, 1) === '!')
-            {
-                not  = true;
-                perm = perm.substr(1);
+            if(perm.substr(0, 1) === '!') {
+                not = true
+                perm = perm.substr(1)
             }
 
-            if(perm === 'connected')
-            {
+            if(perm === 'connected') {
                 if(!not && this.connected())
-                    return true;
+                    return true
+
                 if(not && !this.connected())
-                    return true;
-            }
-            else if(this.permissions.indexOf(perm) !== -1)
-            {
-                return !not;
+                    return true
+            } else if(this.permissions.indexOf(perm) !== -1) {
+                return !not
             }
         }
 
-        return false;
+        return false
     }
 
-    setPermissions(permissions)
-    {
+    setPermissions(permissions) {
         if(typeof(permissions) === 'string')
-            permissions = [permissions];
+            permissions = [permissions]
 
-        this.permissions = permissions;
-        this.api.$storage.put(this.api.token + '_user_permissions', permissions);
+        this.permissions = permissions
+        this.api.$storage.put(this.api.token + '_user_permissions', permissions)
 
         for(var key in this.bindedElements)
-            this.directiveUpdate( this.bindedElements[key].el, this.bindedElements[key].permissions );
+            this.directiveUpdate( this.bindedElements[key].el, this.bindedElements[key].permissions )
     }
 
     //----------------------------
 
-    layoutAuthorized(layout)
-    {
+    layoutAuthorized(layout) {
         if(!layout.permissions)
-            return true;
+            return true
 
-        return this.hasPermission( layout.permissions );
+        return this.hasPermission( layout.permissions )
     }
 
-    layoutRedirectPath(layout)
-    {
+    layoutRedirectPath(layout) {
         if(layout.permissionsRedirect)
-            return layout.permissionsRedirect;
+            return layout.permissionsRedirect
 
-        return this.defaultRedirect;
+        return this.defaultRedirect
     }
 
-    connected()
-    {
-        return this.permissions.length > 0;
+    connected() {
+        return this.permissions.length > 0
     }
 }
 
-module.exports = PermissionsManager;
+module.exports = PermissionsManager

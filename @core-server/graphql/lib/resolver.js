@@ -89,10 +89,10 @@ module.exports = {
                         const m = (options.getModel ? options.getModel(f.references.model || f.references, ContextLib.Schemas) : null) || ContextLib.Schemas[f.references.model || f.references]
                         findOp.include = findOp.include || []
                         const r = {
-                            model: m,
-                            required: false,
+                            model:      m,
+                            required:   false,
                             attributes: [],
-                            as: alias,
+                            as:         alias,
                         }
 
                         findOp.include.push(r)
@@ -136,7 +136,7 @@ module.exports = {
 
     Session: ProxySession({}),
 
-    Params:  ProxyParams(),
+    Params: ProxyParams(),
 
     TransformOptions,
 
@@ -155,8 +155,10 @@ function ProxySession(base) {
             return ProxySession(function(context) {
                 if(typeof(base) === 'function')
                     context = base(context)
+
                 if(!context)
                     return null
+
                 if(name === 'auth_id' && context[name] === undefined)
                     throw(new AuthenticationError('You need to be connected in order to get the required resource'))
 
@@ -165,9 +167,9 @@ function ProxySession(base) {
         },
         set: function(target, name, value, receiver) {
             if (!(name in target))
-                console.log("Setting non-existing property '" + name + "', initial value: " + value);
+                console.log("Setting non-existing property '" + name + "', initial value: " + value)
 
-            return Reflect.set(target, name, value, receiver);
+            return Reflect.set(target, name, value, receiver)
         }
     })
 }
@@ -185,16 +187,17 @@ function ProxyParams() {
                 type = t
                 return {
                     IsParam: true,
-                    Name: name,
-                    Type: t,
+                    Name:    name,
+                    Type:    t,
                 }
             }
         },
         set: function(target, name, value, receiver) {
             if (!(name in target)) {
-                console.log("Setting non-existant property '" + name + "', initial value: " + value);
+                console.log("Setting non-existant property '" + name + "', initial value: " + value)
             }
-            return Reflect.set(target, name, value, receiver);
+
+            return Reflect.set(target, name, value, receiver)
         }
     })
 }
@@ -221,18 +224,18 @@ function TransformOptions(dest, options) {
                     dest.params.push({
                         kind: "InputValueDefinition",
                         name: {
-                          kind: "Name",
-                          value: obj.Name,
+                            kind:  "Name",
+                            value: obj.Name,
                         },
                         type: {
-                          kind: "NonNullType",
-                          type: {
-                            kind: "NamedType",
-                            name: {
-                              kind: "Name",
-                              value: obj.Type,
+                            kind: "NonNullType",
+                            type: {
+                                kind: "NamedType",
+                                name: {
+                                    kind:  "Name",
+                                    value: obj.Type,
+                                }
                             }
-                          }
                         },
                         directives: []
                     })

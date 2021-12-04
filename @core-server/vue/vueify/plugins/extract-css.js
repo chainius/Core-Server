@@ -1,11 +1,11 @@
 var fs = require('fs')
 var compiler = require('../lib/compiler')
-var CleanCSS = require('clean-css');
+var CleanCSS = require('clean-css')
 
 function minify(css) {
     return new CleanCSS({
         level: 2
-    }).minify(css).styles;
+    }).minify(css).styles
 }
 
 function write(b, outPath, css) {
@@ -15,7 +15,7 @@ function write(b, outPath, css) {
     } else if (typeof outPath === 'string') {
         fs.writeFile(outPath, css, function (err) {
             if (err)
-                console.error(err);
+                console.error(err)
         })
     }
 }
@@ -25,7 +25,7 @@ module.exports = function (b, opts) {
         extractCSS: true
     })
 
-    var styles = b._options.stylesCache;
+    var styles = b._options.stylesCache
 
     var outPath = opts.out || opts.o || 'bundle.css'
 
@@ -38,9 +38,9 @@ module.exports = function (b, opts) {
                 .join('\n')
 
             if (opts.minify)
-                css = minify(css);
+                css = minify(css)
 
-            write(b, outPath, css);
+            write(b, outPath, css)
 
         })
     })

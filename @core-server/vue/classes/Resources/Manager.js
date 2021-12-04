@@ -1,10 +1,10 @@
 class ResourcesManager extends SuperClass {
 
     purgeCache() {
-        super.purgeCache();
-        this.siteManager.pagesCache = {};
+        super.purgeCache()
+        this.siteManager.pagesCache = {}
     }
     
 }
 
-module.exports = ResourcesManager;
+module.exports = ResourcesManager

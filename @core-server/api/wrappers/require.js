@@ -1,33 +1,32 @@
-const fsWrapper = require('./fs.js');
-const Path      = require('path');
+const fsWrapper = require('./fs.js')
+const Path = require('path')
 
-module.exports = function(dir, name)
-{
+module.exports = function(dir, name) {
     if (name.toLowerCase() === 'fs')
-        return fsWrapper;
+        return fsWrapper
 
-    var path;
+    var path
     try {
-        return require(name);
+        return require(name)
     } catch(e) {
         if(e.code !== 'MODULE_NOT_FOUND') {
-            throw(e);
+            throw(e)
         }
 
-        path = Path.resolve(Path.join(process.cwd(), 'node_modules'), name);
+        path = Path.resolve(Path.join(process.cwd(), 'node_modules'), name)
         if(path === name) {
             throw(e)
         }
     }
 
     try {
-        return require(path);
+        return require(path)
     } catch(e) {
         if(e.code !== 'MODULE_NOT_FOUND') {
-            throw(e);
+            throw(e)
         }
     }
 
-    path = Path.resolve(dir, name);
-    return require(path);
-};
+    path = Path.resolve(dir, name)
+    return require(path)
+}

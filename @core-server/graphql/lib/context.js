@@ -1,7 +1,7 @@
 const Sequelize = require('sequelize')
-const Path      = require('path')
-const fs        = require('fs')
-const Model     = Sequelize.Model
+const Path = require('path')
+const fs = require('fs')
+const Model = Sequelize.Model
 const { schemaDeffinition, graphConfig, camelize, getComputedFields } = require('./typedeff.js')
 const { createResolver, Session, Params, TransformOptions, setResolverContext } = require('./resolver.js')
 
@@ -20,8 +20,8 @@ const context = {
         var multiSelector = null
         var oneSelector = null
         // var computedFields = {}
-        var schema;
-        var schemaOptions = {};
+        var schema
+        var schemaOptions = {}
         var graphqlDepencies = {}
 
         const obj = {
@@ -61,7 +61,7 @@ const context = {
                         if(fields[name].foreign) {
                             fields[name].sequelize.references = {
                                 model: fields[name].foreign,
-                                key: 'id'
+                                key:   'id'
                             }
                         }
 
@@ -73,9 +73,9 @@ const context = {
 
                 schema = Table.init(config, Object.assign({
                     sequelize,
-                    modelName: table,
+                    modelName:       table,
                     freezeTableName: true,
-                    timestamps: (config.updatedAt !== undefined && config.createdAt !== undefined),
+                    timestamps:      (config.updatedAt !== undefined && config.createdAt !== undefined),
                 }, schemaOptions))
 
                 context.SchemasByTableName[table] = schema
@@ -88,6 +88,7 @@ const context = {
             BuildGraphql(name = table) {
                 if(!hasGraphql)
                     return null
+
                 if(schemaOptions.graphqlName)
                     name = schemaOptions.graphqlName
 
@@ -100,16 +101,16 @@ const context = {
                             query: {
                                 kind: "FieldDefinition",
                                 name: {
-                                    kind: 'Name',
+                                    kind:  'Name',
                                     value: name,
                                 },
-                                arguments:  multiSelector.params || [],
-                                type: {
+                                arguments: multiSelector.params || [],
+                                type:      {
                                     kind: 'ListType',
                                     type: {
                                         kind: "NamedType",
                                         name: {
-                                            kind: "Name",
+                                            kind:  "Name",
                                             value: camelize(name),
                                         }
                                     }
@@ -123,14 +124,14 @@ const context = {
                             query: {
                                 kind: "FieldDefinition",
                                 name: {
-                                    kind: 'Name',
+                                    kind:  'Name',
                                     value: name.substr(-1, 1) === 's' ? name.substr(0, name.length-1) : name,
                                 },
                                 arguments: oneSelector.params || [],
-                                type: {
+                                type:      {
                                     kind: "NamedType",
                                     name: {
-                                        kind: "Name",
+                                        kind:  "Name",
                                         value: camelize(name),
                                     }
                                 },
@@ -171,7 +172,7 @@ const context = {
         graphql: {
             typeName: 'ID!'
         },
-        /*sequelize: {
+        /* sequelize: {
 
         }*/
     },
@@ -348,7 +349,7 @@ const context = {
         }
 
         return {
-            graphql: graphConfig(config),
+            graphql:   graphConfig(config),
             sequelize: {
                 field:        config.sql,
                 type:         Sequelize.DATE,
@@ -375,7 +376,7 @@ const context = {
         }
 
         return {
-            graphql: graphConfig(config),
+            graphql:   graphConfig(config),
             sequelize: {
                 field:        config.sql,
                 type:         Sequelize.DATEONLY,
@@ -435,10 +436,10 @@ const context = {
             // graphql: graphConfig(config, {
             //     typeName: 'Boolean'
             // }),
-            graphql: null,
+            graphql:   null,
             sequelize: Object.assign({
-                field:        config.sql,
-                type:         Sequelize.JSON,
+                field: config.sql,
+                type:  Sequelize.JSON,
             }, config)
         }
     },
@@ -446,7 +447,7 @@ const context = {
         return {
             graphql: {
                 typeName: type,
-                resolve: fn,
+                resolve:  fn,
             },
         }
     },

@@ -1,5 +1,8 @@
 module.exports = SuperClass
 
+if(process.env.NODE_ENV === 'production')
+    return
+
 // Load eslint config
 var config
 try {
@@ -43,7 +46,7 @@ function verify(path, data, config) {
     res = mapper({
         filePath: path,
         messages: res.messages,
-        source: data,
+        source:   data,
     })
 
     for(var item of res)

@@ -1,32 +1,31 @@
-//const cluster       = require('cluster');
-const chalk         = require('chalk');
-const subConsole    = console.create('Bundle');
+// const cluster       = require('cluster');
+const chalk = require('chalk')
+const subConsole = console.create('Bundle')
 
-const PagesManager  = plugins.require('vue/PagesManager');
+const PagesManager = plugins.require('vue/PagesManager')
 
-module.exports = function(value, cb)
-{
+module.exports = function(value, cb) {
     if(value === undefined || value === null)
-        value = 'client';
+        value = 'client'
 
-    //if (cluster.isMaster)
-    subConsole.info('Starting bundle in environment:', chalk.bold(process.env.NODE_ENV + '-' + value), 'for', value, 'use');
+    // if (cluster.isMaster)
+    subConsole.info('Starting bundle in environment:', chalk.bold(process.env.NODE_ENV + '-' + value), 'for', value, 'use')
 
-    var serverStart = Date.now();
+    var serverStart = Date.now()
 
     try {
         PagesManager.compile(value, function() {
-            subConsole.info(value.substr(0,1).toUpperCase() + value.substr(1), 'bundle done (' + (Date.now() - serverStart) + ' ms)');
+            subConsole.info(value.substr(0,1).toUpperCase() + value.substr(1), 'bundle done (' + (Date.now() - serverStart) + ' ms)')
 
             if(cb)
-                cb();
+                cb()
         })
-        .on('bundle', function() {
-            serverStart = Date.now();
-        });
+            .on('bundle', function() {
+                serverStart = Date.now()
+            })
     } catch(e) {
-        subConsole.error(e);
+        subConsole.error(e)
     }
 
-    return false;
-};
+    return false
+}

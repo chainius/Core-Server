@@ -1,73 +1,66 @@
-const Path   = require('path');
-const fs     = require('fs');
-const mime   = require('mime-types');
-const zlib   = require('zlib');
+const Path = require('path')
+const fs = require('fs')
+const mime = require('mime-types')
+const zlib = require('zlib')
 
-const CStream = plugins.require('http/Resources/CacheStream');
-const Watcher = plugins.require('http/Watcher');
-const Crypter = plugins.require('http/Crypter');
+const CStream = plugins.require('http/Resources/CacheStream')
+const Watcher = plugins.require('http/Watcher')
+const Crypter = plugins.require('http/Crypter')
 
-class CacheObject
-{
-    constructor(path, streamCreator)
-    {
+class CacheObject {
+    constructor(path, streamCreator) {
         if(streamCreator)
-            this.createReadStream = streamCreator;
+            this.createReadStream = streamCreator
 
-        this.mime = mime.contentType(Path.extname(path));
-        this.path = Path.normalize(path);
-        this.purge();
+        this.mime = mime.contentType(Path.extname(path))
+        this.path = Path.normalize(path)
+        this.purge()
 
-        const that = this;
-        Watcher.onFileChange(this.path, function()
-        {
-            that.purge();
-            that.load();
-        });
+        const that = this
+        Watcher.onFileChange(this.path, function() {
+            that.purge()
+            that.load()
+        })
     }
 
-    purge()
-    {
-        this.stream     = null;
-        this.gzip       = false;
-        this.deflate    = false;
-        this.error      = false;
-        this.hash       = false;
+    purge() {
+        this.stream = null
+        this.gzip = false
+        this.deflate = false
+        this.error = false
+        this.hash = false
 
-        /*this.loaded     = false;
+        /* this.loaded     = false;
         this.content    = false;
         this.isLoading  = false;*/
 
-        this.load();
+        this.load()
     }
 
-    createReadStream()
-    {
-        return fs.createReadStream(this.path);
+    createReadStream() {
+        return fs.createReadStream(this.path)
     }
 
-    load()
-    {
-        this.exists = fs.existsSync(this.path);
+    load() {
+        this.exists = fs.existsSync(this.path)
 
         if(!this.exists)
-            return;
+            return
 
-        const raw   = this.createReadStream();
-        this.stream = new CStream(raw);
+        const raw = this.createReadStream()
+        this.stream = new CStream(raw)
 
-        const _this = this;
+        const _this = this
         raw.on('error', function(e) {
-            _this.error = e;
-            _this.stream.emit('error', e);
-        });
+            _this.error = e
+            _this.stream.emit('error', e)
+        })
     }
 
     //------------------------------------------------------------------------
 
-    linkPipes(src, dest)
-    {
-        /*src.once('readable', function(e)
+    linkPipes(src, dest) {
+        /* src.once('readable', function(e)
         {
             try
             {
@@ -79,127 +72,101 @@ class CacheObject
             }
         });*/
 
-        function onError(e)
-        {
-            try
-            {
-                dest.emit('error', e);
-            }
-            catch(e) { /*_console.error(e);*/ }
+        function onError(e) {
+            try {
+                dest.emit('error', e)
+            } catch(e) { /* _console.error(e);*/ }
         }
 
-        src.once('error', onError);
-        dest.once('finish', function(e)
-        {
-            src.removeListener('error', onError);
-        });
+        src.once('error', onError)
+        dest.once('finish', function(e) {
+            src.removeListener('error', onError)
+        })
 
-        return src.pipe(dest);
+        return src.pipe(dest)
     }
 
-    pipe(dest)
-    {
-        try
-        {
-            if (this.error)
-            {
-                dest.emit('error', this.error);
-                return dest;
+    pipe(dest) {
+        try {
+            if (this.error) {
+                dest.emit('error', this.error)
+                return dest
             }
 
-            return this.linkPipes(this.stream, dest);
-        }
-        catch(e)
-        {
-            console.error(e);
-            return false;
+            return this.linkPipes(this.stream, dest)
+        } catch(e) {
+            console.error(e)
+            return false
         }
     }
 
-    pipeGZip(dest)
-    {
-        try
-        {
-            if (this.error)
-            {
-                dest.emit('error', this.error);
-                return dest;
+    pipeGZip(dest) {
+        try {
+            if (this.error) {
+                dest.emit('error', this.error)
+                return dest
             }
 
-            if (!this.gzip)
-            {
-                const zipStream = this.pipe( zlib.createGzip() );
-                this.gzip       = new CStream(zipStream);
+            if (!this.gzip) {
+                const zipStream = this.pipe( zlib.createGzip() )
+                this.gzip = new CStream(zipStream)
             }
 
-            return this.linkPipes( this.gzip, dest );
-        }
-        catch(e)
-        {
-            console.error(e);
-            return false;
+            return this.linkPipes( this.gzip, dest )
+        } catch(e) {
+            console.error(e)
+            return false
         }
     }
 
-    pipeDeflate(dest)
-    {
-        try
-        {
-            if (this.error)
-            {
-                dest.emit('error', this.error);
-                return dest;
+    pipeDeflate(dest) {
+        try {
+            if (this.error) {
+                dest.emit('error', this.error)
+                return dest
             }
 
-            if (!this.deflate)
-            {
-                const deflStream = this.pipe( zlib.createDeflate() );
-                this.deflate     = new CStream(deflStream);
+            if (!this.deflate) {
+                const deflStream = this.pipe( zlib.createDeflate() )
+                this.deflate = new CStream(deflStream)
             }
 
-            return this.linkPipes( this.deflate, dest );
-        }
-        catch(e)
-        {
-            console.error(e);
-            return false;
+            return this.linkPipes( this.deflate, dest )
+        } catch(e) {
+            console.error(e)
+            return false
         }
     }
 
     //------------------------------------------------------------------------
 
-    getHash()
-    {
-        try
-        {
+    getHash() {
+        try {
             if (this.hash)
-                return this.hash;
+                return this.hash
 
             if(this.error)
-                return false;
+                return false
 
-            if (fs.existsSync(this.path))
-            {
-                const content = fs.readFileSync(this.path);
-                this.hash = Crypter.sha1(content);
+            if (fs.existsSync(this.path)) {
+                const content = fs.readFileSync(this.path)
+                this.hash = Crypter.sha1(content)
             }
 
-            return this.hash;
-        }
-        catch (e)
-        {
-            console.error(e);
+            return this.hash
+        } catch (e) {
+            console.error(e)
         }
 
-        return false;
+        return false
     }
 }
 
-module.exports = CacheObject;
+module.exports = CacheObject
 
 //------------------------------------------------------------------------
 
-/*class Test
+/* class Test
 {
 
     streamOutput(path)
@@ -239,5 +206,5 @@ module.exports = CacheObject;
 }
 
 const test = new Test();*/
-//test.hash(__dirname + '/index.js');
-//test.catch404(__dirname + '/index3.js');
+// test.hash(__dirname + '/index.js');
+// test.catch404(__dirname + '/index3.js');

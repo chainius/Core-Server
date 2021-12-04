@@ -1,82 +1,82 @@
-const fs         = require('fs')
-const path       = require('path')
-const vm         = require('vm')
-const Sequelize  = require('sequelize')
+const fs = require('fs')
+const path = require('path')
+const vm = require('vm')
+const Sequelize = require('sequelize')
 const contextLib = require('../lib/context.js')
-const qContent   = require('../lib/query_context.js')
-const { gql }    = require('apollo-server-express')
+const qContent = require('../lib/query_context.js')
+const { gql } = require('apollo-server-express')
 
 const funcStart = "func = function(console, __filename, __dirname) { " +
-                    "\n";
+                    "\n"
 
 class GraphDB {
 
     createContext() {
-        const context           = contextLib;
-        context.func            = false;
-        //context.$__require      = _require;
-        context.setTimeout      = setTimeout;
-        context.setInterval     = setInterval;
-        context.setImmediate    = setImmediate;
-        context.clearTimeout    = clearTimeout;
-        context.clearInterval   = clearInterval;
-        context.clearImmediate  = clearImmediate;
-        context.Buffer          = Buffer;
-        context.plugins         = plugins;
-        context.process         = process;
-        context.global          = context;
+        const context = contextLib
+        context.func = false
+        // context.$__require      = _require;
+        context.setTimeout = setTimeout
+        context.setInterval = setInterval
+        context.setImmediate = setImmediate
+        context.clearTimeout = clearTimeout
+        context.clearInterval = clearInterval
+        context.clearImmediate = clearImmediate
+        context.Buffer = Buffer
+        context.plugins = plugins
+        context.process = process
+        context.global = context
 
         context.eval = function(code) {
             const script = new vm.Script(code, {
-                filename: 'ApiEval',
-                lineOffset: -1,
+                filename:      'ApiEval',
+                lineOffset:    -1,
                 displayErrors: true
-            });
+            })
 
-            return script.runInContext(context);
-        };
+            return script.runInContext(context)
+        }
 
-        vm.createContext(context);
-        return context;
+        vm.createContext(context)
+        return context
     }
 
     construct(host, user, pass, db) {
-        const Op = Sequelize.Op;
+        const Op = Sequelize.Op
         const operatorsAliases = {
-            $eq: Op.eq,
-            $ne: Op.ne,
-            $gte: Op.gte,
-            $gt: Op.gt,
-            $lte: Op.lte,
-            $lt: Op.lt,
-            $not: Op.not,
-            $in: Op.in,
-            $notIn: Op.notIn,
-            $is: Op.is,
-            $like: Op.like,
-            $notLike: Op.notLike,
-            $iLike: Op.iLike,
-            $notILike: Op.notILike,
-            $regexp: Op.regexp,
-            $notRegexp: Op.notRegexp,
-            $iRegexp: Op.iRegexp,
-            $notIRegexp: Op.notIRegexp,
-            $between: Op.between,
-            $notBetween: Op.notBetween,
-            $overlap: Op.overlap,
-            $contains: Op.contains,
-            $contained: Op.contained,
-            $adjacent: Op.adjacent,
-            $strictLeft: Op.strictLeft,
-            $strictRight: Op.strictRight,
+            $eq:            Op.eq,
+            $ne:            Op.ne,
+            $gte:           Op.gte,
+            $gt:            Op.gt,
+            $lte:           Op.lte,
+            $lt:            Op.lt,
+            $not:           Op.not,
+            $in:            Op.in,
+            $notIn:         Op.notIn,
+            $is:            Op.is,
+            $like:          Op.like,
+            $notLike:       Op.notLike,
+            $iLike:         Op.iLike,
+            $notILike:      Op.notILike,
+            $regexp:        Op.regexp,
+            $notRegexp:     Op.notRegexp,
+            $iRegexp:       Op.iRegexp,
+            $notIRegexp:    Op.notIRegexp,
+            $between:       Op.between,
+            $notBetween:    Op.notBetween,
+            $overlap:       Op.overlap,
+            $contains:      Op.contains,
+            $contained:     Op.contained,
+            $adjacent:      Op.adjacent,
+            $strictLeft:    Op.strictLeft,
+            $strictRight:   Op.strictRight,
             $noExtendRight: Op.noExtendRight,
-            $noExtendLeft: Op.noExtendLeft,
-            $and: Op.and,
-            $or: Op.or,
-            $any: Op.any,
-            $all: Op.all,
-            $values: Op.values,
-            $col: Op.col
+            $noExtendLeft:  Op.noExtendLeft,
+            $and:           Op.and,
+            $or:            Op.or,
+            $any:           Op.any,
+            $all:           Op.all,
+            $values:        Op.values,
+            $col:           Op.col
         }
 
         var config = {
@@ -93,49 +93,49 @@ class GraphDB {
         if(fs.existsSync(srcContext))
             config = Object.assign(config, require(srcContext).sequelize || {})
 
-        this.sequelize = new Sequelize(db, user, pass, config);
+        this.sequelize = new Sequelize(db, user, pass, config)
 
         return this.buildSchemas()
     }
 
     buildSchemas() {
-        const context   = this.createContext()
+        const context = this.createContext()
         const sequelize = this.sequelize
         const queryDeff = {
-            kind: 'ObjectTypeDefinition',
+            kind:        'ObjectTypeDefinition',
             description: undefined,
-            name: {
-                kind: 'Name',
+            name:        {
+                kind:  'Name',
                 value: 'Query'
             },
             interfaces: [],
             directives: [],
-            fields: [],
+            fields:     [],
         }
 
-        const res =  {
-            schemas: {},
+        const res = {
+            schemas:   {},
             resolvers: {
                 Query: {}
             },
             typeDefs: {
-                kind: 'Document',
+                kind:        'Document',
                 definitions: [
                     queryDeff,
                 ],
                 loc: {
                     start: 0,
-                    end: 0,
+                    end:   0,
                 }
             },
         }
 
         // Register db fiiles
         var foreign = []
-        var exploreDirectory;
+        var exploreDirectory
 
         exploreDirectory = (dir, dirName = null) => {
-            var files = fs.readdirSync(dir);
+            var files = fs.readdirSync(dir)
             var schemas = {}
 
             for(var file of files) {
@@ -159,13 +159,13 @@ class GraphDB {
 
                     if(build.foreign && Object.keys(build.foreign).length > 0) {
                         foreign.push({
-                            schema:  build.schema,
-                            fields:  build.foreign
+                            schema: build.schema,
+                            fields: build.foreign
                         })
                     }
                 }
                 {
-                    //Graphql schema
+                    // Graphql schema
                     const build = schema.BuildGraphql(name)
                     if(build !== null) {
                         // Add schema definition in graphql
@@ -207,20 +207,20 @@ class GraphDB {
         // Parse foreign keys
         for(var item of foreign) {
             for(var key in item.fields) {
-                //res.schemas[field[key]].belongsTo(res.schemas[name])
+                // res.schemas[field[key]].belongsTo(res.schemas[name])
                 var n = key
                 if(n.substr(-3) === '_id')
                     n = n.substr(0, n.length-3)
 
                 const relatedModel = contextLib.SchemasByTableName[ item.fields[key] ]
                 item.schema.belongsTo(relatedModel, { as: n, foreignKey: key })
-                //res.schemas[field[key]].hasMany(res.schemas[name], { foreignKey: field[key] })
+                // res.schemas[field[key]].hasMany(res.schemas[name], { foreignKey: field[key] })
             }
         }
 
         // Register static types
         var dir = path.join(process.cwd(), 'graphql', 'types')
-        var files = fs.readdirSync(dir);
+        var files = fs.readdirSync(dir)
         for(var file of files) {
             var deff = this.readGql(path.join(dir, file))
             for(var d of deff.definitions)
@@ -236,16 +236,16 @@ class GraphDB {
     parseFile(path, context) {
         const source = fs.readFileSync(path)
         const script = new vm.Script(funcStart + source + "\n }", {
-            filename:       path,
-            lineOffset:     -1,
-            displayErrors:  true
-        });
+            filename:      path,
+            lineOffset:    -1,
+            displayErrors: true
+        })
 
         contextLib.file = path
-        script.runInContext( context );
-        const schema = context.func(console.create('graphql'));
-        context.func = null;
-        return schema;
+        script.runInContext( context )
+        const schema = context.func(console.create('graphql'))
+        context.func = null
+        return schema
     }
 
     readGql(path) {

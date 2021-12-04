@@ -6,9 +6,9 @@ class ApiEnvironment extends SuperClass {
     * @param task {Object}
     */
     sendTask(name, task) {
-        return this.siteManager.sendTask(name, task);
+        return this.siteManager.sendTask(name, task)
     }
 
 }
 
-module.exports = ApiEnvironment;
+module.exports = ApiEnvironment

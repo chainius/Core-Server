@@ -1,7 +1,7 @@
 class ApiEnvironment extends SuperClass {
 
     getConnections() {
-        return this.siteManager.connections || {};
+        return this.siteManager.connections || {}
     }
 
     /**
@@ -9,24 +9,22 @@ class ApiEnvironment extends SuperClass {
     * @param sql {String}
     * @param vars {Object}
     */
-    async query(sql, vars)
-    {
+    async query(sql, vars) {
         if (vars === undefined || vars === null)
-            vars = this.post;
+            vars = this.post
 
-        vars['auth_id'] = this.session['auth_id'];
+        vars['auth_id'] = this.session['auth_id']
 
-        if (this.queryVars)
-        {
+        if (this.queryVars) {
             for (var key in this.queryVars)
-                vars[key] = this.queryVars[key];
+                vars[key] = this.queryVars[key]
         }
 
-        const database = this.getConnections().mysql;
+        const database = this.getConnections().mysql
         if (!database)
-            throw('No Mysql connection found');
+            throw('No Mysql connection found')
 
-        return await database.query(sql, vars, this.console);
+        return await database.query(sql, vars, this.console)
     }
 
     /**
@@ -35,19 +33,17 @@ class ApiEnvironment extends SuperClass {
     * @param vars {Object}
     * @param default
     */
-    async query_object(sql, vars, def)
-    {
-        const result = await this.query(sql, vars);
+    async query_object(sql, vars, def) {
+        const result = await this.query(sql, vars)
 
-        if (result.length === 0 || result[0] === undefined)
-        {
+        if (result.length === 0 || result[0] === undefined) {
             if(def !== undefined)
-                return def;
+                return def
             else
-                throw('No results found');
+                throw('No results found')
         }
 
-        return result[0];
+        return result[0]
     }
 
     /**
@@ -55,19 +51,18 @@ class ApiEnvironment extends SuperClass {
     * @param sql {String}
     * @param vars {Object}
     */
-    query_prepare(sql, vars)
-    {
+    query_prepare(sql, vars) {
         if (vars === undefined || vars === null)
-            vars = this.post;
+            vars = this.post
 
-        const database = this.getConnections().mysql;
+        const database = this.getConnections().mysql
 
         if(!database)
-            return sql;
+            return sql
 
-        return plugins.require('databases/Mysql').queryFormat.call(database.connection, sql, vars);
+        return plugins.require('databases/Mysql').queryFormat.call(database.connection, sql, vars)
     }
 
 }
 
-module.exports = ApiEnvironment;
+module.exports = ApiEnvironment

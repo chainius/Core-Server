@@ -40,6 +40,7 @@ module.exports = function vueify(file, options) {
                 // browserify doesn't log the stack by default...
                 console.error(error.stack.replace(/^.*?\n/, ''))
             }
+
             stream.queue(result)
             stream.queue(null)
         })

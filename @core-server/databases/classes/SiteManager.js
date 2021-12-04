@@ -1,21 +1,19 @@
-'use strict';
+'use strict'
 
-class SiteManager extends SuperClass
-{
-    autoSetupFromConfig()
-    {
-        super.autoSetupFromConfig();
+class SiteManager extends SuperClass {
+    autoSetupFromConfig() {
+        super.autoSetupFromConfig()
 
-        const config = this.getConfig('servers');
+        const config = this.getConfig('servers')
 
         if (config.mysql)
-            this.setupMysql(config.mysql);
+            this.setupMysql(config.mysql)
 
         if (config.cloudflare)
-            this.setupCloudflare(config.cloudflare);
+            this.setupCloudflare(config.cloudflare)
 
         if (config.mongodb)
-            this.setupMongodb(config.mongodb);
+            this.setupMongodb(config.mongodb)
     }
 
     //------------------------------------------
@@ -24,41 +22,34 @@ class SiteManager extends SuperClass
     * Setup a cloudflare api link
     * @param config {Object}
     */
-    setupCloudflare(config)
-    {
-        this.connections = this.connections || {};
+    setupCloudflare(config) {
+        this.connections = this.connections || {}
 
-        try
-        {
+        try {
             if (config === undefined)
-                config = this.getConfig('servers').cloudflare;
+                config = this.getConfig('servers').cloudflare
 
-            const Cloudflare = require('cloudflare');
-            this.connections.cloudflare = new Cloudflare(config);
+            const Cloudflare = require('cloudflare')
+            this.connections.cloudflare = new Cloudflare(config)
 
             //-------------------------------------------------------
 
-            if(process.env.NODE_ENV === 'production' && config["zone-id"])
-            {
-                console.log("Purging cloudflare cache..");
+            if(process.env.NODE_ENV === 'production' && config["zone-id"]) {
+                console.log("Purging cloudflare cache..")
 
                 this.connections.cloudflare.deleteCache(config["zone-id"], {
                     purge_everything: true
                 })
-                .then(function()
-                {
-                    console.log('Cloudflare cache successfully purged')
-                })
-                .catch(function(err)
-                {
-                    console.error(err);
-                });
+                    .then(function() {
+                        console.log('Cloudflare cache successfully purged')
+                    })
+                    .catch(function(err) {
+                        console.error(err)
+                    })
             }
 
-        }
-        catch (e)
-        {
-            console.error(e);
+        } catch (e) {
+            console.error(e)
         }
     }
 
@@ -66,21 +57,17 @@ class SiteManager extends SuperClass
     * Setup a mongodb connection that will be used by the api's
     * @param config {Object}
     */
-    setupMongodb(config)
-    {
-        this.connections = this.connections || {};
+    setupMongodb(config) {
+        this.connections = this.connections || {}
 
-        try
-        {
+        try {
             if (config === undefined)
-                config = this.getConfig('servers').mongodb;
+                config = this.getConfig('servers').mongodb
 
-            const Mongodb = plugins.require('databases/Mongodb');
-            this.connections.mongodb  = new Mongodb(config);
-        }
-        catch (e)
-        {
-            console.error(e);
+            const Mongodb = plugins.require('databases/Mongodb')
+            this.connections.mongodb = new Mongodb(config)
+        } catch (e) {
+            console.error(e)
         }
     }
 
@@ -88,25 +75,21 @@ class SiteManager extends SuperClass
     * Setup a database connection that will be used by the api's
     * @param config {Object}
     */
-    setupMysql(config)
-    {
-        this.connections = this.connections || {};
+    setupMysql(config) {
+        this.connections = this.connections || {}
 
-        try
-        {
+        try {
             if (config === undefined)
-                config = this.getConfig('servers').mysql;
+                config = this.getConfig('servers').mysql
 
-            const Mysql = plugins.require('databases/Mysql');
-            this.connections.mysql  = new Mysql(config);
-        }
-        catch (e)
-        {
-            console.error(e);
+            const Mysql = plugins.require('databases/Mysql')
+            this.connections.mysql = new Mysql(config)
+        } catch (e) {
+            console.error(e)
         }
     }
 
 
 }
 
-module.exports = SiteManager;
+module.exports = SiteManager

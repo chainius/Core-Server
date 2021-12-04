@@ -1,26 +1,25 @@
-'use strict';
-const cluster = require('cluster');
+'use strict'
+const cluster = require('cluster')
 
 if(!cluster.isMaster) {
-    module.exports = SuperClass;
-    return;
+    module.exports = SuperClass
+    return
 }
 
-class MasterServer extends SuperClass
-{
+class MasterServer extends SuperClass {
     startWorker() {
-        const worker = super.startWorker();
+        const worker = super.startWorker()
 
         if(this.setupNetworkDiscovery())
-            this.networkDiscovery.registerWorker(worker);
+            this.networkDiscovery.registerWorker(worker)
 
-        return worker;
+        return worker
     }
 
     getConfig(name, retry) {
         try {
-            const Path = require('path');
-            return require(Path.join(process.cwd(), 'config', 'servers.json'));
+            const Path = require('path')
+            return require(Path.join(process.cwd(), 'config', 'servers.json'))
         } catch(e) {
             return {}
         }
@@ -28,19 +27,19 @@ class MasterServer extends SuperClass
 
     setupNetworkDiscovery() {
         if(this.networkDiscovery)
-            return true;
+            return true
 
-        var discoveryIdentifier = process.options.discovery || process.env.discovery;
+        var discoveryIdentifier = process.options.discovery || process.env.discovery
 
         if(!discoveryIdentifier) {
-            const config = this.getConfig('servers');
-            discoveryIdentifier = config['network-discovery'];
+            const config = this.getConfig('servers')
+            discoveryIdentifier = config['network-discovery']
         }
 
-        const NetworkDiscovery = plugins.require('network-tasks/NetworkDiscovery');
-        this.networkDiscovery  = NetworkDiscovery.Create(discoveryIdentifier);
-        return true;
+        const NetworkDiscovery = plugins.require('network-tasks/NetworkDiscovery')
+        this.networkDiscovery = NetworkDiscovery.Create(discoveryIdentifier)
+        return true
     }
 }
 
-module.exports = MasterServer;
+module.exports = MasterServer
