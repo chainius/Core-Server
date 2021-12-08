@@ -47,6 +47,7 @@ class WSRequest {
             session,
             method: 'GET',
             headers: socket.headers,
+            socket,
         }
 
         // Execute query

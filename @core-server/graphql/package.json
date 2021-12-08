@@ -1,6 +1,6 @@
 {
   "name": "@core-server/graphql",
-  "version": "1.3.9",
+  "version": "1.4.3",
   "description": "",
   "main": "index.js",
   "scripts": {

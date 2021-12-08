@@ -21,7 +21,8 @@ class GraphDB extends SuperClass {
             return resolver.call(this, parent, args, Object.assign({
                 $sentryTransaction: transaction,
             }, context), info).catch((e) => {
-                if(e.stack && e.message && context.session_object && context.session_object.onException) {
+                const hasStack = e.stack && e.message && context.session_object && context.session_object.onException
+                if(hasStack && !(e.extensions && e.extensions.code == 'UNAUTHENTICATED')) {
                     try {
                         context.session_object.onException(e, {
                             graphql:            name,

@@ -58,6 +58,11 @@ class Session extends SuperClass {
             if(info && info.name)
                 scope.setTag('api', info.name)
 
+            if(info && info.method)
+                scope.setTag('method', info.method)
+            else if (info && info.environment && info.environment.$req && info.environment.$req.method)
+                scope.setTag('method', info.environment.$req.method)
+
             if(info && info.graphql)
                 scope.setTag('graphql', info.graphql)                
 

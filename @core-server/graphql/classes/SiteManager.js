@@ -4,6 +4,7 @@ const Session = plugins.require('api/Session')
 const context = require('../lib/context')
 const fs = require('fs')
 const path = require('path')
+const HttpServer = plugins.require('http/HttpServer')
 
 /* const typeDefs = gql(`
   # Comments in GraphQL strings (such as this one) start with the hash (#) symbol.
@@ -28,6 +29,9 @@ class SiteManager extends SuperClass {
 
     async getGraphqlContext({ req }) {
         var sess = null
+        req.getClientIp = req.getClientIp || function() {
+            return HttpServer.getClientIpFromHeaders(this, this.socket)
+        }
 
         // Try loading session from headers (parsed from LB)
         if(req.session) {
@@ -66,6 +70,7 @@ class SiteManager extends SuperClass {
 
         res.session_object = sess
         res.session = sess.data
+        res.req = req
         return res
     }
 

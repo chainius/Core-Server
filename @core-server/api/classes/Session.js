@@ -45,7 +45,7 @@ class Session {
         }).then(fn)
     }
 
-    static toRequest({ client_ip, file, get, socket }) {
+    static toRequest({ client_ip, file, get, socket, headers }) {
         if(!client_ip && socket) {
             client_ip = function() {
                 return HttpServer.getClientIpFromHeaders(socket, socket)
@@ -54,7 +54,7 @@ class Session {
 
         return {
             getClientIp: typeof(client_ip) == 'function' ? client_ip : () => client_ip,
-            headers:     socket ? socket.headers : {},
+            headers:     headers || (socket && socket.headers) || {},
             file:        file || {},
             get:         get || {},
             socket,
@@ -134,6 +134,7 @@ class Session {
                 } else if(typeof(e) == 'object' && e.message) {
                     if(e.stack && this.onException) {
                         e.httpCode = e.httpCode || 500
+                        e.method = 'WSS'
                         this.onException(e, message)
                     }
 
