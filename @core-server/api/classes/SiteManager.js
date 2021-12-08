@@ -359,7 +359,7 @@ class SiteManager extends SuperClass {
                 throw(permission)
 
             return session.api(name, post, req)
-        })
+        }, { name })
     }
 
 

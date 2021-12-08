@@ -22,7 +22,8 @@ class Session extends SuperClass {
 
     onException(e, apiHandler) {
         Sentry.withScope(scope => {
-            scope.setTag('api', apiHandler.name)
+            if(apiHandler && apiHandler.name)
+                scope.setTag('api', apiHandler.name)
 
             if(this.data && this.data.auth_id)
                 scope.setUser({ id: this.data.auth_id })

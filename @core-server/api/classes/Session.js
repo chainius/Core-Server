@@ -25,26 +25,24 @@ class Session {
         return true
     }
 
-    executeOnReady(fn) { // Async fn as input
+    executeOnReady(fn, info = null) { // Async fn as input
         if(this.ready)
             return fn()
-        
-        const onR = this.onReady()
-        
-        if(!onR.then)
-            return fn()
-        
-        return new Promise((resolve, reject) => {
-            onR.then(function() {
-                fn().then(function(result) {
-                    resolve(result)
-                }).catch(function(err) {
-                    reject(err)
-                })
-            }).catch(function(err) {
-                reject(err)
-            })
-        })
+
+        return (new Promise((resolve, reject) => {
+            try {
+                resolve(this.onReady())
+            } catch(e) {
+                reject(e)
+            }
+        })).catch((e) => {
+            if(typeof(e) == 'string')
+                e = new Error(e)
+
+            e.httpCode = 504
+            this.onException(e, info)
+            throw(e)
+        }).then(fn)
     }
 
     updateCookies(cookies) {
@@ -83,7 +81,7 @@ class Session {
      */
     sendSocketMessage(socket, message) {
         try {
-            if (typeof (message) === 'object' || typeof (message) === 'array')
+            if (typeof (message) === 'object')
                 message = JSON.stringify(message)
 
             socket.write(message)
@@ -167,12 +165,12 @@ class Session {
         const environment = this.createApiEnvironment(name, post, req)
         environment.socket = socket
 
-        return this.executeOnReady(() => this.__execApi(apiHandler, environment))
+        return this.executeOnReady(() => this.__execApi(apiHandler, environment), apiHandler)
     }
 
     __execApi(apiHandler, environment) {
         return apiHandler.handler.call(environment, apiHandler.console, apiHandler.path, apiHandler.dirname).then(function(result) {
-            if ((typeof (result) === 'object' || typeof (result) === 'array') && result !== null) {
+            if ((typeof (result) === 'object') && result !== null) {
                 if (result['error'])
                     throw(result)
 
@@ -181,17 +179,19 @@ class Session {
                 return { result: result }
             }
         }).catch((err) => {
-            if (typeof (err) === 'object' || typeof (err) === 'array') {
+            if (typeof (err) === 'object') {
                 if (err.error === undefined) {
                     if (err.message != undefined) {
                         if(err.showIntercept !== false)
                             console.error(err)
 
-                        if(err.stack && this.onException)
+                        if(err.stack && this.onException) {
                             this.onException(err, apiHandler, environment)
+                            err.httpCode = err.httpCode || 500
+                        }
 
                         if(err.stack && err.stack.indexOf('sequelize') != -1)
-                            err = { error: "internal error" }
+                            err = { error: "internal error", httpCode: 500 }
                         else
                             err = { error: err.message }
                     } else {
@@ -238,7 +238,7 @@ class Session {
             }
 
             return this.api(api, post, HttpServer.getClientIpFromHeaders(socket, socket), {}, get, socket)
-        }).then(function(result) {
+        }, { name: api }).then(function(result) {
             _this.sendSocketMessage(socket, {
                 api:  api,
                 data: result,
