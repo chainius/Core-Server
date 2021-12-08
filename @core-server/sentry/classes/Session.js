@@ -28,17 +28,17 @@ Sentry.init(pkg.sentry)
 class Session extends SuperClass {
 
     __execApi(apiHandler, environment) {
-        var transaction;
+        var transaction
         if(environment.$req.$sentryTransaction && !environment.$sentryTransaction) {
             transaction = environment.$req.$sentryTransaction.startChild({
-                op:   "api",
+                op:          "api",
                 description: apiHandler.name,
             })
         } else if(!environment.$sentryTransaction) {
             transaction = Sentry.startTransaction({
-                op: "api",
+                op:          "api",
                 description: apiHandler.name,
-                name: apiHandler.name,
+                name:        apiHandler.name,
             })
         }
 
@@ -50,13 +50,20 @@ class Session extends SuperClass {
     }
 
     onException(e, info) {
+        if(e.captured)
+            return
+
+        e.captured = true
         Sentry.withScope(scope => {
             if(info && info.name)
                 scope.setTag('api', info.name)
 
+            if(info && info.graphql)
+                scope.setTag('graphql', info.graphql)                
+
             if(info && info.$sentryTransaction)
                 scope.setSpan(info.$sentryTransaction)
-            else if(info && info.environment.$sentryTransaction)
+            else if(info && info.environment && info.environment.$sentryTransaction)
                 scope.setSpan(info.environment.$sentryTransaction)
 
             if(Array.isArray(e.context)) {

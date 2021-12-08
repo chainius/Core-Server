@@ -46,11 +46,17 @@ class Session {
     }
 
     static toRequest({ client_ip, file, get, socket }) {
+        if(!client_ip && socket) {
+            client_ip = function() {
+                return HttpServer.getClientIpFromHeaders(socket, socket)
+            }    
+        }
+
         return {
             getClientIp: typeof(client_ip) == 'function' ? client_ip : () => client_ip,
             headers:     socket ? socket.headers : {},
-            file,
-            get,
+            file:        file || {},
+            get:         get || {},
             socket,
         }
     }

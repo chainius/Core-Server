@@ -1,5 +1,6 @@
 const { convertNodeHttpToRequest, runHttpQuery } = require('apollo-server-core')
 const Crypter = plugins.require('http/Crypter')
+const EventEmitter = require('events');
 
 // Incomming WebSocket message (defining a graphql request)
 
@@ -52,9 +53,11 @@ class WSRequest {
         var res = ""
         var etag = ""
 
+        const resEmitter = new EventEmitter();
+
         await runHttpQuery([ req ], {
             method: "GET",
-            options: apollo.graphQLServerOptions({ req }),
+            options: apollo.graphQLServerOptions({ req, res: resEmitter }),
             query: this.apolloQuery,
             request: convertNodeHttpToRequest(req),
         })
@@ -77,8 +80,8 @@ class WSRequest {
             if(this.id)
                 res.id = this.id
 
-            if(res.code == 401 && this.siteManager.addLog)
-                this.siteManager.addLog('graphql', socket, session, this.apolloQuery, res)
+            if(res.code == 401 && session.siteManager && session.siteManager.addLog)
+                session.siteManager.addLog('graphql', socket, session, this.apolloQuery, res)
 
             res = JSON.stringify(res)
         }).catch((err) => {
@@ -130,6 +133,8 @@ class WSRequest {
                 id: this.id,
             }
         }
+
+        resEmitter.emit('close', res)
 
         // Send result back
         return session.sendSocketMessage(socket, res)
