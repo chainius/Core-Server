@@ -61,7 +61,7 @@ class SiteManager extends SuperClass {
         // Create context object
         var res = Object.assign({ permissions: sess.permissions }, sess.data)
         res.api = (name, post) => {
-            return sess.api(name, post)
+            return sess.api(name, post, req)
         }
 
         res.session_object = sess
@@ -94,7 +94,8 @@ class SiteManager extends SuperClass {
             this.apollo = new ApolloServer({
                 typeDefs,
                 resolvers,
-                context: this.getGraphqlContext.bind(this)
+                context: this.getGraphqlContext.bind(this),
+                // validationRules: [depthLimit(10)],
             })
 
             this.apollo.applyMiddleware({

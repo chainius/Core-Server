@@ -136,6 +136,7 @@ class WSRequest {
     }
 
     handle(socket, session, initialState) {
+
 	    // Handle simple query
         if(this.Query != "" && this.query)
             this.doQuery(socket, session, initialState).catch(console.error)
@@ -152,6 +153,46 @@ class WSRequest {
                 this.bulk[key].handle(socket, session, initialState)
             }
         }
+    }
+
+    queriesCount() {
+        var count = 0
+        if(this.Query != "" && this.query)
+            count++
+
+        // Handle bulk queries
+        if(this.bulk) {
+            for(var key in this.bulk) {
+                if(!(this.bulk[key] instanceof WSRequest)) {
+                    this.bulk[key] = new WSRequest(this.bulk[key])
+                    this.bulk[key].live = null
+                    this.bulk[key].bulk = []
+                }
+
+                count += this.bulk[key].queriesCount()
+            }
+        }
+
+        return count
+    }
+
+    assertMaxQueries(max) {
+        const count = this.queriesCount()
+        if(count <= max)
+            return
+
+        const err = new Error('Too many graphql queries')
+        err.context = [
+            {
+                name: 'counter',
+                data: {
+                    count,
+                    max,
+                }
+            },
+        ]
+
+        throw(err)
     }
 
     removeSubQueries() {
@@ -172,7 +213,9 @@ module.exports = function WebSocket(session, socket, message) {
 	if(!message.query && !message.live && !message.bulk)
         return
 
+    const max = session.max_graphql_queries || 10
     message = new WSRequest(message)
+    message.assertMaxQueries(max)
     message.handle(socket, session, true)
 
     // Handle subscriptions
@@ -180,6 +223,7 @@ module.exports = function WebSocket(session, socket, message) {
 
         message.live = new WSRequest(message.live)
         message.live.removeSubQueries()
+        message.live.assertMaxQueries(max)
         message.live.handle(socket, session, true)
 
         // console.warn("handle", socket.id, typeof(socket.$liveGraphql), JSON.stringify(message, null, 4))

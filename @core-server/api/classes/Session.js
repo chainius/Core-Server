@@ -45,6 +45,16 @@ class Session {
         }).then(fn)
     }
 
+    static toRequest({ client_ip, file, get, socket }) {
+        return {
+            getClientIp: typeof(client_ip) == 'function' ? client_ip : () => client_ip,
+            headers:     socket ? socket.headers : {},
+            file,
+            get,
+            socket,
+        }
+    }
+
     updateCookies(cookies) {
         if (typeof (cookies) === 'object')
             this.cookies = cookies
@@ -103,32 +113,35 @@ class Session {
 
     handleSocket(socket) {
         this.activeSockets.push(socket)
-        const _this = this
 
-        socket.on('data', function(message) {
+        socket.on('data', (message) => {
             try {
-                if(typeof(message) !== 'object') {
+                if(typeof(message) !== 'object')
                     message = JSON.parse(message)
-                }
 
-                _this.handleSocketMessage(socket, message)
+                this.handleSocketMessage(socket, message)
             } catch(e) {
                 console.error(e)
                 
                 if(typeof(e) == 'string') {
-                    _this.sendSocketMessage(socket, { error: e })
+                    this.sendSocketMessage(socket, { error: e, httpCode: 500 })
                 } else if(typeof(e) == 'object' && e.message) {
-                    _this.sendSocketMessage(socket, { error: e.message })
+                    if(e.stack && this.onException) {
+                        e.httpCode = e.httpCode || 500
+                        this.onException(e, message)
+                    }
+
+                    this.sendSocketMessage(socket, { error: e.message, httpCode: e.httpCode || 500 })
                 } else if(typeof(e) == 'object' && e.error) {
-                    _this.sendSocketMessage(socket, e)
+                    this.sendSocketMessage(socket, e)
                 } else {
-                    _this.sendSocketMessage(socket, { error: e })
+                    this.sendSocketMessage(socket, { error: e, httpCode: 500 })
                 }
             }
         })
 
-        socket.on('close', function() {
-            _this.handleSocketClose(socket)
+        socket.on('close', () => {
+            this.handleSocketClose(socket)
         })
     }
 
@@ -139,19 +152,7 @@ class Session {
     * @param client_ip {String}
     * @param files {Object} optional
     */
-    api(name, post, client_ip, file, get, socket) {
-        var req = client_ip
-        if(typeof(client_ip) !== 'object') {
-            req = {
-                getClientIp() {
-                    return client_ip 
-                },
-                file,
-                get,
-                headers: socket ? socket.headers : {}
-            }
-        }
-
+    api(name, post, req) {
         const apiHandler = this.siteManager.autoCreateApi(name)
 
         if (!apiHandler)
@@ -163,7 +164,7 @@ class Session {
             })
 
         const environment = this.createApiEnvironment(name, post, req)
-        environment.socket = socket
+        environment.socket = req.socket
 
         return this.executeOnReady(() => this.__execApi(apiHandler, environment), apiHandler)
     }
@@ -186,7 +187,11 @@ class Session {
                             console.error(err)
 
                         if(err.stack && this.onException) {
-                            this.onException(err, apiHandler, environment)
+                            this.onException(err, {
+                                name: apiHandler.name,
+                                environment,
+                            })
+
                             err.httpCode = err.httpCode || 500
                         }
 
@@ -220,7 +225,6 @@ class Session {
     }
 
     handleSocketApi(socket, api, post, salt) {
-        const _this = this
         var get = {}
 
         if(api.indexOf('?') !== -1) {
@@ -237,15 +241,22 @@ class Session {
                 })
             }
 
-            return this.api(api, post, HttpServer.getClientIpFromHeaders(socket, socket), {}, get, socket)
-        }, { name: api }).then(function(result) {
-            _this.sendSocketMessage(socket, {
+            return this.api(api, post, Session.toRequest({
+                client_ip() {
+                    return HttpServer.getClientIpFromHeaders(socket, socket)
+                },
+                file: {},
+                get,
+                socket,
+            }))
+        }, { name: api }).then((result) => {
+            this.sendSocketMessage(socket, {
                 api:  api,
                 data: result,
                 salt: salt
             })
-        }).catch(function(err) {
-            _this.sendSocketMessage(socket, {
+        }).catch((err) => {
+            this.sendSocketMessage(socket, {
                 apiError: api,
                 error:    err,
                 salt:     salt
