@@ -1,11 +1,7 @@
-const GraphDB = plugins.require('graphql/GraphDb')
+const GraphDB = plugins.require('graphql/GraphDb').Instance()
 const sequelize = require('sequelize')
 
 class ApiEnvironment extends SuperClass {
-
-    grahpql(query) {
-        return "todo"
-    }
 
     get schemas() {
         return this.siteManager.schemas

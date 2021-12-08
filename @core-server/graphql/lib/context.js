@@ -85,12 +85,21 @@ const context = {
                     schema
                 }
             },
-            BuildGraphql(name = table) {
+            BuildGraphql(name = table, graphDB = null) {
                 if(!hasGraphql)
                     return null
 
+                if(graphDB == null)
+                    graphDB = plugins.require('graphql/GraphDb').Instance()
+
                 if(schemaOptions.graphqlName)
                     name = schemaOptions.graphqlName
+
+                const withResolver = graphDB.withResolver || ((resolver) => {
+                    return resolver
+                })
+
+                var singleName = name.substr(-1, 1) === 's' ? name.substr(0, name.length-1) : name
 
                 return {
                     definitions: [
@@ -117,7 +126,7 @@ const context = {
                                 },
                                 directives: [],
                             },
-                            resolve: multiSelector.multi.resolve || createResolver(schema, Object.assign(multiSelector))
+                            resolve: withResolver(multiSelector.multi.resolve || createResolver(schema, Object.assign(multiSelector)), name, multiSelector)
                         } : null,
 
                         oneSelector ? {
@@ -125,7 +134,7 @@ const context = {
                                 kind: "FieldDefinition",
                                 name: {
                                     kind:  'Name',
-                                    value: name.substr(-1, 1) === 's' ? name.substr(0, name.length-1) : name,
+                                    value: singleName,
                                 },
                                 arguments: oneSelector.params || [],
                                 type:      {
@@ -137,7 +146,7 @@ const context = {
                                 },
                                 directives: [],
                             },
-                            resolve: oneSelector.one.resolve || createResolver(schema, Object.assign(oneSelector))
+                            resolve: withResolver(oneSelector.one.resolve || createResolver(schema, Object.assign(oneSelector)), singleName, oneSelector)
                         } : null,
 
                         getComputedFields(name, fields),

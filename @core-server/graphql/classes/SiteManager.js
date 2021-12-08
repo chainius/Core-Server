@@ -1,5 +1,5 @@
 const { ApolloServer } = require('apollo-server-express')
-const GraphDB = plugins.require('graphql/GraphDb')
+const GraphDB = plugins.require('graphql/GraphDb').Instance()
 const Session = plugins.require('api/Session')
 const context = require('../lib/context')
 const fs = require('fs')

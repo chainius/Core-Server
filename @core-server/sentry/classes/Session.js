@@ -1,5 +1,6 @@
 const Sentry = require("@sentry/node")
 const pkg = require(process.cwd() + "/package.json")
+// const Tracing = require("@sentry/tracing")
 
 if(!pkg.sentry || (pkg.sentry.onlyProd && process.env.NODE_ENV != "production")) {
     module.exports = SuperClass
@@ -14,30 +15,32 @@ if(!pkg.sentry.release)
 if(!pkg.sentry.environment)
     pkg.sentry.environment = process.env.SENTRY_ENV || process.env.NODE_ENV || 'development'
 
+// pkg.sentry.integrations = pkg.sentry.integrations || [
+//     new Tracing.Integrations.Mongo({
+//         useMongoose: true // Default: false
+//     })
+// ]
+
 delete pkg.sentry.onlyProd
 Sentry.init(pkg.sentry)
 
 /** session */
 class Session extends SuperClass {
 
-    // api(name, post, req = {}) {
-    //     const transaction = Sentry.startTransaction({
-    //         op: "api",
-    //         name,
-    //     })
-
-    //     req.$sentryTransaction = transaction
-    //     return super.api.call(this, name, post, req).finally(res => {
-    //         transaction.finish()
-    //         return res
-    //     })
-    // }
-
     __execApi(apiHandler, environment) {
-        const transaction = Sentry.startTransaction({
-            op:   "api",
-            name: apiHandler.name,
-        })
+        var transaction;
+        if(environment.$req.$sentryTransaction && !environment.$sentryTransaction) {
+            transaction = environment.$req.$sentryTransaction.startChild({
+                op:   "api",
+                description: apiHandler.name,
+            })
+        } else if(!environment.$sentryTransaction) {
+            transaction = Sentry.startTransaction({
+                op: "api",
+                description: apiHandler.name,
+                name: apiHandler.name,
+            })
+        }
 
         environment.$sentryTransaction = transaction
         return super.__execApi(apiHandler, environment).finally(res => {
@@ -66,7 +69,7 @@ class Session extends SuperClass {
             if(this.data && this.data.auth_id)
                 scope.setUser({ id: this.data.auth_id })
 
-            Sentry.captureException(e)
+            Sentry.captureException(e, scope)
         })
     }
 

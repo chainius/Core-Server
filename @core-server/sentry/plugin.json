@@ -1,5 +1,8 @@
 {
     "classes": {
-        "Session": "api/Session"
+        "Session": "api/Session",
+        "ApiEnvironment": "api/ApiEnvironment",
+        "GraphDb": "graphql/GraphDb",
+        "SiteManager": "graphql/SiteManager"
     }
 }

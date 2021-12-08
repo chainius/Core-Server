@@ -166,7 +166,7 @@ class GraphDB {
                 }
                 {
                     // Graphql schema
-                    const build = schema.BuildGraphql(name)
+                    const build = schema.BuildGraphql(name, this)
                     if(build !== null) {
                         // Add schema definition in graphql
                         for(var deff of build.definitions)
@@ -253,6 +253,13 @@ class GraphDB {
         return gql(src)
     }
 
+    static Instance() {
+        if(!this._instance)
+            this._instance = new this()
+
+        return this._instance
+    }
+
 }
 
-module.exports = new GraphDB()
+module.exports = GraphDB
