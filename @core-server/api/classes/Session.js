@@ -252,7 +252,8 @@ class Session {
                 client_ip() {
                     return HttpServer.getClientIpFromHeaders(socket, socket)
                 },
-                file: {},
+                method: 'WSS',
+                file:   {},
                 get,
                 socket,
             }))

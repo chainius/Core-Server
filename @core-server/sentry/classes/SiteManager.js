@@ -4,9 +4,9 @@ class SiteManager extends SuperClass {
 
     getGraphqlContext(info) {
         const tx = Sentry.startTransaction({
-            op: "graphql",
+            op:          "graphql",
             description: "graphql",
-            name: "graphql",
+            name:        "graphql",
         })
 
         info.res.once('close', () => tx.finish())
