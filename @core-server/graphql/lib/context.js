@@ -101,6 +101,12 @@ const context = {
 
                 var singleName = name.substr(-1, 1) === 's' ? name.substr(0, name.length-1) : name
 
+                if(multiSelector && !multiSelector.database)
+                    multiSelector.database = graphDB.database
+
+                if(oneSelector && !oneSelector.database)
+                    oneSelector.database = graphDB.database
+
                 return {
                     definitions: [
                         schemaDeffinition(name, fields)
@@ -126,7 +132,7 @@ const context = {
                                 },
                                 directives: [],
                             },
-                            resolve: withResolver(multiSelector.multi.resolve || createResolver(schema, Object.assign(multiSelector)), name, multiSelector)
+                            resolve: withResolver(multiSelector.multi.resolve || createResolver(schema, multiSelector), name, multiSelector)
                         } : null,
 
                         oneSelector ? {
@@ -146,7 +152,7 @@ const context = {
                                 },
                                 directives: [],
                             },
-                            resolve: withResolver(oneSelector.one.resolve || createResolver(schema, Object.assign(oneSelector)), singleName, oneSelector)
+                            resolve: withResolver(oneSelector.one.resolve || createResolver(schema, oneSelector), singleName, oneSelector)
                         } : null,
 
                         getComputedFields(name, fields),

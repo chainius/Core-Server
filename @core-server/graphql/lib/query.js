@@ -40,7 +40,13 @@ class WSRequest {
         return r
     }
 
-    async doQuery(socket, session, initialState) {
+    async doQuery(socket, session, initialState, watcher) {
+        if(this.watcher && this.watcher.unsubscribe && this.watcher.group && this.watcher.group != socket.id) {
+            this.watcher.unsubscribe()
+            this.watcher.group = socket.id
+            delete this.watcher.unsubscribe
+        }
+
         // Execute graphql query
         const { apollo } = session.siteManager
         const req = {
@@ -48,6 +54,7 @@ class WSRequest {
             method: 'GET',
             headers: socket.headers,
             socket,
+            watcher,
         }
 
         // Execute query
@@ -141,11 +148,45 @@ class WSRequest {
         return session.sendSocketMessage(socket, res)
     }
 
-    handle(socket, session, initialState) {
+    async handle(socket, session, initialState, watcher = false) {
+        const upperWatcher = watcher
+        if(watcher && initialState && watcher.subscribe) {
+            this.watcher = {
+                topics: [],
+                disable: () => {
+                    delete this.watcher
+                }
+            }
+
+            watcher = {
+                subscribe: (topics) => {
+                    if(!Array.isArray(topics))
+                        topics = [ topics ]
+
+                    for(var topic of topics) {
+                        topic.callback = topic.callback || this.onUpdated.bind(this, socket, session, initialState, watcher)
+                    }
+
+                    this.watcher.topics = this.watcher.topics.concat(topics)
+                    return () => {
+                        this.watcher.topics = this.watcher.topics.filter(t => !topics.includes(t))
+                    }
+                }
+            }
+        }
+
+        var queries = []
 
 	    // Handle simple query
-        if(this.Query != "" && this.query)
-            this.doQuery(socket, session, initialState).catch(console.error)
+        if(this.Query != "" && this.query && (initialState || !this.watcher)) {
+            const res = this.doQuery(socket, session, initialState, watcher).catch((e) => {
+                console.error(e)
+                if(session.onException)
+                    session.onException(e)
+            })
+
+            queries.push(res)
+        }
 
         // Handle bulk queries
         if(this.bulk) {
@@ -154,11 +195,34 @@ class WSRequest {
                     this.bulk[key] = new WSRequest(this.bulk[key])
                     this.bulk[key].live = null
                     this.bulk[key].bulk = []
+                    this.bulk[key].watcher = this
                 }
 
-                this.bulk[key].handle(socket, session, initialState)
+               queries.push(this.bulk[key].handle(socket, session, initialState, watcher))
             }
         }
+
+        await Promise.race(queries)
+
+        // Subscribe to live queries
+        if(this.watcher && this.watcher.topics.length > 0) {
+            this.watcher.unsubscribe = upperWatcher.subscribe(this.watcher.topics, {
+                group: socket.id,
+            })
+        } else {
+            if(this.watcher && this.watcher.unsubscribe)
+                this.watcher.unsubscribe()
+
+            delete this.watcher
+        }
+    }
+
+    onUpdated(socket, session, initialState, watcher) {
+        this.doQuery(socket, session, initialState, watcher).catch((e) => {
+            console.error(e)
+            if(session && session.onException)
+                session.onException(e)
+        })
     }
 
     queriesCount() {
@@ -208,13 +272,16 @@ class WSRequest {
         }
 
         this.live = null
+
+        if(this.bulk && this.bulk.length > 0 && this.Query != "" && this.query)
+            throw('invalid mix of bulk and query usage')
     }
 
 }
 
 // --------------------------
 
-module.exports = function WebSocket(session, socket, message) {
+module.exports = function WebSocket(session, socket, message, watcher) {
     // Verify if query present
 	if(!message.query && !message.live && !message.bulk)
         return
@@ -230,7 +297,7 @@ module.exports = function WebSocket(session, socket, message) {
         message.live = new WSRequest(message.live)
         message.live.removeSubQueries()
         message.live.assertMaxQueries(max)
-        message.live.handle(socket, session, true)
+        message.live.handle(socket, session, true, watcher)
 
         // console.warn("handle", socket.id, typeof(socket.$liveGraphql), JSON.stringify(message, null, 4))
         socket.$liveGraphql = message.live
@@ -238,7 +305,7 @@ module.exports = function WebSocket(session, socket, message) {
         if(!socket.$liveGraphqlInterval) {
             socket.$liveGraphqlInterval = setInterval(() => {
                 if(socket.$liveGraphql) {
-                    socket.$liveGraphql.handle(socket, session, false)
+                    socket.$liveGraphql.handle(socket, session, false, watcher)
                 } else {
                     clearInterval(socket.$liveGraphqlInterval)
                     delete socket.$liveGraphqlInterval
@@ -248,6 +315,12 @@ module.exports = function WebSocket(session, socket, message) {
             socket.once('close', () => {
                 clearInterval(socket.$liveGraphqlInterval)
                 delete socket.$liveGraphqlInterval
+
+                if(watcher && watcher._groups && watcher._groups[socket.id]) {
+                    watcher.unsubscribe(watcher._groups[socket.id])
+                    delete watcher._groups[socket.id]
+                }
+
             })
         }
 

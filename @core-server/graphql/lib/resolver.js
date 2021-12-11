@@ -4,6 +4,7 @@ var ContextLib = null
 module.exports = {
 
     createResolver(model, options) {
+        var database = options.database
         var isMulti = false
         if(options.multi) {
             isMulti = true
@@ -11,6 +12,8 @@ module.exports = {
         } else if(options.one) {
             options = options.one
         }
+
+        database = database || options.database
 
         // Execute sequelize query
         const fn = async function(parent, args, context, info) {
@@ -48,24 +51,34 @@ module.exports = {
             }
 
             // Setup where filter in sql query
+            var staticWhere = {}
             if(options.where) {
                 function parseWhereClause(where) {
                     var res = {}
+                    var staticWhere = {}
 
                     for(var field in where) {
                         if(typeof(where[field]) === 'function') {
                             res[field] = where[field](context, args, parent)
                         } else if(typeof(where[field]) === "object" && where[field] !== null) {
                             res[field] = parseWhereClause(where[field])
+                            staticWhere[field] = res[field].static
+                            res[field] = res[field].dynamic
                         } else {
                             res[field] = where[field]
+                            staticWhere[field] = where[field]
                         }
                     }
 
-                    return res
+                    return {
+                        static: staticWhere,
+                        dynamic: res,
+                    }
                 }
 
                 findOp.where = parseWhereClause(options.where)
+                staticWhere = findOp.where.static
+                findOp.where = findOp.where.dynamic
             }
 
             // Add attributes to sql query & handle foregin keys
@@ -123,10 +136,24 @@ module.exports = {
                 return res
             }
 
-            if(isMulti)
-                return model.findAll(findOp).then(after)
+            var enableWatcher = (o) => o
+            if(context.req && context.req.watcher && context.req.watcher.subscribe && options.watcher !== false) {
+                const table = database + "." + model.tableName
+                enableWatcher = (o) => {
+                    context.req.watcher.subscribe({
+                        table:   table,
+                        delayed: 25, // ms
+                        where:   staticWhere,
+                    })
 
-            return model.findOne(findOp).then(after)
+                    return o
+                }
+            }
+
+            if(isMulti)
+                return model.findAll(findOp).then(after).then(enableWatcher)
+
+            return model.findOne(findOp).then(after).then(enableWatcher)
         }
     
         fn.model = model

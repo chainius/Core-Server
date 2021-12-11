@@ -95,6 +95,7 @@ class GraphDB {
 
         this.sequelize = new Sequelize(db, user, pass, config)
 
+        this.database = db
         return this.buildSchemas()
     }
 
