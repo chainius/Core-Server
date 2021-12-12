@@ -1,6 +1,7 @@
 const { convertNodeHttpToRequest, runHttpQuery } = require('apollo-server-core')
 const Crypter = plugins.require('http/Crypter')
-const EventEmitter = require('events');
+const EventEmitter = require('events')
+const WebSocket = require('ws')
 
 // Incomming WebSocket message (defining a graphql request)
 
@@ -153,12 +154,12 @@ class WSRequest {
         if(watcher && initialState && watcher.subscribe) {
             this.watcher = {
                 topics: [],
-                disable: () => {
-                    delete this.watcher
-                }
             }
 
             watcher = {
+                disable: () => {
+                    delete this.watcher
+                },
                 subscribe: (topics) => {
                     if(!Array.isArray(topics))
                         topics = [ topics ]
@@ -168,8 +169,9 @@ class WSRequest {
                     }
 
                     this.watcher.topics = this.watcher.topics.concat(topics)
+                    // console.log('sub received', this.watcher.topics)
                     return () => {
-                        this.watcher.topics = this.watcher.topics.filter(t => !topics.includes(t))
+                        this.watcher.topics = this.watcher.topics.filter(t => !topics.find((r) => r.uuid == t.uuid))
                     }
                 }
             }
@@ -198,27 +200,43 @@ class WSRequest {
                     this.bulk[key].watcher = this
                 }
 
-               queries.push(this.bulk[key].handle(socket, session, initialState, watcher))
+                const res = this.bulk[key].handle(socket, session, initialState, watcher)
+                queries.push(res)
             }
         }
 
-        await Promise.race(queries)
+        await Promise.all(queries)
 
         // Subscribe to live queries
-        if(this.watcher && this.watcher.topics.length > 0) {
-            this.watcher.unsubscribe = upperWatcher.subscribe(this.watcher.topics, {
-                group: socket.id,
-            })
-        } else {
-            if(this.watcher && this.watcher.unsubscribe)
-                this.watcher.unsubscribe()
-
-            delete this.watcher
+        if(initialState) {
+            if(this.watcher && this.watcher.topics.length > 0) {
+                // console.log('send', this.watcher.topics)
+                this.watcher.unsubscribe = upperWatcher.subscribe(this.watcher.topics, {
+                    group: socket.id,
+                })
+            } else {
+                if(this.watcher && this.watcher.unsubscribe)
+                    this.watcher.unsubscribe()
+    
+                delete this.watcher
+            }
         }
     }
 
     onUpdated(socket, session, initialState, watcher) {
-        this.doQuery(socket, session, initialState, watcher).catch((e) => {
+        if(socket.readyState == WebSocket.CLOSED) {
+            if(this.watcher && this.watcher.unsubscribe)
+                this.watcher.unsubscribe()
+
+            if(watcher && watcher._groups && watcher._groups[socket.id]) {
+                watcher.unsubscribe(watcher._groups[socket.id])
+                delete watcher._groups[socket.id]
+            }
+
+            return
+        }
+
+        this.doQuery(socket, session, initialState).catch((e) => {
             console.error(e)
             if(session && session.onException)
                 session.onException(e)
@@ -320,7 +338,6 @@ module.exports = function WebSocket(session, socket, message, watcher) {
                     watcher.unsubscribe(watcher._groups[socket.id])
                     delete watcher._groups[socket.id]
                 }
-
             })
         }
 

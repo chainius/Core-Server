@@ -60,6 +60,9 @@ module.exports = {
                     for(var field in where) {
                         if(typeof(where[field]) === 'function') {
                             res[field] = where[field](context, args, parent)
+                            if(where[field]._static) {
+                                staticWhere[field] = res[field]
+                            }
                         } else if(typeof(where[field]) === "object" && where[field] !== null) {
                             res[field] = parseWhereClause(where[field])
                             staticWhere[field] = res[field].static
@@ -71,7 +74,7 @@ module.exports = {
                     }
 
                     return {
-                        static: staticWhere,
+                        static:  staticWhere,
                         dynamic: res,
                     }
                 }
@@ -143,7 +146,7 @@ module.exports = {
                     context.req.watcher.subscribe({
                         table:   table,
                         delayed: 25, // ms
-                        where:   staticWhere,
+                        where:   options.watcher && options.watcher.where || staticWhere,
                     })
 
                     return o
@@ -269,6 +272,7 @@ function TransformOptions(dest, options) {
     
                     // Transform where close to function resolver
                     where[key] = encapsulateWhereClause(obj.Name)
+                    where[key]._static = true
                 } else if(typeof(obj) === 'object' && obj !== null && !obj.__isProxy) {
                     where[key] = handleWhereParams(where[key])
                 }
