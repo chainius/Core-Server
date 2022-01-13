@@ -120,28 +120,23 @@ class ApiEnvironment {
         }
 
         switch (type) {
+        case 'boolean':
+            return typeof (val) === 'boolean' || typeof (val) === 'number'
         case 'string':
             return typeof (val) === 'string' || typeof (val) === 'number'
-            break
         case 'numeric':
         case 'number':
             return isNumeric(val)
-            break
         case 'positive':
             return isNumeric(val) && val >= 0
-            break
         case 'positive+':
             return isNumeric(val) && val > 0
-            break
         case 'array':
             return Array.isArray(val)
-            break
         case 'object':
             return typeof (val) === 'object'
-            break
         case 'no':
             return true
-            break
         case 'email':
             const mvalidator = require('email-validator')
             return mvalidator.validate(val)
@@ -151,9 +146,6 @@ class ApiEnvironment {
         case 'password-difficulty':
             var regex = /^(?=.*[a-zA-Z])(?=.*[0-9])(?=.{7,})/
             return regex.test(val)
-                // case 'action_id':
-                //    return preg_match("/([A-Z]{3})-([0-9]{3})\s/", $var.' ');
-                //    break;
         }
 
         return false

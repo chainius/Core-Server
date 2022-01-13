@@ -3,7 +3,6 @@ const vm = require('vm')
 const Path = require('path')
 const Crypter = plugins.require('http/Crypter')
 const _require = require('../wrappers/require.js')
-const resource_url = require('../wrappers/resource_url.js')
 
 const funcStart = "func = async function {@name}(console, __filename, __dirname) { " +
                     "const require = $__require.bind(this, __dirname); var post = this.post; var session = this.session; var cookie = this.cookie; var _this = this; this.console = console;\n"
@@ -107,7 +106,6 @@ class ApiCreator {
         context.clearTimeout = clearTimeout
         context.clearInterval = clearInterval
         context.clearImmediate = clearImmediate
-        context.resource_url = resource_url
         context.Buffer = Buffer
         context.plugins = plugins
         // context.ASyncQueue      = ASyncQueue;

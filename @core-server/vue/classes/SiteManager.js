@@ -1,10 +1,12 @@
 const helmet = require('helmet')
+const ResourceManager = plugins.require('http/Resources/Manager')
 
 class SiteManager extends SuperClass {
 
     constructor(httpServer) {
         super(httpServer)
 
+        this.resourceManager = new ResourceManager(this)
         this._helmet = helmet()
         this.pagesCache = {}
         const _this = this
@@ -13,6 +15,33 @@ class SiteManager extends SuperClass {
             const PagesManager = plugins.require('vue/PagesManager')
             _this.pagesManager = new PagesManager(_this)
         })
+    }
+
+    //------------------------------------------
+
+    /**
+    * Remove an object from the CDN and locally memory
+    * @param file_name {String}
+    */
+    purgeCache(name) {
+        try {
+            if (process.env.NODE_ENV !== 'production')
+                console.warn('Clearing cache for resource', name)
+
+            const object = this.resourceManager.getObject('/' + name)
+            if (object)
+                object.purge()
+        } catch (e) {
+            console.error(e)
+        }
+    }
+
+    preHandle(req, res, prePath) {
+        const preHandle = this.resourceManager.handle(req, res, prePath)
+        if (preHandle === true)
+            return true
+
+        return false
     }
 
     sendErrorPage(code, req, res) {

@@ -1,6 +1,5 @@
 'use strict'
 
-const ResourceManager = plugins.require('http/Resources/Manager')
 const Watcher = plugins.require('http/Watcher')
 
 /** SiteManager */
@@ -8,7 +7,6 @@ class SiteManager {
     constructor(server) {
         this._routerHandlers = []
         this.server = server
-        this.resourceManager = new ResourceManager(this)
         this.configs = {}
 
         this.autoSetupFromConfig()
@@ -82,25 +80,6 @@ class SiteManager {
     //------------------------------------------
 
     /**
-    * Remove an object from the CDN and locally memory
-    * @param file_name {String}
-    */
-    purgeCache(name) {
-        try {
-            if (process.env.NODE_ENV !== 'production')
-                console.warn('Clearing cache for resource', name)
-
-            const object = this.resourceManager.getObject('/' + name)
-            if (object)
-                object.purge()
-        } catch (e) {
-            console.error(e)
-        }
-    }
-
-    //------------------------------------------
-
-    /**
     * Sen an error page to the given request
     * @param code {Number}
     * @param req {Object}
@@ -113,14 +92,6 @@ class SiteManager {
         } catch (err) {
             console.error('{sendErrorPage}', err)
         }
-    }
-
-    preHandle(req, res, prePath) {
-        const preHandle = this.resourceManager.handle(req, res, prePath)
-        if (preHandle === true)
-            return true
-
-        return false
     }
 
     /**

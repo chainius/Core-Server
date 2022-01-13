@@ -5,7 +5,9 @@ const Model = Sequelize.Model
 const { schemaDeffinition, graphConfig, camelize, getComputedFields } = require('./typedeff.js')
 const { createResolver, Session, Params, TransformOptions, setResolverContext } = require('./resolver.js')
 
-const context = {
+var context
+
+context = {
     SchemasByTableName: {},
     plugins,
     require,
@@ -34,6 +36,9 @@ const context = {
                 return this
             },
             Query(options) {
+                if(context.QueryMixin) 
+                    options = context.QueryMixin(options)
+
                 multiSelector = TransformOptions({
                     multi: options,
                 }, options)
@@ -43,6 +48,9 @@ const context = {
                 return this
             },
             QueryOne(options) {
+                if(context.QueryOneMixin) 
+                    options = context.QueryOneMixin(options)
+
                 oneSelector = TransformOptions({
                     one: options
                 }, options)

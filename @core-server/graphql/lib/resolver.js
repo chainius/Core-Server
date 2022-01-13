@@ -60,9 +60,10 @@ module.exports = {
                     for(var field in where) {
                         if(typeof(where[field]) === 'function') {
                             res[field] = where[field](context, args, parent)
-                            if(where[field]._static) {
+                            if(res[field] === undefined)
+                                delete res[field]
+                            else if(where[field]._static)
                                 staticWhere[field] = res[field]
-                            }
                         } else if(typeof(where[field]) === "object" && where[field] !== null) {
                             res[field] = parseWhereClause(where[field])
                             staticWhere[field] = res[field].static
@@ -70,6 +71,11 @@ module.exports = {
                         } else {
                             res[field] = where[field]
                             staticWhere[field] = where[field]
+                        }
+
+                        if(where[field] && typeof where[field]._mandatory == "boolean" && where[field]._mandatory == false && res[field] == null) {
+                            delete res[field]
+                            delete staticWhere[field]
                         }
                     }
 
@@ -153,6 +159,15 @@ module.exports = {
                 }
             }
 
+            if(options.offset)
+                findOp.offset = typeof(options.offset) == "function" ? options.offset(parent, args, context, info) : options.offset
+
+            if(options.limit)
+                findOp.limit = typeof(options.limit) == "function" ? options.limit(parent, args, context, info) : options.limit
+
+            if(options.order)
+                findOp.order = typeof(options.order) == "function" ? options.order(parent, args, context, info) : options.order
+
             if(isMulti)
                 return model.findAll(findOp).then(after).then(enableWatcher)
 
@@ -161,6 +176,7 @@ module.exports = {
     
         fn.model = model
         fn.options = options
+        fn.database = database
         return fn
     },
 
@@ -223,9 +239,8 @@ function ProxyParams() {
             }
         },
         set: function(target, name, value, receiver) {
-            if (!(name in target)) {
+            if (!(name in target))
                 console.log("Setting non-existant property '" + name + "', initial value: " + value)
-            }
 
             return Reflect.set(target, name, value, receiver)
         }
@@ -248,24 +263,25 @@ function TransformOptions(dest, options) {
                 var obj = where[key]
                 if(obj !== null && typeof(obj) === 'object' && obj.IsParam === true) {
                     // Transform where close parameter
-
+                    var mandatory = obj.Type.indexOf("!") != -1
                     // Add param to query definition
                     dest.params = dest.params || []
+                    var parameter_obj = {
+                        kind: "NamedType",
+                        name: {
+                            kind:  "Name",
+                            value: obj.Type.replace("!" , ""),
+                        }
+                    }
                     dest.params.push({
                         kind: "InputValueDefinition",
                         name: {
                             kind:  "Name",
                             value: obj.Name,
                         },
-                        type: {
+                        type: !mandatory ? parameter_obj : {
                             kind: "NonNullType",
-                            type: {
-                                kind: "NamedType",
-                                name: {
-                                    kind:  "Name",
-                                    value: obj.Type,
-                                }
-                            }
+                            type: parameter_obj
                         },
                         directives: []
                     })
@@ -273,6 +289,7 @@ function TransformOptions(dest, options) {
                     // Transform where close to function resolver
                     where[key] = encapsulateWhereClause(obj.Name)
                     where[key]._static = true
+                    where[key]._mandatory = mandatory
                 } else if(typeof(obj) === 'object' && obj !== null && !obj.__isProxy) {
                     where[key] = handleWhereParams(where[key])
                 }
@@ -282,6 +299,33 @@ function TransformOptions(dest, options) {
         }
 
         options.where = handleWhereParams(options.where)
+    }
+
+    if(options.params && options.params.length) {
+        options.params.forEach(obj => {
+            var mandatory = obj.Type.indexOf("!") != -1
+            dest.params = dest.params || []
+            var parameter_obj = {
+                kind: "NamedType",
+                name: {
+                    kind:  "Name",
+                    value: obj.Type.replace("!" , ""),
+                }
+            }
+
+            dest.params.push({
+                kind: "InputValueDefinition",
+                name: {
+                    kind:  "Name",
+                    value: obj.Name,
+                },
+                type: !mandatory ? parameter_obj : {
+                    kind: "NonNullType",
+                    type: parameter_obj
+                },
+                directives: []
+            })
+        })
     }
 
     return dest
