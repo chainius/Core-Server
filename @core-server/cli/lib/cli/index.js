@@ -16,8 +16,10 @@ class CLI {
         argv.options = argv.options || {}
         this.parseEnvironmentCLI()
 
-        if (argv.options.production !== undefined)
+        if (argv.options.production !== undefined && !process.env.NODE_ENV)
             process.env.NODE_ENV = 'production'
+        else if (argv.options.staging !== undefined && !process.env.NODE_ENV)
+            process.env.NODE_ENV = 'staging'
         else if (!process.env.NODE_ENV)
             process.env.NODE_ENV = 'development'
 

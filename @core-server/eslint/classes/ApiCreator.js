@@ -1,6 +1,6 @@
 module.exports = SuperClass
 
-if(process.env.NODE_ENV === 'production')
+if(process.env.NODE_ENV !== 'development')
     return
 
 // Load eslint config

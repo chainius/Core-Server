@@ -36,6 +36,7 @@ module.exports = function() {
     var Categories = {
         core: {
             production: "Run core-server in production mode",
+            staging:    "Run core-server in staging mode",
             install:    "Install all core-server dependencie & the nested plugins",
             help:       "Show the help utility",
             version:    "Show the current nodejs and app version",

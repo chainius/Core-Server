@@ -31,7 +31,7 @@ class ApiCreator {
         if (handler !== false)
             return { handler: handler, path: path + '.sql', dirname: Path.dirname(path + '.sql') }
 
-        if (process.env.NODE_ENV === 'production')
+        if (process.env.NODE_ENV !== 'development')
             this.nonExisting.push(path)
 
         return false
@@ -51,12 +51,6 @@ class ApiCreator {
         const source = ApiCreator.fileContent(path)
         if (source === false)
             return false
-
-        /* if (process.env.NODE_ENV !== "production")
-        {
-            if (!verifySource(path, source, name))
-                return lintError;
-        }*/
 
         try {
             const script = new vm.Script(funcStart.replace("{@name}", camelize(name)) + source + "\n }", {

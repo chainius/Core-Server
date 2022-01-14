@@ -8,7 +8,7 @@ class Watcher {
         this.siteChangeListeners = []
         this.fileChangeListeners = {}
 
-        if (cluster.isMaster || process.env.NODE_ENV === 'production')
+        if (cluster.isMaster || process.env.NODE_ENV !== 'development')
             return
 
         const _this = this

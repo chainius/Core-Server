@@ -94,6 +94,10 @@ class SiteManager {
         }
     }
 
+    preHandle(req, res, prePath) {
+        return false
+    }
+
     /**
     * Handle the incoming http request
     * @param req {Object}

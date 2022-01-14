@@ -3,7 +3,7 @@ const { spawnSync } = require('child_process')
 
 function prune(dir) {
     try {
-        const res = spawnSync("npm", ['prune', '--production'], {
+        spawnSync("npm", ['prune', '--production'], {
             cwd:      dir,
             env:      process.env,
             stdio:    [process.stdin, process.stdout, process.stdout],

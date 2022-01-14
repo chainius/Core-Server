@@ -12,17 +12,13 @@ class SessionsManager {
         this.siteManager = siteManager
         this.sessions = {}
 
-        var _this = this
-        this.interval = setInterval(function() {
-            _this.checkExpiredSessions()
-        }, 5000)
-
+        this.interval = setInterval(this.checkExpiredSessions.bind(this), 5000)
         this.interval.unref()
     }
 
     getFromCookies(cookies) {
         if (typeof (cookies) !== 'object')
-            return {}
+            return {}
 
         if (typeof (cookies.token) !== 'string' || cookies.token.length < 10 || cookies.token.length > 20 || cookies.token === '__global__') {
             cookies.token = uniqid()
@@ -124,7 +120,7 @@ class SessionsManager {
                     localeOnly:       true,
                 })
 
-                socket.once('close', () => {
+                socket.once('close', () => {
                     if(this.sessions[session.token])
                         delete this.sessions[session.token]
                 })
