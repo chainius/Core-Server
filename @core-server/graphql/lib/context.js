@@ -481,7 +481,6 @@ context = {
     },
     Session: Session,
     Params:  Params,
-    plugins,
 }
 
 const srcContext = Path.join(process.cwd(), 'graphql', 'src', 'context.js')
