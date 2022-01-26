@@ -112,14 +112,6 @@ class SiteManager extends SuperClass {
     /**
     * @param session {Class}
     * @param role {String}
-    */
-    sessionHasRole(session, role) {
-        return false
-    }
-
-    /**
-    * @param session {Class}
-    * @param role {String}
     * @param api {String}
     * @param connected {Boolean}
     */
@@ -203,7 +195,7 @@ class SiteManager extends SuperClass {
 
         for(var key in config) {
             if(checkConfig(key)) {
-                if(!this.sessionHasRole(session, key)) {
+                if(!session.hasRole(key)) {
                     const msg = this.roleDeniedMessage(session, key, api, connected, req)
                     if(msg !== false) {
                         return msg

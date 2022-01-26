@@ -282,6 +282,13 @@ class Session {
             this.handleSocketApi(socket, message.api, message.data, message.salt)
     }
 
+    /**
+    * @param role {String}
+    */
+    hasRole(role) {
+        return false
+    }
+    
 }
 
 module.exports = Session

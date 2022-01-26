@@ -24,6 +24,8 @@ class GraphDB extends SuperClass {
                 const hasStack = e.stack && e.message && context.session_object && context.session_object.onException
                 if(hasStack && !(e.extensions && e.extensions.code == 'UNAUTHENTICATED')) {
                     try {
+                        console.error('error ', context.session.auth_id, context.permissions)
+
                         context.session_object.onException(e, {
                             graphql:            name,
                             $sentryTransaction: transaction,
@@ -31,7 +33,13 @@ class GraphDB extends SuperClass {
                                 {
                                     name: 'args',
                                     data: args,
-                                }
+                                },
+                                {
+                                    name: 'context',
+                                    data: {
+                                        permissions: context.permissions,
+                                    },
+                                },
                             ]
                         })
                     } catch(e) {

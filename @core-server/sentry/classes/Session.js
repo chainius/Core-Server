@@ -71,8 +71,8 @@ class Session extends SuperClass {
             else if(info && info.environment && info.environment.$sentryTransaction)
                 scope.setSpan(info.environment.$sentryTransaction)
 
-            if(Array.isArray(e.context)) {
-                for(var ctx of e.context) {
+            if(Array.isArray(e.context) || info.context) {
+                for(var ctx of (e.context || info.context)) {
                     if(ctx.name && ctx.data)
                         scope.setContext(ctx.name, ctx.data)
                 }

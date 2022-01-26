@@ -63,7 +63,7 @@ class SiteManager extends SuperClass {
         }
 
         // Create context object
-        var res = Object.assign({ permissions: sess.permissions }, sess.data)
+        var res = Object.assign({}, sess.data)
         res.api = (name, post) => {
             return sess.api(name, post, req)
         }
@@ -87,7 +87,7 @@ class SiteManager extends SuperClass {
             this.Sequelize = require('sequelize')
 
             if(fs.existsSync(path.join(process.cwd(), 'graphql', 'src', 'mixin.js'))) {
-                const mixin  = require(path.join(process.cwd(), 'graphql', 'src', 'mixin.js'))
+                const mixin = require(path.join(process.cwd(), 'graphql', 'src', 'mixin.js'))
                 this.schemas = mixin(schemas, resolvers, typeDefs)
             } else {
                 this.schemas = schemas

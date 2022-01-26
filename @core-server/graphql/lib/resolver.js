@@ -30,30 +30,28 @@ module.exports = {
 
             // Scopes handle
             if(options.scoped) {
-                const err = (e) => new Promise((_, reject) => reject(e))
-                const autoError = () => {
+                const session = context.session_object
+                const err = (e) => new Promise((_, reject) => reject(e))    
+                const autoError = (msg) => {
                     if(context.session.auth_id)
-                        return err(new ForbiddenError('Unauthorized scope'))
+                        return err(new ForbiddenError(msg || 'UNAUTHORIZED_SCOPE'))
 
-                    return err(new AuthenticationError('Unauthorized scope'))
+                    return err(new AuthenticationError('NOT_AUTHENTICATED'))
                 }
-
-                if(!Array.isArray(context.permissions))
-                    return autoError()
 
                 if(Array.isArray(options.scoped)) {
                     var found = false
                     for(var key of options.scoped) {
-                        if(context.permissions.indexOf(key) !== -1) {
+                        if(session.hasRole(key) !== -1) {
                             found = true
                             break
                         }
                     }
 
                     if(!found)
-                        return autoError()
-                } else if(context.permissions.indexOf(options.scoped) == -1) {
-                    return autoError()
+                        return autoError('UNAUTHORZID_SCOPE ALLOWED: ' + options.scoped.join(', '))
+                } else if(!session.hasRole(options.scoped)) {
+                    return autoError('UNAUTHORIZED_SCOPE')
                 }
             }
 
