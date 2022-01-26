@@ -32,8 +32,6 @@ module.exports = {
             if(options.scoped) {
                 const err = (e) => new Promise((_, reject) => reject(e))
                 const autoError = () => {
-
-                    console.log(context.session, options.scoped , context.permissions)
                     if(context.session.auth_id)
                         return err(new ForbiddenError('Unauthorized scope'))
 
