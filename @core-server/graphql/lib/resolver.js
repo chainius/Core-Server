@@ -1,4 +1,4 @@
-const { AuthenticationError } = require('apollo-server-errors')
+const { AuthenticationError, ForbiddenError } = require('apollo-server-errors')
 var ContextLib = null
 
 module.exports = {
@@ -31,8 +31,17 @@ module.exports = {
             // Scopes handle
             if(options.scoped) {
                 const err = (e) => new Promise((_, reject) => reject(e))
-                if(!Array.isArray(context.permissions))
+                const autoError = () => {
+
+                    console.log(context.session, options.scoped , context.permissions)
+                    if(context.session.auth_id)
+                        return err(new ForbiddenError('Unauthorized scope'))
+
                     return err(new AuthenticationError('Unauthorized scope'))
+                }
+
+                if(!Array.isArray(context.permissions))
+                    return autoError()
 
                 if(Array.isArray(options.scoped)) {
                     var found = false
@@ -44,9 +53,9 @@ module.exports = {
                     }
 
                     if(!found)
-                        return err(new AuthenticationError('Unauthorized scope'))
+                        return autoError()
                 } else if(context.permissions.indexOf(options.scoped) == -1) {
-                    return err(new AuthenticationError('Unauthorized scope'))
+                    return autoError()
                 }
             }
 
