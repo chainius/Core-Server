@@ -149,6 +149,9 @@ class GraphDB {
                 }
     
                 const schema = this.parseFile(p, context)
+                if(!schema)
+                    continue
+                // Transform schema
                 {
                     // Sql schema
                     const build = schema.BuildSequelize(sequelize)

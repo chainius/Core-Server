@@ -115,6 +115,11 @@ context = {
                 if(oneSelector && !oneSelector.database)
                     oneSelector.database = graphDB.database
 
+                if(name.indexOf('-') != -1) {
+                    name = camelize(name) 
+                    name = name.substr(0,1).toLowerCase() + name.substr(1)
+                }
+
                 return {
                     definitions: [
                         schemaDeffinition(name, fields)

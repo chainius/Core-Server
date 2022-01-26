@@ -27,6 +27,7 @@ module.exports = {
         "indent":                           ["error", 4],
         "no-empty":                         ["error", { "allowEmptyCatch": true }],
         "no-redeclare":                     "off",
+        "no-inner-declarations":            "off",
         "no-unused-vars":                   ["error", { "vars": "all", "args": "after-used", "ignoreRestSiblings": true, "varsIgnorePattern": "React" }],
         "brace-style":                      ["error", "1tbs", { }],
         "object-curly-spacing":             ["error", "always"],

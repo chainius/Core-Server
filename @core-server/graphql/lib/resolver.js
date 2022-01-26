@@ -54,8 +54,9 @@ module.exports = {
             var staticWhere = {}
             if(options.where) {
                 function parseWhereClause(where) {
-                    var res = {}
-                    var staticWhere = {}
+                    var isArray = Array.isArray(where)
+                    var res = isArray ? [] : {}
+                    var staticWhere = isArray ? [] : {}
 
                     for(var field in where) {
                         if(typeof(where[field]) === 'function') {
@@ -66,8 +67,14 @@ module.exports = {
                                 staticWhere[field] = res[field]
                         } else if(typeof(where[field]) === "object" && where[field] !== null) {
                             res[field] = parseWhereClause(where[field])
-                            staticWhere[field] = res[field].static
-                            res[field] = res[field].dynamic
+                            if(res[field] === undefined)
+                                delete res[field]
+                            else {
+                                staticWhere[field] = res[field].static
+                                res[field] = res[field].dynamic
+                            }
+                             
+                           
                         } else {
                             res[field] = where[field]
                             staticWhere[field] = where[field]
@@ -79,6 +86,14 @@ module.exports = {
                         }
                     }
 
+                    if(isArray) {
+                        res = res.filter(x => x != undefined)
+                        staticWhere = staticWhere.filter(x => x != undefined)
+                    }
+
+                    if ((Array.isArray(where) && res.length == 0 && staticWhere.length == 0 ) || (Object.keys(staticWhere).length == 0 && Object.keys(res).length == 0))
+                        return undefined
+
                     return {
                         static:  staticWhere,
                         dynamic: res,
@@ -86,8 +101,12 @@ module.exports = {
                 }
 
                 findOp.where = parseWhereClause(options.where)
-                staticWhere = findOp.where.static
-                findOp.where = findOp.where.dynamic
+                if(findOp.where !== undefined) {
+                    staticWhere = findOp.where.static
+                    findOp.where = findOp.where.dynamic
+                } else {
+                    findOp.where = {}
+                }
             }
 
             // Add attributes to sql query & handle foregin keys
@@ -167,6 +186,9 @@ module.exports = {
 
             if(options.order)
                 findOp.order = typeof(options.order) == "function" ? options.order(parent, args, context, info) : options.order
+
+            if(options.debug)
+                console.log(findOp)
 
             if(isMulti)
                 return model.findAll(findOp).then(after).then(enableWatcher)
