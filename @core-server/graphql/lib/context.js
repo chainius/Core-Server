@@ -386,6 +386,24 @@ context = {
             }
         }
     },
+    DateTimeMilli(def, config) {
+        if(typeof(def) === 'object' && def !== null) {
+            config = def
+            def = undefined
+        } else if(config === undefined) {
+            config = {}
+        }
+
+        return {
+            graphql:   graphConfig(config),
+            sequelize: {
+                field:        config.sql,
+                type:         Sequelize.DATE(3),
+                allowNull:    def === null,
+                defaultValue: def === 'now' ? Sequelize.NOW : def,
+            }
+        }
+    },
     Date: function(def, config) {
         if(this instanceof context.Date) {
             if(def && config)

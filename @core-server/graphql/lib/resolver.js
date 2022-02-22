@@ -34,7 +34,7 @@ module.exports = {
                 const err = (e) => new Promise((_, reject) => reject(e))    
                 const autoError = (msg) => {
                     if(context.session.auth_id)
-                        return err(new ForbiddenError(msg || 'UNAUTHORIZED_SCOPE'))
+                        return err(new ForbiddenError(msg || 'Unauthorized scope'))
 
                     return err(new AuthenticationError('NOT_AUTHENTICATED'))
                 }
@@ -256,9 +256,10 @@ function ProxyParams() {
             if(name === '__isProxy')
                 return true
 
-            return function(t) {
+            return function(t, def) {
                 type = t
                 return {
+                    Default: def,
                     IsParam: true,
                     Name:    name,
                     Type:    t,
@@ -278,9 +279,9 @@ function ProxyParams() {
 // Options transformer
 
 function TransformOptions(dest, options) {
-    function encapsulateWhereClause(name) {
+    function encapsulateWhereClause(name, def) {
         return function(ctx, args) {
-            return args[name]
+            return args[name] || def
         }
     }
 
@@ -314,7 +315,7 @@ function TransformOptions(dest, options) {
                     })
     
                     // Transform where close to function resolver
-                    where[key] = encapsulateWhereClause(obj.Name)
+                    where[key] = encapsulateWhereClause(obj.Name, obj.Default)
                     where[key]._static = true
                     where[key]._mandatory = mandatory
                 } else if(typeof(obj) === 'object' && obj !== null && !obj.__isProxy) {
