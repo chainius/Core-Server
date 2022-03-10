@@ -58,20 +58,20 @@ module.exports = {
             // Setup where filter in sql query
             var staticWhere = {}
             if(options.where) {
-                function parseWhereClause(where) {
+                async function parseWhereClause(where) {
                     var isArray = Array.isArray(where)
                     var res = isArray ? [] : {}
                     var staticWhere = isArray ? [] : {}
 
                     for(var field in where) {
                         if(typeof(where[field]) === 'function') {
-                            res[field] = where[field](context, args, parent)
+                            res[field] = await where[field](context, args, parent)
                             if(res[field] === undefined)
                                 delete res[field]
                             else if(where[field]._static)
                                 staticWhere[field] = res[field]
                         } else if(typeof(where[field]) === "object" && where[field] !== null) {
-                            res[field] = parseWhereClause(where[field])
+                            res[field] = await parseWhereClause(where[field])
                             if(res[field] === undefined)
                                 delete res[field]
                             else {
@@ -105,7 +105,7 @@ module.exports = {
                     }
                 }
 
-                findOp.where = parseWhereClause(options.where)
+                findOp.where = await parseWhereClause(options.where)
                 if(findOp.where !== undefined) {
                     staticWhere = findOp.where.static
                     findOp.where = findOp.where.dynamic
@@ -281,7 +281,7 @@ function ProxyParams() {
 function TransformOptions(dest, options) {
     function encapsulateWhereClause(name, def) {
         return function(ctx, args) {
-            return args[name] || def
+            return args[name] === undefined ? def : args[name]
         }
     }
 

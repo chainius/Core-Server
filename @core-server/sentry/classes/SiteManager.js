@@ -9,6 +9,9 @@ class SiteManager extends SuperClass {
             name:        "graphql",
         })
 
+        if(!tx)
+            return super.getGraphqlContext(info)
+
         info.res.once('close', () => tx.finish())
         return super.getGraphqlContext(info).then((r) => {
             r.$sentryTransaction = tx

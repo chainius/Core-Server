@@ -19,7 +19,6 @@ function queryFormat(sql, values, timeZone) {
         // this.escapeId(..?)
 
         if (value.substr(0, 1) == "'" && value.substr(value.length - 1) == "'")
-
             value = value.substr(1, value.length - 2)
 
         result += sql.slice(chunkIndex, match.index) + value
@@ -35,7 +34,6 @@ function queryFormat(sql, values, timeZone) {
     }
 
     if (chunkIndex < sql.length)
-
         result += sql.slice(chunkIndex)
 
     if (global.logSQL)

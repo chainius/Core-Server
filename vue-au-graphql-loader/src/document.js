@@ -34,7 +34,8 @@ export default class Document {
 
         // Extract all required variables from graphql
         var onChange = function() {
-            this.$gqw[id].update()
+            if(this.$gqw && this.$gqw[id])
+                this.$gqw[id].update()
         }
 
         // Init watchers to detect dependencie changes

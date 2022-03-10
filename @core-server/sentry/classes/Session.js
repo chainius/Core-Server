@@ -41,6 +41,9 @@ class Session extends SuperClass {
                 name:        apiHandler.name,
             })
         }
+        
+        if(!transaction)
+            return super.__execApi(apiHandler, environment)
 
         environment.$sentryTransaction = transaction
         return super.__execApi(apiHandler, environment).finally(res => {

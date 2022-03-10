@@ -70,6 +70,23 @@ module.exports = function(res, queryDeff) {
                     if(t == 'Number') {
                         t = 'Int'
                     }
+
+                    t += '!'
+                }
+
+                var sub = {
+                    kind: "NamedType",
+                    name: {
+                        kind:  "Name",
+                        value: t.replace('!', ''),
+                    }
+                }
+
+                if(sub.name.value != t) {
+                    sub = {
+                        kind: "NonNullType",
+                        type: sub,
+                    }
                 }
 
                 argsArr.push({
@@ -78,16 +95,7 @@ module.exports = function(res, queryDeff) {
                         kind:  "Name",
                         value: key,
                     },
-                    type: {
-                        kind: "NonNullType",
-                        type: {
-                            kind: "NamedType",
-                            name: {
-                                kind:  "Name",
-                                value: t,
-                            }
-                        }
-                    },
+                    type: sub,
                     directives: []
                 })
             }
