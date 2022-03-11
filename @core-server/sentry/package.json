@@ -27,7 +27,7 @@
   },
   "homepage": "https://www.core-server.io",
   "dependencies": {
-		"@sentry/node": "^6.13.3",
-		"@sentry/tracing": "^6.13.3"
+		"@sentry/node": "6.13.3",
+		"@sentry/tracing": "6.13.3"
   }
 }
