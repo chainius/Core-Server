@@ -106,6 +106,7 @@ class SessionsManager {
                         throw('No token found in res')
                     }
 
+                    socket.join_ip = res.ip
                     this.getFromToken(res.token).handleSocket(socket)
                 }).catch((e) => {
                     socket.write(JSON.stringify({ error: e.error || e.message || e, resetSession: true }))

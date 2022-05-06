@@ -336,6 +336,9 @@ HttpServer.getClientIpFromHeaders = function(req, socket) {
     if (req.headers['cf-connecting-ip'])
         return req.headers['cf-connecting-ip']
 
+    if(socket && socket.join_ip)
+        return socket.join_ip
+
     if (req.headers['x-real-ip'])
         return req.headers['x-real-ip']
 
