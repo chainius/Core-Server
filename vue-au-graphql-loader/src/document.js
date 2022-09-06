@@ -70,7 +70,7 @@ export default class Document {
                 this.$gqw[id] = create_query.call(this, handler, attributes, document, fragments)
             }
 
-            mixin.destroyed = function() {
+            mixin.beforeDestroy = function() {
                 for(var e in this.$gqw) {
                     this.$gqw[e].close()
                     delete this.$gqw[e]

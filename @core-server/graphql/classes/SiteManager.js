@@ -49,7 +49,7 @@ class SiteManager extends SuperClass {
                 }
             }
         } else if(!this.getConfig('graphql').sessionHeaders) {
-            sess = this.sessionsManager.getFromCookies(req.cookies)
+            sess = this.sessionsManager.getFromCookies(req.cookies, req)
             await sess.onReady()
         }
 

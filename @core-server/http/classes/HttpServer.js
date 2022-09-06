@@ -89,8 +89,8 @@ class HttpServer {
             const cwd = process.cwd()
 
             this.server = http.createServer({
-                key:  fs.readFileSync(Path.join(cwd, 'ssl', 'key.pem')),
-                cert: fs.readFileSync(Path.join(cwd, 'ssl', 'cert.pem')),
+                key:  fs.readFileSync(Path.join(cwd, 'ssl', 'tls.key')),
+                cert: fs.readFileSync(Path.join(cwd, 'ssl', 'tls.crt')),
             }, this.handleRequest.bind(this))
         } else {
             this.server = http.createServer(this.handleRequest.bind(this))

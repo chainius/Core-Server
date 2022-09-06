@@ -81,6 +81,12 @@ class Session extends SuperClass {
                 }
             }
 
+            if(typeof(e.tags) == "object") {
+                for(var key in e.tags) {
+                    scope.setTag(key, e.tags[key])
+                }
+            }
+
             if(this.data && this.data.auth_id)
                 scope.setUser({ id: this.data.auth_id })
 

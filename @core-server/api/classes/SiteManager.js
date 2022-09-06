@@ -329,7 +329,7 @@ class SiteManager extends SuperClass {
     api(name, post, req, tokenChangeNotify) {
         const cookies = req.cookies
         const oToken = cookies.token
-        const session = this.sessionsManager.getFromCookies(cookies)
+        const session = this.sessionsManager.getFromCookies(cookies, req)
 
         session.updateCookies(cookies)
 
