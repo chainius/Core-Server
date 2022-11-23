@@ -44,6 +44,8 @@ function extract_attributes(n, attr = {}) {
                 attr[d.name.value] = true
             }
         }
+
+        o.directives = []
     }
 
     return attr
