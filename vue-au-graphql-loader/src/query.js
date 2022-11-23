@@ -61,11 +61,11 @@ export default function create_query(data, handler, attributes, query, fragments
         try {
             // Call query on handler
             var res = handler({
-                query:     withFragments(query, fragments),
-                variables: query.variables(data),
-                attributes,
+                query:      withFragments(query, fragments),
+                variables:  query.variables(data),
+                attributes: attributes,
+                component:  this,
                 stream,
-                component: this,
             })
     
             // Send handler result to data stream

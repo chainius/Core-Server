@@ -20,7 +20,7 @@ export default class Document {
         Object.assign(this, options)
         this.#id = glob_id++
         this.#handler = handler
-        this.#attr = handler
+        this.#attr = attributes
         this.#query_fragments = fragments.filter(framgentsIn(options))
 
         if(this.operation === 'query')

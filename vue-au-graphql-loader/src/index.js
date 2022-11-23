@@ -33,6 +33,22 @@ function getAttributes(query) {
 //     return null
 // }
 
+function extract_attributes(n, attr = {}) {
+    for(var o of n.definitions) {
+        for(var d of o.directives) {
+            if(d.name.value === 'attr') {
+                for(var arg of d.arguments) {
+                    attr[arg.name.value] = arg.value.value
+                }
+            } else {
+                attr[d.name.value] = true
+            }
+        }
+    }
+
+    return attr
+}
+
 function generate(source, id, options) {
     var index = id.indexOf('?') + 1
 
@@ -46,6 +62,8 @@ function generate(source, id, options) {
     const fragments = graph.definitions.filter((o) => o.kind === 'FragmentDefinition')
     const documentPath = require.resolve('./document.js')
     const handler = options.handler || null // getHandlerPath('') // ToDo attach root dor
+
+    extract_attributes(graph, attr)
 
     var res = `import Document from '${documentPath}'
         ${handler !== null ? `import Handler from '${handler}'` : 'var Handler = null'}
