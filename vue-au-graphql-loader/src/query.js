@@ -1,8 +1,32 @@
 import { withFragments } from './fragments'
+import { ref, watch } from 'vue'
 
-export default function create_query(handler, attributes, query, fragments) {
+function exec(cb, self, data) {
+    if(typeof cb === 'function')
+        return cb.call(self, data)
+
+    if(Array.isArray(cb)) {
+        for(var i = 0; i < cb.length; i++)
+            exec(cb[i], self, data)
+    }
+
+    return cb
+}
+
+function initial_data(document) {
+    var vars = document.selectionSet.selections.map((o) => o.alias && o.alias.value || o.name.value)
+    var res = {}
+    for(var key of vars)
+        res[key] = ref(null)
+
+    return res
+}
+
+export default function create_query(data, handler, attributes, query, fragments) {
     var self = this
-    var stream;
+    var current_data = initial_data(query)
+    var stream
+    var catchers = []
 
     // Query execution function
     var execute = () => {
@@ -14,37 +38,31 @@ export default function create_query(handler, attributes, query, fragments) {
                 // Assign result to component fields
                 for(var selection of query.selectionSet.selections) {
                     var key = selection.alias && selection.alias.value || selection.name.value
-                    if(data[key] !== undefined)
-                        self[key] = data[key]
+                    if(data[key] !== undefined) {
+                        current_data[key].value = data[key]
+                    }
                 }
 
                 // Call graphql hooks
-                if(self.$options.graphql) {
-                    if(self.$options.graphql.success)
-                        self.$options.graphql.success.call(self, data)
-                    if(self.$options.graphql.done)
-                        self.$options.graphql.done.call(self)
-                }
+                exec(self.$options.graphql?.success, self, data)
+                exec(self.$options.graphql?.done, self)
             },
     
             error(err) {
                 updating = false
 
                 // Call graphql hooks
-                if(self.$options.graphql) {
-                    if(self.$options.graphql.error)
-                        self.$options.graphql.error.call(self, err)
-                    if(self.$options.graphql.done)
-                        self.$options.graphql.done.call(self)
-                }
+                exec(self.$options.graphql?.error, self, err)
+                exec(catchers, self, err)
+                exec(self.$options.graphql?.done, self)
             }
         }
 
         try {
             // Call query on handler
             var res = handler({
-                query: withFragments(query, fragments),
-                variables: query.variables(this),
+                query:     withFragments(query, fragments),
+                variables: query.variables(data),
                 attributes,
                 stream,
                 component: this,
@@ -66,27 +84,42 @@ export default function create_query(handler, attributes, query, fragments) {
     }
 
     // Execute query
-    execute()
+    var updating = false
+    const stop_watcher = watch(() => {
+        if(updating)
+            return
+ 
+        updating = true
+        execute()
+    })
 
     // Return object to be able to update on variable change or close stream on component destroyed
-    var updating = false
-    return {
-        update() {
-            // Dependency variable updated, update query on next tick
-            if(updating)
-                return
+    current_data.update = () => {
+        // Dependency variable updated, update query on next tick
+        if(updating)
+            return current_data
 
-            updating = true
-            self.$nextTick(() => {
-                if(stream.close)
-                    stream.close()
-
-                execute()
-            })
-        },
-        close() {
+        updating = true
+        self.$nextTick(() => {
             if(stream.close)
                 stream.close()
-        }
+
+            execute()
+        })
+
+        return current_data
     }
+
+    current_data.close = () => {
+        stream.close && stream.close()
+        stop_watcher()
+        return current_data
+    }
+
+    current_data.catch = (cb) => {
+        catchers.push(cb)
+        return current_data
+    }
+
+    return current_data
 }

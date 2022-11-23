@@ -1,14 +1,27 @@
 import create_mutation from './mutations'
-import create_query from './query';
+import create_query from './query'
 import framgentsIn from './fragments'
+import { getCurrentInstance, unref } from "vue"
 
-var glob_id = 0;
+var glob_id = 0
 
 export default class Document {
+
+    #id = 0
+
+    #handler = null
+
+    #attr = null
+
+    #query_fragments = null
 
     // Create a new query, mutation or subscription representation
     constructor(mixin, options, fragments, attributes, handler = null) {
         Object.assign(this, options)
+        this.#id = glob_id++
+        this.#handler = handler
+        this.#attr = handler
+        this.#query_fragments = fragments.filter(framgentsIn(options))
 
         if(this.operation === 'query')
             Object.assign(mixin, this.query_mixin(handler, attributes, fragments.filter(framgentsIn(options))))
@@ -21,40 +34,31 @@ export default class Document {
         var vars = {}
         for(var obj of this.variableDefinitions) {
             var name = obj.variable.name.value
-            vars[name] = instance[name]
+            vars[name] = unref(instance[name])
         }
 
         return vars
     }
 
+    use(component, data) {
+        component.graphql = component.graphql || {}
+        data = data || component.ctx
+
+        if(!component.graphql[this.#id]) {
+            const res = create_query.call(component.ctx, data, this.#handler, this.#attr, this, this.#query_fragments)
+            component.graphql[this.#id] = res
+            return res
+        }
+
+        return component.graphql[this.#id]
+    }
+
     // Auto assign data fields to vue instances with null as default value
     query_mixin(handler = null, attributes = {}, fragments = []) {
-        var document = this
-        var id = glob_id++
-
-        // Extract all required variables from graphql
-        var onChange = function() {
-            if(this.$gqw && this.$gqw[id])
-                this.$gqw[id].update()
-        }
-
-        // Init watchers to detect dependencie changes
-        var watch = {}
-        for(var obj of this.variableDefinitions)
-            watch[obj.variable.name.value] = onChange
+        var self = this
 
         // Create mixin
-        var mixin = {
-            watch,
-            data() {
-                var vars = document.selectionSet.selections.map((o) => o.alias && o.alias.value || o.name.value)
-                var res = {}
-                for(var key of vars)
-                    res[key] = null
-
-                return res
-            }
-        }
+        var mixin = {}
 
         // Add methods
         mixin.$query = {}
@@ -65,15 +69,31 @@ export default class Document {
 
         // Auto execute query mixin
         if(handler !== null) {
-            mixin.mounted = function() {
-                this.$gqw = this.$gqw || {}
-                this.$gqw[id] = create_query.call(this, handler, attributes, document, fragments)
+            function proxy(self, res, key) {
+                Object.defineProperty(self, key, {
+                    get() {
+                        return res[key].value
+                    },
+                    set(val) {
+                        res[key].value = val 
+                    },
+                    enumerable:   true,
+                    configurable: true
+                })
             }
 
-            mixin.beforeDestroy = function() {
-                for(var e in this.$gqw) {
-                    this.$gqw[e].close()
-                    delete this.$gqw[e]
+            mixin.created = function() {
+                const res = self.use(getCurrentInstance())
+                for(var key in res) {
+                    proxy(this, res, key)
+                }
+            }
+
+            mixin.unmounted = function() {
+                const $gqw = getCurrentInstance().graphql || {}
+                for(var e in $gqw) {
+                    $gqw[e].close()
+                    delete $gqw[e]
                 }
             }
         }

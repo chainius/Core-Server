@@ -373,12 +373,19 @@ class SiteManager extends SuperClass {
                 return console.error('{handleApi-Result}', path, 'Response received after timeout')
 
             try {
+                var hasContent = false
                 for(var name in req.responseHeaders || []) {
+                    hasContent = hasContent || name === 'Content-Type'
                     res.setHeader(name, req.responseHeaders[name])
                 }
-
-                res.writeHead(code || 200, { 'Content-Type': 'application/json' })
-                res.end(JSON.stringify(result))
+    
+                if(!hasContent) {
+                    res.writeHead(code || 200, { 'Content-Type': 'application/json' })
+                    res.end(JSON.stringify(result))
+                } else {
+                    res.writeHead(code || 200)
+                    res.end(result.result || result)
+                }
             } catch (e) {
                 console.error('{handleApi-Result}', e)
                 _this.sendErrorPage(500, req, res)
