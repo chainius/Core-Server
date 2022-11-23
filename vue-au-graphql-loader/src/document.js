@@ -89,16 +89,18 @@ export default class Document {
                 }
             }
 
-            mixin.unmounted = function() {
-                const $gqw = getCurrentInstance().graphql || {}
-                for(var e in $gqw) {
-                    $gqw[e].close()
-                    delete $gqw[e]
-                }
-            }
+            mixin.unmounted = () => this.unmounted(getCurrentInstance())
         }
 
         return mixin
+    }
+    
+    unmounted(instance) {
+        const $gqw = instance.graphql || {}
+        for(var e in $gqw) {
+            $gqw[e].close()
+            delete $gqw[e]
+        }
     }
 
     // Auto assign graphql methods to vue component

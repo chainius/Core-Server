@@ -1,5 +1,5 @@
-var querystring          = require('querystring')
-var gql                  = require('graphql-tag')
+var querystring = require('querystring')
+var gql = require('graphql-tag')
 const { createUnplugin } = require('unplugin')
 // var fs                   = require('fs')
 // var path                 = require('path')
@@ -36,16 +36,16 @@ function getAttributes(query) {
 function generate(source, id, options) {
     var index = id.indexOf('?') + 1
 
-    const graph        = gql(source)
-    const attr         = index == 0 ? {} : getAttributes(id.substr(index))
-    const fileName     = index == 0 ? id : id.substr(0, index - 1)
-    const isMixin      = index == 0 || fileName.endsWith('.gql')
-    const query        = graph.definitions.find((o) => o.operation === 'query')
-    const mutation     = graph.definitions.find((o) => o.operation === 'mutation')
+    const graph = gql(source)
+    const attr = index == 0 ? {} : getAttributes(id.substr(index))
+    const fileName = index == 0 ? id : id.substr(0, index - 1)
+    const isMixin = index == 0 || fileName.endsWith('.gql')
+    const query = graph.definitions.find((o) => o.operation === 'query')
+    const mutation = graph.definitions.find((o) => o.operation === 'mutation')
     const subscription = graph.definitions.find((o) => o.operation === 'subscription')
-    const fragments    = graph.definitions.filter((o) => o.kind === 'FragmentDefinition')
+    const fragments = graph.definitions.filter((o) => o.kind === 'FragmentDefinition')
     const documentPath = require.resolve('./document.js')
-    const handler      = options.handler || null // getHandlerPath('') // ToDo attach root dor
+    const handler = options.handler || null // getHandlerPath('') // ToDo attach root dor
 
     var res = `import Document from '${documentPath}'
         ${handler !== null ? `import Handler from '${handler}'` : 'var Handler = null'}
@@ -65,6 +65,15 @@ function generate(source, id, options) {
 
     if(isMixin) {
         return `${res}
+
+        import { getCurrentInstance, onUnmounted } from 'vue'
+
+        mixin.use = function(data) {
+            const instance = getCurrentInstance()
+            onUnmounted($gql.query.unmounted.bind($gql.query, instance))
+            return $gql.query.use(instance, data)
+        }
+
         export default mixin`
     }
 

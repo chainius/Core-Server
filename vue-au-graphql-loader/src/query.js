@@ -1,5 +1,5 @@
 import { withFragments } from './fragments'
-import { ref, watch } from 'vue'
+import { ref, watchEffect } from 'vue'
 
 function exec(cb, self, data) {
     if(typeof cb === 'function')
@@ -85,7 +85,7 @@ export default function create_query(data, handler, attributes, query, fragments
 
     // Execute query
     var updating = false
-    const stop_watcher = watch(() => {
+    const stop_watcher = watchEffect(() => {
         if(updating)
             return
  
