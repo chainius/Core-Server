@@ -1,5 +1,6 @@
 import { withFragments } from './fragments'
 import { ref, watchEffect } from 'vue'
+import { print } from 'graphql/language/printer.js'
 
 function exec(cb, self, data) {
     if(typeof cb === 'function')
@@ -17,47 +18,39 @@ function initial_data(document) {
     var vars = document.selectionSet.selections.map((o) => o.alias && o.alias.value || o.name.value)
     var res = {}
     for(var key of vars)
-        res[key] = ref(null)
+        res[key] = null
 
-    return res
+    return ref(res)
 }
 
 export default function create_query(data, handler, attributes, query, fragments) {
     var self = this
     var current_data = initial_data(query)
-    var stream
     var catchers = []
+
+    // Create a stream object to assign results to component
+    var stream = {
+        emit(data) {
+            current_data.value = data
+            updating = false
+
+            // Call graphql hooks
+            exec(self.$options.graphql?.success, self, data)
+            exec(self.$options.graphql?.done, self)
+        },
+
+        error(err) {
+            updating = false
+
+            // Call graphql hooks
+            exec(self.$options.graphql?.error, self, err)
+            exec(catchers, self, err)
+            exec(self.$options.graphql?.done, self)
+        }
+    }
 
     // Query execution function
     var execute = () => {
-        // Create a stream object to assign results to component
-        stream = {
-            emit(data) {
-                updating = false
-
-                // Assign result to component fields
-                for(var selection of query.selectionSet.selections) {
-                    var key = selection.alias && selection.alias.value || selection.name.value
-                    if(data[key] !== undefined) {
-                        current_data[key].value = data[key]
-                    }
-                }
-
-                // Call graphql hooks
-                exec(self.$options.graphql?.success, self, data)
-                exec(self.$options.graphql?.done, self)
-            },
-    
-            error(err) {
-                updating = false
-
-                // Call graphql hooks
-                exec(self.$options.graphql?.error, self, err)
-                exec(catchers, self, err)
-                exec(self.$options.graphql?.done, self)
-            }
-        }
-
         try {
             // Call query on handler
             var res = handler({
@@ -67,20 +60,20 @@ export default function create_query(data, handler, attributes, query, fragments
                 component:  this,
                 stream,
             })
-    
+
             // Send handler result to data stream
             if(!res || res == stream) {
                 updating = false
-                return
             } else if(res.then) {
                 res.then(stream.emit).catch(stream.error)
             } else {
                 stream.emit(res)
             }
         } catch(e) {
-            updating = false
             stream.error(e)
         }
+
+        updating = false
     }
 
     // Execute query
@@ -90,6 +83,12 @@ export default function create_query(data, handler, attributes, query, fragments
             return
  
         updating = true
+
+        if(stream.close) {
+            stream.close()
+            delete stream.close()
+        }
+
         execute()
     })
 
@@ -101,8 +100,10 @@ export default function create_query(data, handler, attributes, query, fragments
 
         updating = true
         self.$nextTick(() => {
-            if(stream.close)
+            if(stream.close) {
                 stream.close()
+                delete stream.close()
+            }
 
             execute()
         })

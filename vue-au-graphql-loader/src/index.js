@@ -34,7 +34,11 @@ function getAttributes(query) {
 // }
 
 function extract_attributes(n, attr = {}) {
-    for(var o of n.definitions) {
+    // create a copy to prevent caching issues from gql
+    // otherwise after a second compilation, gql will not return the same object when the graphql hasn't been changed (get from caches)
+    var output = Object.assign({}, n)
+
+    output.definitions = output.definitions.map((o) => {
         for(var d of o.directives) {
             if(d.name.value === 'attr') {
                 for(var arg of d.arguments) {
@@ -45,27 +49,30 @@ function extract_attributes(n, attr = {}) {
             }
         }
 
-        o.directives = []
-    }
+        var res = Object.assign({}, o)
+        res.directives = []
+        return res
+    })
 
-    return attr
+    return output
 }
 
 function generate(source, id, options) {
     var index = id.indexOf('?') + 1
 
-    const graph = gql(source)
+    var graph = gql(source)
     const attr = index == 0 ? {} : getAttributes(id.substr(index))
     const fileName = index == 0 ? id : id.substr(0, index - 1)
     const isMixin = index == 0 || fileName.endsWith('.gql')
+
+    graph = extract_attributes(graph, attr)
+
     const query = graph.definitions.find((o) => o.operation === 'query')
     const mutation = graph.definitions.find((o) => o.operation === 'mutation')
     const subscription = graph.definitions.find((o) => o.operation === 'subscription')
     const fragments = graph.definitions.filter((o) => o.kind === 'FragmentDefinition')
     const documentPath = require.resolve('./document.js')
     const handler = options.handler || null // getHandlerPath('') // ToDo attach root dor
-
-    extract_attributes(graph, attr)
 
     var res = `import Document from '${documentPath}'
         ${handler !== null ? `import Handler from '${handler}'` : 'var Handler = null'}

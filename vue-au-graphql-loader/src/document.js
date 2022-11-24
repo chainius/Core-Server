@@ -72,10 +72,12 @@ export default class Document {
             function proxy(self, res, key) {
                 Object.defineProperty(self, key, {
                     get() {
-                        return res[key].value
+                        return res.value[key]
                     },
                     set(val) {
-                        res[key].value = val 
+                        n = res.value
+                        n[key] = val
+                        res.value = n
                     },
                     enumerable:   true,
                     configurable: true
@@ -84,7 +86,7 @@ export default class Document {
 
             mixin.created = function() {
                 const res = self.use(getCurrentInstance())
-                for(var key in res) {
+                for(var key in res._rawValue) {
                     proxy(this, res, key)
                 }
             }
