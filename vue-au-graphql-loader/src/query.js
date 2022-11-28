@@ -1,6 +1,5 @@
 import { withFragments } from './fragments'
 import { ref, watchEffect } from 'vue'
-import { print } from 'graphql/language/printer.js'
 
 function exec(cb, self, data) {
     if(typeof cb === 'function')
@@ -32,6 +31,7 @@ export default function create_query(data, handler, attributes, query, fragments
     var stream = {
         emit(data) {
             current_data.value = data
+            current_data.loading.value = false
             updating = false
 
             // Call graphql hooks
@@ -41,6 +41,7 @@ export default function create_query(data, handler, attributes, query, fragments
 
         error(err) {
             updating = false
+            current_data.loading.value = false
 
             // Call graphql hooks
             exec(self.$options.graphql?.error, self, err)
@@ -121,6 +122,8 @@ export default function create_query(data, handler, attributes, query, fragments
         catchers.push(cb)
         return current_data
     }
+
+    current_data.loading = ref(true)
 
     return current_data
 }
