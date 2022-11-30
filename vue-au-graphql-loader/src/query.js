@@ -27,6 +27,8 @@ export default function create_query(data, handler, attributes, query, fragments
     var current_data = initial_data(query)
     var catchers = []
 
+    current_data.loading = ref(true)
+
     // Create a stream object to assign results to component
     var stream = {
         emit(data) {
@@ -122,8 +124,6 @@ export default function create_query(data, handler, attributes, query, fragments
         catchers.push(cb)
         return current_data
     }
-
-    current_data.loading = ref(true)
 
     return current_data
 }

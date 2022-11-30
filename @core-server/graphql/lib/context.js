@@ -59,11 +59,11 @@ context = {
                 hasGraphql = true
                 return this
             },
-            BuildSequelize(sequelize) {
+            BuildSequelize(get_db) {
                 const foreignKeys = {}
 
                 class Table extends Model {}
-                const config = {}
+                const attr = {}
                 for(var name in fields) {
                     if(fields[name].sequelize) {
                         if(fields[name].foreign) {
@@ -73,19 +73,24 @@ context = {
                             }
                         }
 
-                        config[name] = fields[name].sequelize
+                        attr[name] = fields[name].sequelize
                         if(fields[name].foreign)
                             foreignKeys[name] = fields[name].foreign
                     }
                 }
 
-                schema = Table.init(config, Object.assign({
+                const sequelize = get_db(schemaOptions.schema)
+
+                const config = Object.assign({
                     sequelize,
                     modelName:       table,
+                    tableName:       table,
                     freezeTableName: true,
-                    timestamps:      (config.updatedAt !== undefined && config.createdAt !== undefined),
-                }, schemaOptions))
+                    timestamps:      (attr.updatedAt !== undefined && attr.createdAt !== undefined),
+                }, schemaOptions)
 
+                delete config.schema
+                schema = Table.init(attr, config)
                 context.SchemasByTableName[table] = schema
                 
                 return {

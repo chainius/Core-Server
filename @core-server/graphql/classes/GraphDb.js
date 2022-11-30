@@ -94,12 +94,22 @@ class GraphDB {
             config = Object.assign(config, require(srcContext).sequelize || {})
 
         this.sequelize = new Sequelize(db, user, pass, config)
+        var alt_connections = {}
+
+        const gen_alt_conn = (name) => {
+            if(alt_connections[name])
+                return alt_connections[name]
+
+            const conn =  new Sequelize(name, user, pass, config)
+            alt_connections[name] = conn
+            return conn
+        }
 
         this.database = db
-        return this.buildSchemas()
+        return this.buildSchemas(gen_alt_conn)
     }
 
-    buildSchemas() {
+    buildSchemas(gen_alt_conn) {
         const context = this.createContext()
         const sequelize = this.sequelize
         const queryDeff = {
@@ -154,7 +164,13 @@ class GraphDB {
                 // Transform schema
                 {
                     // Sql schema
-                    const build = schema.BuildSequelize(sequelize)
+                    const build = schema.BuildSequelize((name) => {
+                        if(!name)
+                            return sequelize
+
+                        return gen_alt_conn(name)
+                    })
+
                     if(file == 'index.js' && dirName != null) {
                         schemas = Object.assign(build.schema, schemas)
                     } else {
