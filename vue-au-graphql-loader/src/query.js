@@ -28,12 +28,14 @@ export default function create_query(data, handler, attributes, query, fragments
     var catchers = []
 
     current_data.loading = ref(true)
+    current_data.initial_loading = ref(true)
 
     // Create a stream object to assign results to component
     var stream = {
         emit(data) {
             current_data.value = data
             current_data.loading.value = false
+            current_data.initial_loading.value = false
             updating = false
 
             // Call graphql hooks
@@ -44,6 +46,7 @@ export default function create_query(data, handler, attributes, query, fragments
         error(err) {
             updating = false
             current_data.loading.value = false
+            current_data.initial_loading.value = false
 
             // Call graphql hooks
             exec(self.$options.graphql?.error, self, err)
@@ -55,6 +58,7 @@ export default function create_query(data, handler, attributes, query, fragments
     // Query execution function
     var execute = () => {
         try {
+            current_data.loading.value = true
             // Call query on handler
             var res = handler({
                 query:      withFragments(query, fragments),
@@ -121,6 +125,12 @@ export default function create_query(data, handler, attributes, query, fragments
     }
 
     current_data.catch = (cb) => {
+        if(!cb) {
+            var dest = ref(null)
+            catchers.push((err) => dest.value = err)
+            return dest
+        }
+
         catchers.push(cb)
         return current_data
     }
