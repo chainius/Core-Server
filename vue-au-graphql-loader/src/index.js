@@ -1,6 +1,7 @@
 var querystring = require('querystring')
 var gql = require('graphql-tag')
 const { createUnplugin } = require('unplugin')
+const { print } = require('graphql/language/printer.js')
 // var fs                   = require('fs')
 // var path                 = require('path')
 
@@ -66,16 +67,20 @@ function auto_variables(n, kinds = {}) {
 
         for(var selection of def.selectionSet.selections) { 
             for(var arg of selection.arguments) {
-                if(arg.kind == 'Argument' && !known_vars[arg.name.value] && kinds[arg.name.value]) {
+                if(arg.kind != 'Argument' || arg.value.kind != 'Variable')
+                    continue
+
+                const var_name = arg.value.name.value
+                if(!known_vars[var_name] && kinds[var_name]) {
                     def.variableDefinitions = def.variableDefinitions || []
                     def.variableDefinitions.push({
                         kind:         'VariableDefinition',
-                        variable:     { kind: 'Variable', name: { kind: 'Name', value: 'simulation' } },
-                        type:         kinds[arg.name.value],
+                        variable:     { kind: 'Variable', name: { kind: 'Name', value: var_name } },
+                        type:         kinds[var_name],
                         defaultValue: undefined,
                     })
 
-                    known_vars[arg.name.value] = true
+                    known_vars[var_name] = true
                 }
             }
         }
@@ -85,12 +90,14 @@ function auto_variables(n, kinds = {}) {
 }
 
 function load_var_types(options) {
-    var r = {}
+    var r = options.static_types || {}
     try {
         r = require(options.handler + '/kinds.json')
     } catch(e) {
-        console.warn("no satic graphql kinds.json found", e)
-        return null
+        if(e.code != 'MODULE_NOT_FOUND') {
+            console.warn("no satic graphql kinds.json found", e)
+            return null
+        }
     }
 
     if(Object.keys(r).length == 0)
@@ -130,6 +137,8 @@ function generate(source, id, options) {
     if(auto_types) {
         graph = auto_variables(graph, auto_types)    
     }
+
+    options.print && console.log(print(graph))
 
     const query = graph.definitions.find((o) => o.operation === 'query')
     const mutation = graph.definitions.find((o) => o.operation === 'mutation')

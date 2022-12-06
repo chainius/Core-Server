@@ -3,7 +3,7 @@ class Component {
     constructor(options = {}) {
         this.plugin = require('./index').raw(options)
         this.resourceQuery = '?'
-        this.options = {}
+        this.options = options
     }
 
     setAttributes(attrs) {
@@ -16,7 +16,11 @@ class Component {
 }
 
 var compo = new Component({
-    handler: '../src/addons/graphql'
+    handler:      '../src/addons/graphql',
+    print:        true,
+    static_types: {
+        simulation: 'Boolean!',
+    }
 })
 
 var res = compo.parse(`query($id: String!) {
