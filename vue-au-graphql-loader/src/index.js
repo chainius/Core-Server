@@ -57,6 +57,65 @@ function extract_attributes(n, attr = {}) {
     return output
 }
 
+function auto_variables(n, kinds = {}) {
+    for(var def of n.definitions) {
+        var known_vars = {}
+        for(var i of (def.variableDefinitions || [])) {
+            known_vars[i.variable.name.value] = true
+        }
+
+        for(var selection of def.selectionSet.selections) { 
+            for(var arg of selection.arguments) {
+                if(arg.kind == 'Argument' && !known_vars[arg.name.value] && kinds[arg.name.value]) {
+                    def.variableDefinitions = def.variableDefinitions || []
+                    def.variableDefinitions.push({
+                        kind:         'VariableDefinition',
+                        variable:     { kind: 'Variable', name: { kind: 'Name', value: 'simulation' } },
+                        type:         kinds[arg.name.value],
+                        defaultValue: undefined,
+                    })
+
+                    known_vars[arg.name.value] = true
+                }
+            }
+        }
+    }
+
+    return n
+}
+
+function load_var_types(options) {
+    var r = {}
+    try {
+        r = require(options.handler + '/kinds.json')
+    } catch(e) {
+        console.warn("no satic graphql kinds.json found", e)
+        return null
+    }
+
+    if(Object.keys(r).length == 0)
+        return null
+
+    var q = "query("
+    var first = true
+
+    for(var k in r) {
+        if(!first)
+            q += ', '
+
+        q += "$" + k + ": " + r[k] + " "
+        first = false
+    }
+
+    q = gql(q + ") { __schema }")
+    var res = {}
+    for(var item of q.definitions[0].variableDefinitions) {
+        res[item.variable.name.value] = item.type
+    }
+
+    return res
+}
+
 function generate(source, id, options) {
     var index = id.indexOf('?') + 1
 
@@ -67,6 +126,11 @@ function generate(source, id, options) {
 
     graph = extract_attributes(graph, attr)
 
+    const auto_types = load_var_types(options)
+    if(auto_types) {
+        graph = auto_variables(graph, auto_types)    
+    }
+
     const query = graph.definitions.find((o) => o.operation === 'query')
     const mutation = graph.definitions.find((o) => o.operation === 'mutation')
     const subscription = graph.definitions.find((o) => o.operation === 'subscription')
@@ -75,7 +139,7 @@ function generate(source, id, options) {
     const handler = options.handler || null // getHandlerPath('') // ToDo attach root dor
 
     var res = `import Document from '${documentPath}'
-        ${handler !== null ? `import Handler from '${handler}'` : 'var Handler = null'}
+        ${handler !== null ? `import Handler, { provides } from '${handler}'` : 'var Handler = null, provides = () => ({})'}
 
         var attr       = ${JSON.stringify(attr)}
         var fragments  = ${JSON.stringify(fragments)}
@@ -84,9 +148,9 @@ function generate(source, id, options) {
         export let $gql = {
             attr: attr,
             fragments: fragments,
-            query: ${query ? 'new Document(mixin, '+JSON.stringify(query)+', fragments, attr, Handler)' : 'null'},
-            mutation: ${mutation ? 'new Document(mixin, '+JSON.stringify(mutation)+', fragments, attr, Handler)' : 'null'},
-            subscription: ${subscription ? 'new Document(mixin, '+JSON.stringify(subscription)+', fragments, attr, Handler)' : 'null'},
+            query: ${query ? 'new Document(mixin, '+JSON.stringify(query)+', fragments, attr, Handler, provides)' : 'null'},
+            mutation: ${mutation ? 'new Document(mixin, '+JSON.stringify(mutation)+', fragments, attr, Handler, provides)' : 'null'},
+            subscription: ${subscription ? 'new Document(mixin, '+JSON.stringify(subscription)+', fragments, attr, Handler, provides)' : 'null'},
         }
     `
 
