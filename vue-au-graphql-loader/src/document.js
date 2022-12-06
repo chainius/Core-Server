@@ -36,6 +36,7 @@ export default class Document {
     variables(instance) {
         var vars = {}
         var provided = null
+        instance = unref(instance)
 
         for(var obj of this.variableDefinitions) {
             var name = obj.variable.name.value
