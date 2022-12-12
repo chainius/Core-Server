@@ -256,13 +256,14 @@ function ProxyParams() {
             if(name === '__isProxy')
                 return true
 
-            return function(t, def) {
+            return function(t, def, validator) {
                 type = t
                 return {
-                    Default: def,
-                    IsParam: true,
-                    Name:    name,
-                    Type:    t,
+                    Default:   def,
+                    IsParam:   true,
+                    Validator: validator,
+                    Name:      name,
+                    Type:      t,
                 }
             }
         },
@@ -279,9 +280,13 @@ function ProxyParams() {
 // Options transformer
 
 function TransformOptions(dest, options) {
-    function encapsulateWhereClause(name, def) {
+    function encapsulateWhereClause(name, def, validator) {
         return function(ctx, args) {
-            return args[name] === undefined ? def : args[name]
+            const el = args[name]
+            if(el === undefined)
+                return def
+
+            return validator ? validator(el) : el
         }
     }
 
@@ -301,6 +306,7 @@ function TransformOptions(dest, options) {
                             value: obj.Type.replace("!" , ""),
                         }
                     }
+
                     dest.params.push({
                         kind: "InputValueDefinition",
                         name: {
@@ -315,7 +321,7 @@ function TransformOptions(dest, options) {
                     })
     
                     // Transform where close to function resolver
-                    where[key] = encapsulateWhereClause(obj.Name, obj.Default)
+                    where[key] = encapsulateWhereClause(obj.Name, obj.Default, obj.Validator)
                     where[key]._static = true
                     where[key]._mandatory = mandatory
                 } else if(typeof(obj) === 'object' && obj !== null && !obj.__isProxy) {
