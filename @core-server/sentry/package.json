@@ -1,6 +1,6 @@
 {
   "name": "@core-server/sentry",
-  "version": "1.2.4",
+  "version": "1.2.5",
   "description": "",
   "private": false,
   "main": "index.js",
