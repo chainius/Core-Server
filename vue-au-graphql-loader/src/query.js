@@ -1,5 +1,5 @@
 import { withFragments } from './fragments'
-import { ref, watchEffect } from 'vue'
+import { shallowRef, watchEffect } from 'vue'
 
 function exec(cb, self, data) {
     if(typeof cb === 'function')
@@ -19,7 +19,7 @@ function initial_data(document) {
     for(var key of vars)
         res[key] = null
 
-    return ref(res)
+    return shallowRef(res)
 }
 
 export default function create_query(data, handler, attributes, query, fragments) {
@@ -27,8 +27,8 @@ export default function create_query(data, handler, attributes, query, fragments
     var current_data = initial_data(query)
     var catchers = []
 
-    current_data.loading = ref(true)
-    current_data.initial_loading = ref(true)
+    current_data.loading = shallowRef(true)
+    current_data.initial_loading = shallowRef(true)
 
     // Create a stream object to assign results to component
     var stream = {
@@ -62,7 +62,7 @@ export default function create_query(data, handler, attributes, query, fragments
             // Call query on handler
             var res = handler({
                 query:      withFragments(query, fragments),
-                variables:  query.variables(data),
+                variables:  query.variables(data, this),
                 attributes: attributes,
                 component:  this,
                 stream,
@@ -126,7 +126,7 @@ export default function create_query(data, handler, attributes, query, fragments
 
     current_data.catch = (cb) => {
         if(!cb) {
-            var dest = ref(null)
+            var dest = shallowRef(null)
             catchers.push((err) => dest.value = err)
             return dest
         }

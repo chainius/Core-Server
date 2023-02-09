@@ -33,21 +33,21 @@ export default class Document {
     }
 
     // Extract used variables in graphql from vuejs instance
-    variables(instance) {
+    variables(data, instance) {
         var vars = {}
         var provided = null
-        instance = unref(instance)
+        data = unref(data)
 
         for(var obj of this.variableDefinitions) {
             var name = obj.variable.name.value
 
-            if(instance[name] !== undefined) {
-                vars[name] = unref(instance[name])
+            if(data[name] !== undefined) {
+                vars[name] = unref(data[name])
                 continue
             }
 
             if(provided === null)
-                provided = this.#provides()
+                provided = this.#provides.call(instance, data, this)
 
             vars[name] = unref(provided[name])
         }
