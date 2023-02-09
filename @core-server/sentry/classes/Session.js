@@ -21,8 +21,10 @@ if(!pkg.sentry.environment)
 //     })
 // ]
 
-delete pkg.sentry.onlyProd
-Sentry.init(pkg.sentry)
+var sentryConfig = JSON.parse(JSON.stringify(pkg.sentry));
+delete sentryConfig.onlyProd
+delete sentryConfig.tags
+Sentry.init(sentryConfig)
 
 /** session */
 class Session extends SuperClass {
@@ -58,31 +60,37 @@ class Session extends SuperClass {
 
         e.captured = true
         Sentry.withScope(scope => {
-            if(info && info.name)
+            if (typeof(pkg.sentry.tags) == "object") {
+                for (var key in pkg.sentry.tags) {
+                    scope.setTag(key, pkg.sentry.tags[key])
+                }
+            }
+
+            if (info && info.name)
                 scope.setTag('api', info.name)
 
-            if(info && info.method)
+            if (info && info.method)
                 scope.setTag('method', info.method)
             else if (info && info.environment && info.environment.$req && info.environment.$req.method)
                 scope.setTag('method', info.environment.$req.method)
 
-            if(info && info.graphql)
+            if (info && info.graphql)
                 scope.setTag('graphql', info.graphql)                
 
-            if(info && info.$sentryTransaction)
+            if (info && info.$sentryTransaction)
                 scope.setSpan(info.$sentryTransaction)
-            else if(info && info.environment && info.environment.$sentryTransaction)
+            else if (info && info.environment && info.environment.$sentryTransaction)
                 scope.setSpan(info.environment.$sentryTransaction)
 
-            if(Array.isArray(e.context) || info.context) {
-                for(var ctx of (e.context || info.context)) {
-                    if(ctx.name && ctx.data)
+            if (Array.isArray(e.context) || info.context) {
+                for (var ctx of (e.context || info.context)) {
+                    if (ctx.name && ctx.data)
                         scope.setContext(ctx.name, ctx.data)
                 }
             }
-
-            if(typeof(e.tags) == "object") {
-                for(var key in e.tags) {
+          
+            if (typeof(e.tags) == "object") {
+                for (var key in e.tags) {
                     scope.setTag(key, e.tags[key])
                 }
             }
