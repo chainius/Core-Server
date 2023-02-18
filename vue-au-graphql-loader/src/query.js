@@ -24,6 +24,7 @@ function initial_data(document) {
 
 export default function create_query(data, handler, attributes, query, fragments) {
     var self = this
+    var $graphql = (self.$options || self._.type).graphql
     var current_data = initial_data(query)
     var catchers = []
 
@@ -39,8 +40,8 @@ export default function create_query(data, handler, attributes, query, fragments
             updating = false
 
             // Call graphql hooks
-            exec(self.$options.graphql?.success, self, data)
-            exec(self.$options.graphql?.done, self)
+            exec($graphql?.success, self, data)
+            exec($graphql?.done, self)
         },
 
         error(err) {
@@ -49,9 +50,9 @@ export default function create_query(data, handler, attributes, query, fragments
             current_data.initial_loading.value = false
 
             // Call graphql hooks
-            exec(self.$options.graphql?.error, self, err)
+            exec($graphql?.error, self, err)
             exec(catchers, self, err)
-            exec(self.$options.graphql?.done, self)
+            exec($graphql?.done, self)
         }
     }
 
