@@ -24,7 +24,7 @@ function initial_data(document) {
 
 export default function create_query(data, handler, attributes, query, fragments) {
     var self = this
-    var $graphql = (self.$options || self._.type).graphql
+    var $graphql = this.type?.graphql
     var current_data = initial_data(query)
     var catchers = []
 
@@ -40,8 +40,8 @@ export default function create_query(data, handler, attributes, query, fragments
             updating = false
 
             // Call graphql hooks
-            exec($graphql?.success, self, data)
-            exec($graphql?.done, self)
+            exec($graphql?.success, self.ctx, data)
+            exec($graphql?.done, self.ctx)
         },
 
         error(err) {
@@ -50,9 +50,9 @@ export default function create_query(data, handler, attributes, query, fragments
             current_data.initial_loading.value = false
 
             // Call graphql hooks
-            exec($graphql?.error, self, err)
-            exec(catchers, self, err)
-            exec($graphql?.done, self)
+            exec($graphql?.error, self.ctx, err)
+            exec(catchers, self.ctx, err)
+            exec($graphql?.done, self.ctx)
         }
     }
 
@@ -107,7 +107,7 @@ export default function create_query(data, handler, attributes, query, fragments
             return current_data
 
         updating = true
-        self.$nextTick(() => {
+        self.ctx.$nextTick(() => {
             if(stream.close) {
                 stream.close()
                 delete stream.close()

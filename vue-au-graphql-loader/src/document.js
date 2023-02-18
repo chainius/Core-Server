@@ -61,7 +61,7 @@ export default class Document {
         var res = component.graphql[this.#id]
 
         if(!res) {
-            res = create_query.call(component.ctx, data, this.#handler, this.#attr, this, this.#query_fragments)
+            res = create_query.call(component, data, this.#handler, this.#attr, this, this.#query_fragments)
             component.graphql[this.#id] = res
 
             if(this.#attr.inject) {
